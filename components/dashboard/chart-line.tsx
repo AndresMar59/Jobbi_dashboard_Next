@@ -2,7 +2,7 @@
 
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from "recharts"
 
-const data = [
+const defaultData = [
   { mes: "Ene", ingresos: 4000 },
   { mes: "Feb", ingresos: 3000 },
   { mes: "Mar", ingresos: 5000 },
@@ -17,7 +17,19 @@ const data = [
   { mes: "Dic", ingresos: 8500 },
 ]
 
-export function ChartLine() {
+interface ChartLineProps {
+  data?: Array<{ date?: string; mrr?: number }>
+}
+
+export function ChartLine({ data: apiData }: ChartLineProps) {
+  const chartData =
+    apiData && apiData.length > 0
+      ? apiData.slice(-12).map((entry) => ({
+          mes: entry.date ? new Date(entry.date).toLocaleDateString("es-ES", { month: "short" }) : "",
+          ingresos: Math.round((entry.mrr || 0) / 100), // Convertir centavos a dólares
+        }))
+      : defaultData
+
   return (
     <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
       <div className="p-6 pb-0">
@@ -26,7 +38,7 @@ export function ChartLine() {
       </div>
       <div className="p-6">
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={data}>
+          <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
             <XAxis dataKey="mes" className="text-xs" tick={{ fill: "hsl(var(--muted-foreground))" }} />
             <YAxis className="text-xs" tick={{ fill: "hsl(var(--muted-foreground))" }} />
