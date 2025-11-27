@@ -1,0 +1,75 @@
+"use client"
+
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
+
+const data = [
+  { mes: "Ene", grr: 5, nrr: 6, retencion: 5 },
+  { mes: "Feb", grr: 4, nrr: 5, retencion: 6 },
+  { mes: "Mar", grr: 5, nrr: 7, retencion: 7 },
+  { mes: "Abr", grr: 6, nrr: 6, retencion: 5 },
+  { mes: "May", grr: 7, nrr: 8, retencion: 3 },
+  { mes: "Jun", grr: 8, nrr: 9, retencion: 4 },
+  { mes: "Jul", grr: 9, nrr: 10, retencion: 5 },
+  { mes: "Ago", grr: 10, nrr: 11, retencion: 6 },
+  { mes: "Sep", grr: 12, nrr: 12, retencion: 5 },
+  { mes: "Oct", grr: 13, nrr: 14, retencion: 6 },
+  { mes: "Nov", grr: 14, nrr: 16, retencion: 6 },
+  { mes: "Dic", grr: 15, nrr: 18, retencion: 6 },
+]
+
+export function NRRGRRChart() {
+  return (
+    <div className="rounded-lg border bg-card p-6">
+      <h3 className="text-lg font-semibold mb-2">Double Line Graph</h3>
+      <p className="text-sm text-muted-foreground mb-4">NRR vs GRR</p>
+
+      <ResponsiveContainer width="100%" height={350}>
+        <LineChart data={data} margin={{ top: 20, right: 20, left: 0, bottom: 30 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <XAxis dataKey="mes" stroke="#6b7280" fontSize={12} tickMargin={10} interval={0} />
+          <YAxis stroke="#6b7280" fontSize={12} />
+          <Tooltip
+            contentStyle={{
+              backgroundColor: "white",
+              border: "1px solid #e5e7eb",
+              borderRadius: "6px",
+            }}
+          />
+          <Legend
+            verticalAlign="top"
+            height={36}
+            iconSize={10}
+            wrapperStyle={{
+              fontSize: "12px",
+              paddingBottom: "10px",
+            }}
+          />
+          <Line
+            type="monotone"
+            dataKey="grr"
+            stroke="#3b82f6"
+            strokeWidth={2}
+            dot={{ fill: "#3b82f6", r: 4 }}
+            name="GRR %"
+          />
+          <Line
+            type="monotone"
+            dataKey="nrr"
+            stroke="#10b981"
+            strokeWidth={2}
+            dot={{ fill: "#10b981", r: 4 }}
+            name="NRR %"
+          />
+          <Line
+            type="monotone"
+            dataKey="retencion"
+            stroke="#ef4444"
+            strokeWidth={2}
+            dot={{ fill: "#ef4444", r: 4 }}
+            name="% Retención"
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  )
+}
