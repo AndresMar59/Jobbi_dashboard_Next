@@ -10,6 +10,7 @@ import { CACLTVChart } from "@/components/dashboard/cac-ltv-chart"
 import { DollarChurnChart } from "@/components/dashboard/dollar-churn-chart"
 import { CACPaybackChart } from "@/components/dashboard/cac-payback-chart"
 import { NRRGRRChart } from "@/components/dashboard/nrr-grr-chart"
+import { ARPAClientesChart } from "@/components/dashboard/arpa-clientes-chart"
 import { DollarSign, Users, TrendingUp, TrendingDown, Activity, Percent } from "lucide-react"
 
 export default function DashboardMVP() {
@@ -62,6 +63,11 @@ export default function DashboardMVP() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <NRRGRRChart />
             <CACLTVChart />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <ARPAClientesChart />
+            <div />
           </div>
         </main>
       </div>
