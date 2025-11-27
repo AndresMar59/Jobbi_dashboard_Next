@@ -8,6 +8,10 @@ export function DashboardFilters() {
 
   return (
     <div className="mb-6 flex flex-wrap gap-3">
+      <button className="h-10 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-muted transition-colors">
+        Todas
+      </button>
+
       {/* Filtro de fechas */}
       <div className="flex items-center gap-2">
         <select className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">

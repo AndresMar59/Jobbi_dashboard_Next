@@ -9,6 +9,12 @@ const data = [
   { mes: "Abr", newDinero: 19000, netNewARR: 15000, expansionARR: 10000, churnARR: 3800 },
   { mes: "May", newDinero: 25000, netNewARR: 20000, expansionARR: 13000, churnARR: 4500 },
   { mes: "Jun", newDinero: 28000, netNewARR: 22000, expansionARR: 15000, churnARR: 5000 },
+  { mes: "Jul", newDinero: 26000, netNewARR: 21000, expansionARR: 14000, churnARR: 4800 },
+  { mes: "Ago", newDinero: 27000, netNewARR: 22500, expansionARR: 14500, churnARR: 5200 },
+  { mes: "Sep", newDinero: 29000, netNewARR: 24000, expansionARR: 15500, churnARR: 5500 },
+  { mes: "Oct", newDinero: 30000, netNewARR: 25000, expansionARR: 16000, churnARR: 5800 },
+  { mes: "Nov", newDinero: 31000, netNewARR: 26000, expansionARR: 16500, churnARR: 6000 },
+  { mes: "Dic", newDinero: 32000, netNewARR: 27000, expansionARR: 17000, churnARR: 6200 },
 ]
 
 export function ARRMetricsChart() {
@@ -16,18 +22,11 @@ export function ARRMetricsChart() {
     <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
       <div className="mb-4">
         <h3 className="text-lg font-semibold text-card-foreground">Bar chart</h3>
-        <div className="mt-2 space-y-1 text-xs text-muted-foreground">
-          <p>Eje x: meses</p>
-          <p>Eje Y1: $ New dinero en ventas</p>
-          <p>Eje Y2: $ Net new ARR</p>
-          <p>Eje Y3: $ Expansion ARR</p>
-          <p>Eje 4: $ Churn ARR</p>
-        </div>
       </div>
-      <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={data} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+      <ResponsiveContainer width="100%" height={350}>
+        <LineChart data={data} margin={{ top: 10, right: 20, left: 10, bottom: 20 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.92 0 0)" />
-          <XAxis dataKey="mes" tick={{ fill: "oklch(0.55 0 0)" }} />
+          <XAxis dataKey="mes" tick={{ fill: "oklch(0.55 0 0)", fontSize: 12 }} padding={{ left: 20, right: 20 }} />
           <YAxis tick={{ fill: "oklch(0.55 0 0)" }} />
           <Tooltip
             contentStyle={{
@@ -36,11 +35,16 @@ export function ARRMetricsChart() {
               borderRadius: "0.5rem",
             }}
           />
-          <Legend />
-          <Line type="monotone" dataKey="newDinero" stroke="#ef4444" strokeWidth={2} name="$ New dinero" />
-          <Line type="monotone" dataKey="netNewARR" stroke="#3b82f6" strokeWidth={2} name="$ Net new ARR" />
-          <Line type="monotone" dataKey="expansionARR" stroke="#10b981" strokeWidth={2} name="$ Expansion ARR" />
+          <Legend
+            verticalAlign="top"
+            height={40}
+            iconSize={10}
+            wrapperStyle={{ fontSize: "12px", paddingBottom: "10px" }}
+          />
           <Line type="monotone" dataKey="churnARR" stroke="#f59e0b" strokeWidth={2} name="$ Churn ARR" />
+          <Line type="monotone" dataKey="expansionARR" stroke="#10b981" strokeWidth={2} name="$ Expansion ARR" />
+          <Line type="monotone" dataKey="netNewARR" stroke="#3b82f6" strokeWidth={2} name="$ Net new ARR" />
+          <Line type="monotone" dataKey="newDinero" stroke="#ef4444" strokeWidth={2} name="$ New dinero" />
         </LineChart>
       </ResponsiveContainer>
     </div>
