@@ -4,7 +4,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const spreadsheetId = process.env.GOOGLE_SHEET_ID
-    const sheetName = searchParams.get("sheet") || "Consolidacion Cashflow"
+    const sheetName = searchParams.get("sheet") || "V0"
     const range = `${sheetName}!A:C`
     const apiKey = process.env.GOOGLE_SHEETS_API_KEY
 
