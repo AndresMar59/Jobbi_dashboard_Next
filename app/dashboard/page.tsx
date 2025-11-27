@@ -55,18 +55,13 @@ export default function DashboardMVP() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <CACLTVChart />
-            <div />
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <DollarChurnChart />
             <CACPaybackChart />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <NRRGRRChart />
-            <div />
+            <CACLTVChart />
           </div>
         </main>
       </div>
