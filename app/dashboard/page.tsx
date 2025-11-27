@@ -2,50 +2,13 @@
 
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { Navbar } from "@/components/dashboard/navbar"
-import { KPICard } from "@/components/dashboard/kpi-card"
-import { ChartLine } from "@/components/dashboard/chart-line"
-import { ChartBar } from "@/components/dashboard/chart-bar"
-import { DollarSign, Users, TrendingUp, Ticket } from "lucide-react"
-import { useChartMogulMetrics } from "@/lib/hooks/use-chartmogul"
-import { useGoogleSheets } from "@/lib/hooks/use-google-sheets"
-import { useState, useMemo } from "react"
+import { MVPFilters } from "@/components/dashboard/mvp-filters"
+import { MVPKPICard } from "@/components/dashboard/mvp-kpi-card"
+import { MVPMultiLineBarChart } from "@/components/dashboard/mvp-multi-line-bar-chart"
+import { MVPSingleBarChart } from "@/components/dashboard/mvp-single-bar-chart"
+import { MVPDoubleLineChart } from "@/components/dashboard/mvp-double-line-chart"
 
-export default function DashboardPage() {
-  const { metrics, isLoading: chartMogulLoading, isError: chartMogulError } = useChartMogulMetrics()
-  const { data: expenses, isLoading: sheetsLoading, isError: sheetsError } = useGoogleSheets()
-
-  const [selectedMonth, setSelectedMonth] = useState<number>(0) // 0 = todos los meses
-  const [selectedCategory, setSelectedCategory] = useState<string>("Todas") // "Todas" = todas las categorías
-
-  const categories = useMemo(() => {
-    const unique = Array.from(new Set(expenses.map((e) => e.tipo)))
-    return ["Todas", ...unique]
-  }, [expenses])
-
-  const filteredExpenses = useMemo(() => {
-    return expenses.filter((expense) => {
-      const matchMonth = selectedMonth === 0 || expense.mes === selectedMonth
-      const matchCategory = selectedCategory === "Todas" || expense.tipo === selectedCategory
-      return matchMonth && matchCategory
-    })
-  }, [expenses, selectedMonth, selectedCategory])
-
-  const totalGastos = filteredExpenses.reduce((sum, expense) => sum + expense.costo, 0)
-
-  const gastosPorMes = Array.from({ length: 12 }, (_, i) => {
-    const mes = i + 1
-    const total = filteredExpenses.filter((e) => e.mes === mes).reduce((sum, e) => sum + e.costo, 0)
-    return { mes, total }
-  })
-
-  // Métricas de ChartMogul (si están disponibles)
-  const mrr = metrics?.entries?.[metrics.entries.length - 1]?.mrr || 45231
-  const customers = metrics?.entries?.[metrics.entries.length - 1]?.customers || 2350
-  const ltv = metrics?.entries?.[metrics.entries.length - 1]?.ltv || 3.24
-
-  console.log("[v0] Gastos filtrados:", filteredExpenses.length)
-  console.log("[v0] Total gastos:", totalGastos)
-
+export default function DashboardMVP() {
   return (
     <div className="flex min-h-screen bg-background">
       {/* Sidebar fijo */}
@@ -56,89 +19,32 @@ export default function DashboardPage() {
         <Navbar />
 
         <main className="flex-1 p-6 lg:p-8">
-          {(chartMogulLoading || sheetsLoading) && (
-            <div className="mb-4 p-4 bg-muted rounded-lg text-muted-foreground">Cargando datos...</div>
-          )}
+          <h1 className="text-3xl font-bold mb-8 text-foreground">Dashboard MVP</h1>
 
-          {sheetsError && (
-            <div className="mb-4 p-4 bg-destructive/10 rounded-lg text-destructive">
-              <strong>Error de Google Sheets:</strong> El Sheet está privado. Compártelo con "Cualquier persona con el
-              enlace" para ver los datos.
-            </div>
-          )}
+          {/* Filtros superiores */}
+          <MVPFilters />
 
-          <div className="mb-6 p-6 rounded-lg border border-border bg-card">
-            <h3 className="text-lg font-semibold mb-4">Filtros de Gastos</h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Filtro de Categoría */}
-              <div>
-                <label className="block text-sm font-medium mb-2">Categoría</label>
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground"
-                >
-                  {categories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Filtro de Mes */}
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Mes:{" "}
-                  {selectedMonth === 0
-                    ? "Todos"
-                    : new Date(2024, selectedMonth - 1).toLocaleString("es", { month: "long" })}
-                </label>
-                <input
-                  type="range"
-                  min="0"
-                  max="12"
-                  value={selectedMonth}
-                  onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                  className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer slider"
-                />
-                <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                  <span>Todos</span>
-                  <span>Ene</span>
-                  <span>Mar</span>
-                  <span>Jun</span>
-                  <span>Sep</span>
-                  <span>Dic</span>
-                </div>
-              </div>
-            </div>
+          {/* KPIs principales */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <MVPKPICard title="ARPU (Revenue per clientes)" value="$125.50" />
+            <MVPKPICard title="CAC RATIO" value="3.2x" />
+            <MVPKPICard title="# Company Activos" value="847" />
+            <MVPKPICard title="Margen Ganancia" value="42%" />
           </div>
 
-          {/* Sección de KPIs */}
+          {/* KPIs secundarios */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <KPICard
-              title="Gastos Totales"
-              value={`$${totalGastos.toLocaleString()}`}
-              change="+20.1%"
-              trend="up"
-              icon={DollarSign}
-            />
-            <KPICard
-              title="Clientes Activos"
-              value={customers.toLocaleString()}
-              change="+15.3%"
-              trend="up"
-              icon={Users}
-            />
-            <KPICard title="MRR" value={`$${mrr.toLocaleString()}`} change="+2.5%" trend="up" icon={TrendingUp} />
-            <KPICard title="Tickets Abiertos" value="12" change="-8.2%" trend="down" icon={Ticket} />
+            <MVPKPICard title="Expanciones" value="23" />
+            <MVPKPICard title="Downgrade" value="5" />
+            <MVPKPICard title="% Sobre company activos" value="15.3%" />
+            <MVPKPICard title="% MRR" value="8.7%" />
           </div>
 
           {/* Gráficos */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <ChartLine data={gastosPorMes} />
-            <ChartBar data={filteredExpenses} />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <MVPMultiLineBarChart />
+            <MVPSingleBarChart />
+            <MVPDoubleLineChart />
           </div>
         </main>
       </div>
