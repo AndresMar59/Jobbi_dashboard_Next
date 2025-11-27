@@ -16,18 +16,11 @@ export function ARRMetricsChart() {
     <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
       <div className="mb-4">
         <h3 className="text-lg font-semibold text-card-foreground">Bar chart</h3>
-        <div className="mt-2 space-y-1 text-xs text-muted-foreground">
-          <p>Eje x: meses</p>
-          <p>Eje Y1: $ New dinero en ventas</p>
-          <p>Eje Y2: $ Net new ARR</p>
-          <p>Eje Y3: $ Expansion ARR</p>
-          <p>Eje 4: $ Churn ARR</p>
-        </div>
       </div>
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={data} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.92 0 0)" />
-          <XAxis dataKey="mes" tick={{ fill: "oklch(0.55 0 0)" }} />
+          <XAxis dataKey="mes" hide={true} />
           <YAxis tick={{ fill: "oklch(0.55 0 0)" }} />
           <Tooltip
             contentStyle={{
@@ -36,7 +29,7 @@ export function ARRMetricsChart() {
               borderRadius: "0.5rem",
             }}
           />
-          <Legend />
+          <Legend verticalAlign="top" height={36} />
           <Line type="monotone" dataKey="newDinero" stroke="#ef4444" strokeWidth={2} name="$ New dinero" />
           <Line type="monotone" dataKey="netNewARR" stroke="#3b82f6" strokeWidth={2} name="$ Net new ARR" />
           <Line type="monotone" dataKey="expansionARR" stroke="#10b981" strokeWidth={2} name="$ Expansion ARR" />
