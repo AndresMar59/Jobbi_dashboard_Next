@@ -11,6 +11,9 @@ import { DollarChurnChart } from "@/components/dashboard/dollar-churn-chart"
 import { CACPaybackChart } from "@/components/dashboard/cac-payback-chart"
 import { NRRGRRChart } from "@/components/dashboard/nrr-grr-chart"
 import { ARPAClientesChart } from "@/components/dashboard/arpa-clientes-chart"
+import { MRR2025Chart } from "@/components/dashboard/mrr-2025-chart"
+import { TicketPromedioChart } from "@/components/dashboard/ticket-promedio-chart"
+import { DCPAMRPAChart } from "@/components/dashboard/dcpa-mrpa-chart"
 import { DollarSign, Users, TrendingUp, TrendingDown, Activity, Percent } from "lucide-react"
 
 export default function DashboardMVP() {
@@ -67,7 +70,12 @@ export default function DashboardMVP() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <ARPAClientesChart />
-            <div />
+            <MRR2025Chart />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <TicketPromedioChart />
+            <DCPAMRPAChart />
           </div>
         </main>
       </div>
