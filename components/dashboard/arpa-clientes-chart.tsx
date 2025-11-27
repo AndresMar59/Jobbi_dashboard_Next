@@ -1,6 +1,6 @@
 "use client"
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
 
 const data = [
   { mes: "Ene", clientes: 20, arpa: 20 },
@@ -20,17 +20,20 @@ const data = [
 export function ARPAClientesChart() {
   return (
     <div className="rounded-lg border bg-card p-6">
-      <h3 className="text-lg font-semibold mb-2">ARPA vs # clientes activos</h3>
-      <p className="text-sm text-muted-foreground mb-1">Eje x: Mes</p>
-      <p className="text-sm text-muted-foreground mb-1">Eje Y: # clientes activos</p>
-      <p className="text-sm text-muted-foreground mb-4">Eje 2Y: ARPA $</p>
+      <h3 className="text-lg font-semibold mb-4">ARPA vs # clientes activos</h3>
 
-      <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 30 }}>
+      <ResponsiveContainer width="100%" height={320}>
+        <LineChart data={data} margin={{ top: 40, right: 30, left: 20, bottom: 30 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-          <XAxis dataKey="mes" stroke="hsl(var(--foreground))" tickMargin={10} interval={0} />
-          <YAxis yAxisId="left" stroke="hsl(var(--foreground))" />
-          <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--foreground))" />
+          <XAxis dataKey="mes" stroke="hsl(var(--foreground))" tickMargin={10} interval={0} tick={{ fontSize: 12 }} />
+          <YAxis yAxisId="left" stroke="hsl(var(--foreground))" tick={{ fontSize: 12 }} />
+          <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--foreground))" tick={{ fontSize: 12 }} />
+          <Legend
+            verticalAlign="top"
+            height={36}
+            iconSize={10}
+            wrapperStyle={{ fontSize: "12px", paddingBottom: "10px" }}
+          />
           <Tooltip
             contentStyle={{
               backgroundColor: "hsl(var(--card))",
