@@ -4,7 +4,8 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const spreadsheetId = process.env.GOOGLE_SHEET_ID
-    const range = searchParams.get("range") || "A:C"
+    const sheetName = searchParams.get("sheet") || "Consolidacion Cashflow"
+    const range = `${sheetName}!A:C`
     const apiKey = process.env.GOOGLE_SHEETS_API_KEY
 
     if (!apiKey || !spreadsheetId) {
@@ -35,24 +36,28 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "No data found in sheet" }, { status: 404 })
     }
 
-    // Parsear los datos
     const [headers, ...rows] = data.values
     console.log("[v0] Headers:", headers)
-    console.log("[v0] First few rows:", rows.slice(0, 3))
+    console.log("[v0] First few rows:", rows.slice(0, 5))
 
-    // Convertir a formato estructurado
-    const expenses = rows.map((row: string[]) => ({
-      tipo: row[0] || "",
-      mes: Number.parseInt(row[1]) || 0,
-      costo: Number.parseFloat(row[2]?.replace(/[$,]/g, "") || "0"),
-    }))
+    const expenses = rows
+      .filter((row: string[]) => row[0] && row[1] && row[2]) // Solo filas con los 3 campos
+      .map((row: string[]) => {
+        const costoStr = row[2]?.replace(/[$,]/g, "") || "0"
+        return {
+          tipo: row[0].trim(),
+          mes: Number.parseInt(row[1]) || 0,
+          costo: Number.parseFloat(costoStr) || 0,
+        }
+      })
 
     console.log("[v0] Processed expenses:", expenses.slice(0, 5))
+    console.log("[v0] Total expenses found:", expenses.length)
 
     return NextResponse.json({
       headers,
       expenses,
-      raw: data.values,
+      totalExpenses: expenses.reduce((sum, exp) => sum + exp.costo, 0),
     })
   } catch (error) {
     console.error("[v0] Google Sheets API error:", error)
