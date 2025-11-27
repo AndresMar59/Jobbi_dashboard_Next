@@ -4,7 +4,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const spreadsheetId = process.env.GOOGLE_SHEET_ID
-    const range = searchParams.get("range") || "Sheet1!A:C"
+    const range = searchParams.get("range") || "A:C"
     const apiKey = process.env.GOOGLE_SHEETS_API_KEY
 
     if (!apiKey || !spreadsheetId) {
@@ -13,8 +13,9 @@ export async function GET(request: Request) {
 
     console.log("[v0] Fetching Google Sheets data:", { spreadsheetId, range })
 
+    const encodedRange = encodeURIComponent(range)
     const response = await fetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}?key=${apiKey}`,
+      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodedRange}?key=${apiKey}`,
       {
         headers: {
           "Content-Type": "application/json",
