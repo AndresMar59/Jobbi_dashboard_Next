@@ -17,11 +17,11 @@ export function ARRMetricsChart() {
       <div className="mb-4">
         <h3 className="text-lg font-semibold text-card-foreground">Bar chart</h3>
       </div>
-      <ResponsiveContainer width="100%" height={380}>
-        <LineChart data={data} margin={{ top: 10, right: 30, left: 10, bottom: 30 }}>
+      <ResponsiveContainer width="100%" height={350}>
+        <LineChart data={data} margin={{ top: 10, right: 20, left: 10, bottom: 20 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.92 0 0)" />
-          <XAxis dataKey="mes" tick={{ fill: "oklch(0.55 0 0)", fontSize: 13 }} tickMargin={10} interval={0} />
-          <YAxis tick={{ fill: "oklch(0.55 0 0)", fontSize: 12 }} />
+          <XAxis dataKey="mes" tick={{ fill: "oklch(0.55 0 0)", fontSize: 12 }} padding={{ left: 20, right: 20 }} />
+          <YAxis tick={{ fill: "oklch(0.55 0 0)" }} />
           <Tooltip
             contentStyle={{
               backgroundColor: "oklch(1 0 0)",

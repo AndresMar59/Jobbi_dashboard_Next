@@ -22,17 +22,12 @@ export function CACLTVChart() {
     <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
       <div className="mb-4">
         <h3 className="text-lg font-semibold text-card-foreground">Double Line Graph</h3>
-        <div className="mt-2 space-y-1 text-xs text-muted-foreground">
-          <p>Línea 1: CAC $</p>
-          <p>Línea 2: LTV $</p>
-          <p>Línea 3: LTV/CAC RATIO</p>
-        </div>
       </div>
-      <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={data} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+      <ResponsiveContainer width="100%" height={350}>
+        <LineChart data={data} margin={{ top: 40, right: 20, left: 10, bottom: 30 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.92 0 0)" />
-          <XAxis dataKey="mes" tick={{ fill: "oklch(0.55 0 0)" }} />
-          <YAxis tick={{ fill: "oklch(0.55 0 0)" }} />
+          <XAxis dataKey="mes" tick={{ fill: "oklch(0.55 0 0)", fontSize: 12 }} tickMargin={10} interval={0} />
+          <YAxis tick={{ fill: "oklch(0.55 0 0)", fontSize: 12 }} />
           <Tooltip
             contentStyle={{
               backgroundColor: "oklch(1 0 0)",
@@ -40,7 +35,12 @@ export function CACLTVChart() {
               borderRadius: "0.5rem",
             }}
           />
-          <Legend />
+          <Legend
+            verticalAlign="top"
+            height={36}
+            iconSize={10}
+            wrapperStyle={{ fontSize: "12px", paddingBottom: "10px" }}
+          />
           <Line type="monotone" dataKey="cac" stroke="#3b82f6" strokeWidth={2} name="CAC $" />
           <Line type="monotone" dataKey="ltv" stroke="#10b981" strokeWidth={2} name="LTV $" />
           <Line type="monotone" dataKey="ratio" stroke="#ef4444" strokeWidth={2} name="LTV/CAC RATIO" />
