@@ -46,9 +46,12 @@ export default function DashboardMVP() {
             <KPICard title="% MRR" value="8.7%" change="+4.5% vs mes anterior" icon={Percent} trend="up" />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <ARRMetricsChart />
             <MarginGananciaChart />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <CACLTVChart />
           </div>
         </main>
