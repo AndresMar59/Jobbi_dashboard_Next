@@ -3,10 +3,18 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
 
 const data = [
-  { categoria: "A", conHT: 420, sinHT: 380 },
-  { categoria: "B", conHT: 240, sinHT: 230 },
-  { categoria: "C", conHT: 420, sinHT: 380 },
-  { categoria: "D", conHT: 160, sinHT: 50 },
+  { mes: "Ene", conHT: 420, sinHT: 380 },
+  { mes: "Feb", conHT: 380, sinHT: 350 },
+  { mes: "Mar", conHT: 240, sinHT: 230 },
+  { mes: "Abr", conHT: 280, sinHT: 250 },
+  { mes: "May", conHT: 420, sinHT: 380 },
+  { mes: "Jun", conHT: 390, sinHT: 370 },
+  { mes: "Jul", conHT: 310, sinHT: 290 },
+  { mes: "Ago", conHT: 350, sinHT: 320 },
+  { mes: "Sep", conHT: 420, sinHT: 380 },
+  { mes: "Oct", conHT: 400, sinHT: 360 },
+  { mes: "Nov", conHT: 160, sinHT: 50 },
+  { mes: "Dic", conHT: 180, sinHT: 70 },
 ]
 
 export function DCPAMRPAChart() {
@@ -18,7 +26,7 @@ export function DCPAMRPAChart() {
         <BarChart data={data} margin={{ top: 40, right: 30, left: 20, bottom: 30 }}>
           <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
           <XAxis
-            dataKey="categoria"
+            dataKey="mes"
             className="text-xs"
             tickMargin={10}
             interval={0}
