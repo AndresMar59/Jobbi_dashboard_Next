@@ -17,10 +17,10 @@ export function ARRMetricsChart() {
       <div className="mb-4">
         <h3 className="text-lg font-semibold text-card-foreground">Bar chart</h3>
       </div>
-      <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={data} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+      <ResponsiveContainer width="100%" height={350}>
+        <LineChart data={data} margin={{ top: 10, right: 20, left: 10, bottom: 20 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.92 0 0)" />
-          <XAxis dataKey="mes" hide={true} />
+          <XAxis dataKey="mes" tick={{ fill: "oklch(0.55 0 0)", fontSize: 12 }} padding={{ left: 20, right: 20 }} />
           <YAxis tick={{ fill: "oklch(0.55 0 0)" }} />
           <Tooltip
             contentStyle={{
@@ -29,11 +29,16 @@ export function ARRMetricsChart() {
               borderRadius: "0.5rem",
             }}
           />
-          <Legend verticalAlign="top" height={36} />
-          <Line type="monotone" dataKey="newDinero" stroke="#ef4444" strokeWidth={2} name="$ New dinero" />
-          <Line type="monotone" dataKey="netNewARR" stroke="#3b82f6" strokeWidth={2} name="$ Net new ARR" />
-          <Line type="monotone" dataKey="expansionARR" stroke="#10b981" strokeWidth={2} name="$ Expansion ARR" />
+          <Legend
+            verticalAlign="top"
+            height={40}
+            iconSize={10}
+            wrapperStyle={{ fontSize: "12px", paddingBottom: "10px" }}
+          />
           <Line type="monotone" dataKey="churnARR" stroke="#f59e0b" strokeWidth={2} name="$ Churn ARR" />
+          <Line type="monotone" dataKey="expansionARR" stroke="#10b981" strokeWidth={2} name="$ Expansion ARR" />
+          <Line type="monotone" dataKey="netNewARR" stroke="#3b82f6" strokeWidth={2} name="$ Net new ARR" />
+          <Line type="monotone" dataKey="newDinero" stroke="#ef4444" strokeWidth={2} name="$ New dinero" />
         </LineChart>
       </ResponsiveContainer>
     </div>
