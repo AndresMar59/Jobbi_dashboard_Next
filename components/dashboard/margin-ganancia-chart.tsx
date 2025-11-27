@@ -21,11 +21,7 @@ export function MarginGananciaChart() {
   return (
     <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
       <div className="mb-4">
-        <h3 className="text-lg font-semibold text-card-foreground">Bar chart</h3>
-        <div className="mt-2 space-y-1 text-xs text-muted-foreground">
-          <p>Eje x: Mes</p>
-          <p>Eje Y: $ Margen de ganancia</p>
-        </div>
+        <h3 className="text-lg font-semibold text-card-foreground">$ Margen de ganancia</h3>
       </div>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={data} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
