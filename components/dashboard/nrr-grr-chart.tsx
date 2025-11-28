@@ -20,8 +20,10 @@ const data = [
 export function NRRGRRChart() {
   return (
     <div className="rounded-lg border bg-card p-6">
-      <h3 className="text-lg font-semibold mb-2">Double Line Graph</h3>
-      <p className="text-sm text-muted-foreground mb-4">NRR vs GRR</p>
+      <h3 className="text-lg font-semibold mb-2">NRR vs GRR</h3>
+
+            {/*Para poner las etiquetas*/}
+    {/*  <p className="text-sm text-muted-foreground mb-4">NRR vs GRR</p> */}
 
       <ResponsiveContainer width="100%" height={350}>
         <LineChart data={data} margin={{ top: 20, right: 20, left: 0, bottom: 30 }}>

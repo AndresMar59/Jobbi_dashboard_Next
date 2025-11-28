@@ -21,7 +21,7 @@ export function CACLTVChart() {
   return (
     <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
       <div className="mb-4">
-        <h3 className="text-lg font-semibold text-card-foreground">Double Line Graph</h3>
+        <h3 className="text-lg font-semibold text-card-foreground">CAC VS LTV</h3>
       </div>
       <ResponsiveContainer width="100%" height={350}>
         <LineChart data={data} margin={{ top: 40, right: 20, left: 10, bottom: 30 }}>

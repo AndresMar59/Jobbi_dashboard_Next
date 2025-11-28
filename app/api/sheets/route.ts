@@ -57,7 +57,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       headers,
       expenses,
-      totalExpenses: expenses.reduce((sum, exp) => sum + exp.costo, 0),
+      totalExpenses: expenses.reduce((sum: number, exp: { costo: number }) => sum + exp.costo, 0),
     })
   } catch (error) {
     console.error("[v0] Google Sheets API error:", error)

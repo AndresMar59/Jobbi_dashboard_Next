@@ -59,16 +59,18 @@ export function TicketPromedioChart() {
       </ResponsiveContainer>
 
       <div className="mt-4 space-y-2">
-        <input
-          type="text"
-          placeholder="Tipo de empresa..."
-          className="w-full px-4 py-2 border border-border rounded-md bg-background text-foreground"
-        />
-        <input
-          type="text"
-          placeholder="Tipo de plan"
-          className="w-full px-4 py-2 border border-border rounded-md bg-background text-foreground"
-        />
+        <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <option>Tipo de empresa...</option>
+          <option>Enterprise</option>
+          <option>SMB</option>
+          <option>Startup</option>
+        </select>
+        <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <option>Tipo de plan</option>
+          <option>Básico</option>
+          <option>Pro</option>
+          <option>Enterprise</option>
+        </select>
       </div>
     </div>
   )
