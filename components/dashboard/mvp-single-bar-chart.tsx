@@ -39,7 +39,7 @@ export function MVPSingleBarChart() {
               borderRadius: "8px",
             }}
           />
-          <Bar dataKey="margen" fill="#3b82f6" name="Margen de ganancia" />
+          <Bar dataKey="margen" fill="#09124F" name="Margen de ganancia" />
         </BarChart>
       </ResponsiveContainer>
     </div>

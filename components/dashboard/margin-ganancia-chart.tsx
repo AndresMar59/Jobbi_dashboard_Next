@@ -35,7 +35,7 @@ export function MarginGananciaChart() {
               borderRadius: "0.5rem",
             }}
           />
-          <Bar dataKey="margin" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="margin" fill="#09124F" radius={[4, 4, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>

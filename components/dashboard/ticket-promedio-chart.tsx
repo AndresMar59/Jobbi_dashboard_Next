@@ -46,7 +46,7 @@ export function TicketPromedioChart() {
             iconSize={10}
             wrapperStyle={{ fontSize: "12px", paddingBottom: "10px" }}
           />
-          <Line type="monotone" dataKey="cac" stroke="#3b82f6" strokeWidth={2} name="CAC" dot={{ r: 3 }} />
+          <Line type="monotone" dataKey="cac" stroke="#09124F" strokeWidth={2} name="CAC" dot={{ r: 3 }} />
           <Line
             type="monotone"
             dataKey="ticketPromedio"

@@ -46,9 +46,9 @@ export function DollarChurnChart() {
           <Line
             type="monotone"
             dataKey="revenueChurn"
-            stroke="#3b82f6"
+            stroke="#09124F"
             strokeWidth={2}
-            dot={{ fill: "#3b82f6", r: 4 }}
+            dot={{ fill: "#09124F", r: 4 }}
             name="$ Revenue churn"
           />
           <Line

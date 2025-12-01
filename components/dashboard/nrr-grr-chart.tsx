@@ -22,8 +22,8 @@ export function NRRGRRChart() {
     <div className="rounded-lg border bg-card p-6">
       <h3 className="text-lg font-semibold mb-2">NRR vs GRR</h3>
 
-            {/*Para poner las etiquetas*/}
-    {/*  <p className="text-sm text-muted-foreground mb-4">NRR vs GRR</p> */}
+      {/*Para poner las etiquetas*/}
+      {/*  <p className="text-sm text-muted-foreground mb-4">NRR vs GRR</p> */}
 
       <ResponsiveContainer width="100%" height={350}>
         <LineChart data={data} margin={{ top: 20, right: 20, left: 0, bottom: 30 }}>
@@ -49,9 +49,9 @@ export function NRRGRRChart() {
           <Line
             type="monotone"
             dataKey="grr"
-            stroke="#3b82f6"
+            stroke="#09124F"
             strokeWidth={2}
-            dot={{ fill: "#3b82f6", r: 4 }}
+            dot={{ fill: "#09124F", r: 4 }}
             name="GRR %"
           />
           <Line

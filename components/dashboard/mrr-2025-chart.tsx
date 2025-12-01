@@ -46,7 +46,7 @@ export function MRR2025Chart() {
             iconSize={10}
             wrapperStyle={{ fontSize: "12px", paddingBottom: "10px" }}
           />
-          <Line type="monotone" dataKey="newMRR" stroke="#3b82f6" strokeWidth={2} name="$ New MRR" dot={{ r: 3 }} />
+          <Line type="monotone" dataKey="newMRR" stroke="#09124F" strokeWidth={2} name="$ New MRR" dot={{ r: 3 }} />
           <Line
             type="monotone"
             dataKey="netNewMRR"

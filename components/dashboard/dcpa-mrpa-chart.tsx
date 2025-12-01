@@ -46,7 +46,7 @@ export function DCPAMRPAChart() {
             iconSize={10}
             wrapperStyle={{ fontSize: "12px", paddingBottom: "10px" }}
           />
-          <Bar dataKey="conHT" fill="#3b82f6" name="DCPA" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="conHT" fill="#09124F" name="DCPA" radius={[4, 4, 0, 0]} />
           <Bar dataKey="sinHT" fill="#ef4444" name="MRPA" radius={[4, 4, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>

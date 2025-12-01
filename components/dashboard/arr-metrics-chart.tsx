@@ -43,7 +43,7 @@ export function ARRMetricsChart() {
           />
           <Line type="monotone" dataKey="churnARR" stroke="#f59e0b" strokeWidth={2} name="$ Churn ARR" />
           <Line type="monotone" dataKey="expansionARR" stroke="#10b981" strokeWidth={2} name="$ Expansion ARR" />
-          <Line type="monotone" dataKey="netNewARR" stroke="#3b82f6" strokeWidth={2} name="$ Net new ARR" />
+          <Line type="monotone" dataKey="netNewARR" stroke="#09124F" strokeWidth={2} name="$ Net new ARR" />
           <Line type="monotone" dataKey="newDinero" stroke="#ef4444" strokeWidth={2} name="$ New dinero" />
         </LineChart>
       </ResponsiveContainer>

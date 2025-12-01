@@ -41,7 +41,7 @@ export function CACLTVChart() {
             iconSize={10}
             wrapperStyle={{ fontSize: "12px", paddingBottom: "10px" }}
           />
-          <Line type="monotone" dataKey="cac" stroke="#3b82f6" strokeWidth={2} name="CAC $" />
+          <Line type="monotone" dataKey="cac" stroke="#09124F" strokeWidth={2} name="CAC $" />
           <Line type="monotone" dataKey="ltv" stroke="#10b981" strokeWidth={2} name="LTV $" />
           <Line type="monotone" dataKey="ratio" stroke="#ef4444" strokeWidth={2} name="LTV/CAC RATIO" />
         </LineChart>

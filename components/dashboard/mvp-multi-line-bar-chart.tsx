@@ -38,7 +38,7 @@ export function MVPMultiLineBarChart() {
           />
           <Legend />
           <Bar dataKey="newDinero" fill="#10b981" name="New Dinero" />
-          <Bar dataKey="netNewARR" fill="#3b82f6" name="Net New ARR" />
+          <Bar dataKey="netNewARR" fill="#09124F" name="Net New ARR" />
           <Bar dataKey="expansionARR" fill="#06b6d4" name="Expansion ARR" />
           <Bar dataKey="churnARR" fill="#ef4444" name="Churn ARR" />
         </BarChart>

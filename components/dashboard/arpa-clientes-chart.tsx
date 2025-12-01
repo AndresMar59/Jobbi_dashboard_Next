@@ -45,7 +45,7 @@ export function ARPAClientesChart() {
             yAxisId="left"
             type="monotone"
             dataKey="clientes"
-            stroke="#3b82f6"
+            stroke="#09124F"
             strokeWidth={2}
             dot={{ r: 4 }}
             name="# clientes activos"
