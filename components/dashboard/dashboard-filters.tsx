@@ -4,18 +4,38 @@ import { useState } from "react"
 
 export function DashboardFilters() {
   const [selectedMonth, setSelectedMonth] = useState("Todos")
+  const [selectedYear, setSelectedYear] = useState("Todas")
+  const [selectedPlan, setSelectedPlan] = useState("Tipo de plan")
+
   const months = ["Todos", "Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
+  const years = ["Todas", "2023", "2024"]
+  const plans = ["Tipo de plan", "Básico", "Pro", "Enterprise"]
 
   return (
     <div className="mb-6 flex flex-wrap gap-3">
-      <select className="h-10 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-muted transition-colors">
-       <option> Año </option> 
+      <select
+        value={selectedYear}
+        onChange={(e) => setSelectedYear(e.target.value)}
+        className="h-10 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
+      >
+        {years.map((year) => (
+          <option key={year} value={year}>
+            {year}
+          </option>
+        ))}
       </select>
 
-      {/* Filtro de fechas */}
       <div className="flex items-center gap-2">
-        <select className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-          <option>Plan</option>
+        <select
+          value={selectedPlan}
+          onChange={(e) => setSelectedPlan(e.target.value)}
+          className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        >
+          {plans.map((plan) => (
+            <option key={plan} value={plan}>
+              {plan}
+            </option>
+          ))}
         </select>
       </div>
 
