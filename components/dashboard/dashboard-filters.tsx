@@ -4,11 +4,11 @@ import { useState } from "react"
 
 export function DashboardFilters() {
   const [selectedMonth, setSelectedMonth] = useState("Todos")
-  const [selectedYear, setSelectedYear] = useState("Todas")
+  const [selectedYear, setSelectedYear] = useState("Año")
   const [selectedPlan, setSelectedPlan] = useState("Tipo de plan")
 
   const months = ["Todos", "Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
-  const years = ["Todas", "2023", "2024"]
+  const years = ["Año", "2025", "2026"]
   const plans = ["Tipo de plan", "Básico", "Pro", "Enterprise"]
 
   return (
