@@ -16,7 +16,7 @@ export function DashboardFilters() {
       <select
         value={selectedYear}
         onChange={(e) => setSelectedYear(e.target.value)}
-        className="h-10 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
+        className="h-10 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors"
       >
         {years.map((year) => (
           <option key={year} value={year}>
@@ -29,7 +29,7 @@ export function DashboardFilters() {
         <select
           value={selectedPlan}
           onChange={(e) => setSelectedPlan(e.target.value)}
-          className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
           {plans.map((plan) => (
             <option key={plan} value={plan}>
