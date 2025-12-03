@@ -25,17 +25,17 @@ export function Sidebar() {
           
           {/* Logo */}
           <div className="flex h-16 items-center border-b border-sidebar-border px-6">
-            <Link href="/" className="flex items-center gap-2">
+            <Link href="https://jobbi.me/landing/jobber" className="flex items-center gap-2">
           {/* Contenedor del logo */}
-          <div className="flex h-8 w-8 items-center justify-center overflow-hidden">
-          <Image 
-            src="/jobbi_png.jpg"   // Ruta en /public
-            alt="Jobbi Logo"
-            width={38}
-            height={38}
-            className="rounded-lg"
-                />
-            </div>
+         <div className="relative h-8 w-8 overflow-hidden rounded-lg">
+          <Image
+    src="/jobbi_png.png"
+    alt="Jobbi Logo"
+    fill
+    sizes="32px"
+    className="object-cover"
+  />
+          </div>
     {/* Texto */}
     <span className="text-lg font-semibold text-sidebar-foreground">
       Jobbi Analytics
@@ -71,7 +71,7 @@ export function Sidebar() {
               
               {/* Avatar / Iniciales */}
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-sidebar-accent">
-                <span className="text-sm font-semibold text-sidebar-accent-foreground">AM</span>
+                <span className="text-sm font-semibold text-sidebar-accent-foreground">JB</span>
               </div>
 
               {/* Nombre + Email */}

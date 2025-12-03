@@ -24,28 +24,64 @@ export function CACLTVChart() {
         <h3 className="text-lg font-semibold text-card-foreground">CAC VS LTV</h3>
       </div>
       <ResponsiveContainer width="100%" height={350}>
-        <LineChart data={data} margin={{ top: 40, right: 20, left: 10, bottom: 30 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.92 0 0)" />
-          <XAxis dataKey="mes" tick={{ fill: "oklch(0.55 0 0)", fontSize: 12 }} tickMargin={10} interval={0} />
-          <YAxis tick={{ fill: "oklch(0.55 0 0)", fontSize: 12 }} />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: "oklch(1 0 0)",
-              border: "1px solid oklch(0.92 0 0)",
-              borderRadius: "0.5rem",
-            }}
-          />
-          <Legend
-            verticalAlign="top"
-            height={36}
-            iconSize={10}
-            wrapperStyle={{ fontSize: "12px", paddingBottom: "10px" }}
-          />
-          <Line type="monotone" dataKey="cac" stroke="#09124F" strokeWidth={2} name="CAC $" />
-          <Line type="monotone" dataKey="ltv" stroke="#10b981" strokeWidth={2} name="LTV $" />
-          <Line type="monotone" dataKey="ratio" stroke="#ef4444" strokeWidth={2} name="LTV/CAC RATIO" />
-        </LineChart>
-      </ResponsiveContainer>
+  <LineChart data={data} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
+    
+    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+
+    {/* Eje X */}
+    <XAxis
+      dataKey="mes"
+      stroke="#6b7280"
+      tickMargin={10}
+      padding={{ left: 20, right: 20 }}
+      interval={0}
+      height={40}
+      tick={{ fontSize: 12 }}
+    />
+
+    {/* EJE IZQUIERDO ($): CAC + LTV */}
+    <YAxis
+      yAxisId="money"
+      stroke="#6b7280"
+      width={30}
+      tick={{ fontSize: 12 }}
+tickFormatter={(v) => {
+  if (Math.abs(v) >= 1_000_000) return `$${Math.round(v / 1_000_000)}M`
+  if (Math.abs(v) >= 1_000) return `$${Math.round(v / 1_000)}k`
+  return `$${v}`
+}}    />
+
+    {/* EJE DERECHO (RATIO): LTV/CAC */}
+    <YAxis
+      yAxisId="ratio"
+      orientation="right"
+      stroke="#6b7280 "
+      width={30}
+      tick={{ fontSize: 12 }}
+      strokeDasharray="4 4"
+  tickFormatter={(v) => `${v.toFixed(1)}%`}
+    />
+
+    {/* Tooltip */}
+    <Tooltip
+      contentStyle={{
+        backgroundColor: "#fff",
+        border: "1px solid #e5e7eb",
+        borderRadius: "6px",
+      }}
+    />
+
+    {/* Leyenda */}
+    <Legend verticalAlign="top" height={30} iconSize={10} wrapperStyle={{ fontSize: "12px", paddingBottom: "10px" }}
+/>
+
+    {/* LÍNEAS */}
+    <Line yAxisId="money" type="monotone" dataKey="cac" stroke="#09124F" strokeWidth={2} name="CAC $" />
+    <Line yAxisId="money" type="monotone" dataKey="ltv" stroke="#3330f3ff" strokeWidth={2} name="LTV $" />
+    <Line yAxisId="ratio" type="monotone" dataKey="ratio" stroke="#6f06acff" strokeWidth={2} name="LTV/CAC Ratio %" />
+  
+  </LineChart>
+</ResponsiveContainer>
     </div>
   )
 }

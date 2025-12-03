@@ -20,52 +20,50 @@ const data = [
 export function TicketPromedioChart() {
   return (
     <div className="bg-card rounded-lg shadow p-6">
-      <h3 className="text-lg font-semibold mb-4">Ticket promedio PA</h3>
+      <h3 className="text-lg font-semibold text-card-foreground mb-4">Ticket promedio PA</h3>
 
       <ResponsiveContainer width="100%" height={350}>
-        <LineChart data={data} margin={{ top: 40, right: 30, left: 20, bottom: 30 }}>
-          <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-          <XAxis
-            dataKey="mes"
-            className="text-xs"
-            tickMargin={10}
-            interval={0}
-            tick={{ fill: "hsl(var(--foreground))" }}
+        <LineChart data={data} margin={{ top: 10, right: 20, left: 10, bottom: 20 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <XAxis dataKey="mes" stroke="#6b7280" tickMargin={10} interval={0} tick={{ fontSize: 12 }} height={40} padding={{ left: 20, right: 20 }}
           />
-          <YAxis className="text-xs" tick={{ fill: "hsl(var(--foreground))" }} />
+          <YAxis stroke="#6b7280" tick={{ fontSize: 12 }} tickFormatter={(v) => {
+  if (Math.abs(v) >= 1_000_000) return `$${Math.round(v / 1_000_000)}M`
+  if (Math.abs(v) >= 1_000) return `$${Math.round(v / 1_000)}k`
+  return `$${v}` }} width={30}/>
+          
           <Tooltip
             contentStyle={{
-              backgroundColor: "hsl(var(--card))",
-              border: "1px solid hsl(var(--border))",
+              backgroundColor: "White",
+              border: "1px solid #e5e7eb",
               borderRadius: "6px",
             }}
           />
           <Legend
             verticalAlign="top"
-            height={36}
+            height={30}
             iconSize={10}
             wrapperStyle={{ fontSize: "12px", paddingBottom: "10px" }}
           />
-          <Line type="monotone" dataKey="cac" stroke="#09124F" strokeWidth={2} name="CAC" dot={{ r: 3 }} />
+          <Line type="monotone" dataKey="cac" stroke="#09124F" strokeWidth={2} name="$ CAC" />
           <Line
             type="monotone"
             dataKey="ticketPromedio"
-            stroke="#ef4444"
+            stroke="#474194ff"
             strokeWidth={2}
-            name="Ticket Promedio"
-            dot={{ r: 3 }}
+            name="$ Ticket Promedio"
           />
         </LineChart>
       </ResponsiveContainer>
 
       <div className="mt-4 space-y-2">
-        <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-          <option>Tipo de empresa...</option>
+        <select className="w-full h-10 rounded-md border border-input bg-muted/30 px-3 py-2 text-sm font-medium transition-colors text-muted-foreground">
+          <option>Tipo de empresa</option>
           <option>Enterprise</option>
           <option>SMB</option>
           <option>Startup</option>
         </select>
-        <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        <select className="w-full h-10 rounded-md border border-input bg-muted/30 px-3 py-2 text-sm font-medium transition-colors text-muted-foreground">
           <option>Tipo de plan</option>
           <option>Básico</option>
           <option>Pro</option>

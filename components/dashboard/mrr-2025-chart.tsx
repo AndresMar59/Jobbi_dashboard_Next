@@ -19,41 +19,37 @@ const data = [
 
 export function MRR2025Chart() {
   return (
-    <div className="bg-card rounded-lg shadow p-6">
-      <h3 className="text-lg font-semibold mb-4">MRR 2025</h3>
+    <div className="rounded-lg border bg-card p-6">
+      <h3 className="text-lg font-semibold text-card-foreground mb-4">MRR 2026</h3>
 
       <ResponsiveContainer width="100%" height={350}>
-        <LineChart data={data} margin={{ top: 40, right: 30, left: 20, bottom: 30 }}>
-          <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-          <XAxis
-            dataKey="mes"
-            className="text-xs"
-            tickMargin={10}
-            interval={0}
-            tick={{ fill: "hsl(var(--foreground))" }}
-          />
-          <YAxis className="text-xs" tick={{ fill: "hsl(var(--foreground))" }} />
+        <LineChart data={data} margin={{ top: 10, right: 20, left: 10, bottom: 20 }}>
+          <CartesianGrid strokeDasharray="3 3" className="#e5e7eb" />
+          <XAxis dataKey="mes" stroke="#6b7280" tickMargin={10} interval={0} tick={{ fontSize: 12 }} height={40}
+          padding={{ left: 20, right: 20 }}/>
+          <YAxis stroke="#6b7280" tick={{ fontSize: 12 }} tickFormatter={(v) =>
+    `$${v.toLocaleString("en-US", { minimumFractionDigits: 0 })}`} width={40} />
+
           <Tooltip
             contentStyle={{
-              backgroundColor: "hsl(var(--card))",
-              border: "1px solid hsl(var(--border))",
-              borderRadius: "6px",
-            }}
+              backgroundColor: "White",
+              border: "1px solid #e5e7eb",
+              borderRadius: "6px"}}
           />
           <Legend
             verticalAlign="top"
-            height={36}
+            height={30}
             iconSize={10}
             wrapperStyle={{ fontSize: "12px", paddingBottom: "10px" }}
           />
-          <Line type="monotone" dataKey="newMRR" stroke="#09124F" strokeWidth={2} name="$ New MRR" dot={{ r: 3 }} />
+          <Line type="monotone" dataKey="newMRR" stroke="#09124F" strokeWidth={2} name="$ New MRR"  />
           <Line
             type="monotone"
             dataKey="netNewMRR"
-            stroke="#ef4444"
+            stroke="#8b13a8ff"
             strokeWidth={2}
             name="$ Net new MRR"
-            dot={{ r: 3 }}
+
           />
           <Line
             type="monotone"
@@ -61,11 +57,25 @@ export function MRR2025Chart() {
             stroke="#10b981"
             strokeWidth={2}
             name="$ Expansion MRR"
-            dot={{ r: 3 }}
+
           />
-          <Line type="monotone" dataKey="churnMRR" stroke="#f59e0b" strokeWidth={2} name="$ Churn MRR" dot={{ r: 3 }} />
+          <Line type="monotone" dataKey="churnMRR" stroke="#232db9ff" strokeWidth={2} name="$ Churn MRR"  />
         </LineChart>
       </ResponsiveContainer>
+      <div className="mt-4 space-y-2">
+        <select className="w-full h-10 rounded-md border border-input bg-muted/30 px-3 py-2 text-sm font-medium transition-colors text-muted-foreground">
+          <option>Tipo de empresa</option>
+          <option>Enterprise</option>
+          <option>SMB</option>
+          <option>Startup</option>
+        </select>
+        <select className="w-full h-10 rounded-md border border-input bg-muted/30 px-3 py-2 text-sm font-medium transition-colors text-muted-foreground">
+          <option>Tipo de plan</option>
+          <option>Básico</option>
+          <option>Pro</option>
+          <option>Enterprise</option>
+        </select>
+      </div>
     </div>
   )
 }

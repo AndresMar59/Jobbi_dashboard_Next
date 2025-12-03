@@ -23,11 +23,15 @@ export function MarginGananciaChart() {
       <div className="mb-4">
         <h3 className="text-lg font-semibold text-card-foreground">$ Margen de ganancia</h3>
       </div>
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={data} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+      <ResponsiveContainer width="100%" height={350}>
+        <BarChart data={data} margin={{ top: 30, right: 20, left: 10, bottom: 40 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.92 0 0)" />
-          <XAxis dataKey="mes" tick={{ fill: "oklch(0.55 0 0)" }} />
-          <YAxis tick={{ fill: "oklch(0.55 0 0)" }} />
+          <XAxis dataKey="mes" tick={{ fill: "oklch(0.55 0 0)", fontSize:12 }} padding={{ left: 20, right: 20 }} height={30} />
+          <YAxis tick={{ fill: "oklch(0.55 0 0)", fontSize:12 }} width={30} tickFormatter={(v) => {
+  if (Math.abs(v) >= 1_000_000) return `$${Math.round(v / 1_000_000)}M`
+  if (Math.abs(v) >= 1_000) return `$${Math.round(v / 1_000)}k`
+  return `$${v}`
+}}/>
           <Tooltip
             contentStyle={{
               backgroundColor: "oklch(1 0 0)",

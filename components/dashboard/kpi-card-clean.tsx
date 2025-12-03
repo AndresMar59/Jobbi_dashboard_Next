@@ -18,11 +18,11 @@ export function KPICard({ title, value, change, icon: Icon, trend }: KPICardProp
       <p className="text-2xl font-bold text-card-foreground mb-2">{value}</p>
       <div className="flex items-center gap-1 text-sm">
         {trend === "up" ? (
-          <TrendingUpIcon className="h-4 w-4 text-blue-500" />
+          <TrendingUpIcon className="h-4 w-4 text-sidebar" />
         ) : (
           <TrendingDownIcon className="h-4 w-4 text-red-500" />
         )}
-        <span className={trend === "up" ? "text-blue-500" : "text-red-500"}>{change}</span>
+        <span className={trend === "up" ? "text-sidebar" : "text-red-500"}>{change}</span>
       </div>
     </div>
   )

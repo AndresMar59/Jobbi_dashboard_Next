@@ -19,14 +19,45 @@ const data = [
 
 export function DollarChurnChart() {
   return (
-    <div className="rounded-lg border bg-card p-6">
-      <h3 className="text-lg font-semibold mb-4">Dollar churn</h3>
+    <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
+      <h3 className="text-lg font-semibold text-card-foreground mb-4">Dollar churn</h3>
 
       <ResponsiveContainer width="100%" height={350}>
-        <LineChart data={data} margin={{ top: 20, right: 20, left: 0, bottom: 30 }}>
+        <LineChart data={data} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-          <XAxis dataKey="mes" stroke="#6b7280" fontSize={12} tickMargin={10} interval={0} />
-          <YAxis stroke="#6b7280" fontSize={12} />
+          <XAxis
+  dataKey="mes"
+  padding={{ left: 20, right: 20 }}
+  stroke="#6b7280"
+  fontSize ={12}
+  tickMargin={10}
+  height={40}
+  interval={0}
+/>
+          <YAxis
+          yAxisId="left"
+  stroke="#6b7280"
+  tick={{ fontSize: 12 }}
+  width={30}
+  tickFormatter={(v) => {
+  if (Math.abs(v) >= 1_000_000) return `$${Math.round(v / 1_000_000)}M`
+  if (Math.abs(v) >= 1_000) return `$${Math.round(v / 1_000)}k`
+  return `$${v}`
+}}
+/>
+
+<YAxis
+  yAxisId="right"
+  orientation="right"
+  stroke="#959697ff"
+  tick={{ fontSize: 12 }}
+  strokeDasharray="4 4"
+  width={30}
+  tickFormatter={(v) => `${v.toFixed(1)}%`}
+
+  // tickFormatter={(v) => `${v}%`}
+/>
+
           <Tooltip
             contentStyle={{
               backgroundColor: "white",
@@ -36,7 +67,7 @@ export function DollarChurnChart() {
           />
           <Legend
             verticalAlign="top"
-            height={36}
+            height={30}
             iconSize={10}
             wrapperStyle={{
               fontSize: "12px",
@@ -45,26 +76,29 @@ export function DollarChurnChart() {
           />
           <Line
             type="monotone"
+             yAxisId="left"
             dataKey="revenueChurn"
             stroke="#09124F"
             strokeWidth={2}
-            dot={{ fill: "#09124F", r: 4 }}
+           // dot={{ fill: "#09124F", r: 4 }}
             name="$ Revenue churn"
           />
           <Line
             type="monotone"
+                      yAxisId="left"
             dataKey="revenueExpansion"
             stroke="#10b981"
             strokeWidth={2}
-            dot={{ fill: "#10b981", r: 4 }}
+         //   dot={{ fill: "#10b981", r: 4 }}
             name="$ Revenue Expansion"
           />
           <Line
             type="monotone"
+                      yAxisId="right"
             dataKey="netRevenueChurn"
-            stroke="#ef4444"
+            stroke="#382af1ff"
             strokeWidth={2}
-            dot={{ fill: "#ef4444", r: 4 }}
+          //  dot={{ fill: "#ef4444", r: 4 }}
             name="Net Revenue Churn %"
           />
         </LineChart>
