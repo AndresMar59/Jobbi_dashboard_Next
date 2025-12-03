@@ -26,7 +26,7 @@ export default function RetentionPage() {
             <KPICard title="# Retención" value="805" change="+6.5% vs mes anterior" icon={UserCheck} trend="up" />
           </div>
 
-          <div className="grid gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <KFactorChurnChart />
             <CohortAnalysisChart />
           </div>
