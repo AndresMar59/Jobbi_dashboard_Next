@@ -6,6 +6,7 @@ import { DashboardFilters } from "@/components/dashboard/dashboard-filters"
 import { KPICard } from "@/components/dashboard/kpi-card-clean"
 import { KFactorChurnChart } from "@/components/dashboard/k-factor-churn-chart"
 import { CohortAnalysisChart } from "@/components/dashboard/cohort-analysis-chart"
+import { RetentionMetricsTable } from "@/components/dashboard/retention-metrics-table"
 import { Users, Percent, DollarSign, UserCheck } from "lucide-react"
 
 export default function RetentionPage() {
@@ -26,8 +27,12 @@ export default function RetentionPage() {
             <KPICard title="# Retención" value="805" change="+6.5% vs mes anterior" icon={UserCheck} trend="up" />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <KFactorChurnChart />
+            <RetentionMetricsTable />
+          </div>
+
+          <div className="w-full">
             <CohortAnalysisChart />
           </div>
         </main>
