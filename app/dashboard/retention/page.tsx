@@ -5,6 +5,7 @@ import { Navbar } from "@/components/dashboard/navbar"
 import { DashboardFilters } from "@/components/dashboard/dashboard-filters"
 import { KPICard } from "@/components/dashboard/kpi-card-clean"
 import { KFactorChurnChart } from "@/components/dashboard/k-factor-churn-chart"
+import { CohortAnalysisChart } from "@/components/dashboard/cohort-analysis-chart"
 import { Users, Percent, DollarSign, UserCheck } from "lucide-react"
 
 export default function RetentionPage() {
@@ -27,6 +28,7 @@ export default function RetentionPage() {
 
           <div className="grid gap-6">
             <KFactorChurnChart />
+            <CohortAnalysisChart />
           </div>
         </main>
       </div>
