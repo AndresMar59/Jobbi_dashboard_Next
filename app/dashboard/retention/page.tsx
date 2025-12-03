@@ -2,6 +2,7 @@
 
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { Navbar } from "@/components/dashboard/navbar"
+import { KFactorChurnChart } from "@/components/dashboard/k-factor-churn-chart"
 
 export default function RetentionPage() {
   return (
@@ -19,8 +20,8 @@ export default function RetentionPage() {
             </p>
           </div>
 
-          <div className="rounded-lg border border-border bg-card p-12 text-center">
-            <p className="text-muted-foreground">Contenido de Retención & Salud próximamente</p>
+          <div className="grid gap-6">
+            <KFactorChurnChart />
           </div>
         </main>
       </div>
