@@ -34,7 +34,7 @@ El endpoint `/v1/metrics/all` de ChartMogul devuelve:
 8. **ASP (Average Sale Price)**: Precio de venta promedio
 
 ### Estructura de Respuesta
-\`\`\`json
+\`\`\`json mmm
 {
   "entries": [
     {
