@@ -34,7 +34,7 @@ export async function GET(request: Request) {
 
     if (!data.values || data.values.length < 2) {
       return NextResponse.json({ error: "No data found in sheet" }, { status: 404 })
-    }
+    }                                        
 
     const [headers, ...rows] = data.values
     console.log("[v0] Headers:", headers)
