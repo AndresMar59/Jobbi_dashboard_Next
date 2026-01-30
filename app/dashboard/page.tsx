@@ -5,7 +5,6 @@ import { Navbar } from "@/components/dashboard/navbar"
 import { DashboardFilters } from "@/components/dashboard/dashboard-filters"
 import { KPICard } from "@/components/dashboard/kpi-card-clean"
 import { ARRMetricsChart } from "@/components/dashboard/arr-metrics-chart"
-import { MarginGananciaChart } from "@/components/dashboard/margin-ganancia-chart"
 import { CACLTVChart } from "@/components/dashboard/cac-ltv-chart"
 import { DollarChurnChart } from "@/components/dashboard/dollar-churn-chart"
 import { CACPaybackChart } from "@/components/dashboard/cac-payback-chart"
@@ -47,7 +46,7 @@ export default function DashboardMVP() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <ARRMetricsChart />
-            <MarginGananciaChart />
+            <DCPAMRPAChart />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -67,7 +66,6 @@ export default function DashboardMVP() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <TicketPromedioChart />
-            <DCPAMRPAChart />
           </div>
         </main>
       </div>
