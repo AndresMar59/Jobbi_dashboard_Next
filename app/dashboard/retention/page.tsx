@@ -24,7 +24,7 @@ export default function RetentionPage() {
             <KPICard title="# Churn" value="42" change="-5.3% vs mes anterior" icon={Users} trend="down" />
             <KPICard title="MRR %" value="8.7%" change="+2.1% vs mes anterior" icon={Percent} trend="up" />
             <KPICard title="$ Churn" value="$12,450" change="-8.2% vs mes anterior" icon={DollarSign} trend="down" />
-            <KPICard title="# Retención" value="805" change="+6.5% vs mes anterior" icon={UserCheck} trend="up" />
+            <KPICard title="Tasa de retención" value="805" change="+6.5% vs mes anterior" icon={UserCheck} trend="up" />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
