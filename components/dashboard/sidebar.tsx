@@ -4,14 +4,11 @@ import Link from "next/link"
 import Image from "next/image";
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { LayoutDashboard, Settings, FileText, TrendingUp, UserCheck, DollarSign } from "lucide-react"
+import { LayoutDashboard, UserCheck } from "lucide-react"
 
 const navigation = [
   { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Adquisición & Funnel", href: "/dashboard/acquisition", icon: TrendingUp },
   { name: "Retención & Salud", href: "/dashboard/retention", icon: UserCheck },
-  { name: "Unit Economics", href: "/dashboard/unit-economics", icon: DollarSign },
-  { name: "Configuración", href: "/dashboard/settings", icon: Settings },
 ]
 
 export function Sidebar() {
