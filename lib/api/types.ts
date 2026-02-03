@@ -14,6 +14,36 @@ export interface ApiResponse<T> {
 }
 
 // ============================================
+// MRR - Respuesta del endpoint /micro/mrr
+// ============================================
+
+// Estructura: { [plan]: { [mes]: { [company_id]: { mrr, subscriptions } } } }
+export interface MRRCompanyData {
+  mrr: number
+  subscriptions: number
+}
+
+export interface MRRMonthData {
+  [companyId: string]: MRRCompanyData
+}
+
+export interface MRRPlanData {
+  [month: string]: MRRMonthData
+}
+
+export interface MRRResponse {
+  [plan: string]: MRRPlanData
+}
+
+// Datos procesados de MRR para uso en gráficas
+export interface MRRProcessed {
+  totalMRR: number
+  mrrByPlan: { plan: string; mrr: number; subscriptions: number }[]
+  mrrByMonth: { month: string; mrr: number }[]
+  totalSubscriptions: number
+}
+
+// ============================================
 // KPIs - Tarjetas de métricas principales
 // ============================================
 

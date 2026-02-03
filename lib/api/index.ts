@@ -20,10 +20,19 @@ export type {
   RetentionCohorteDataPoint,
   ChurnAnalysisDataPoint,
   CalculatedMetrics,
+  // MRR
+  MRRResponse,
+  MRRCompanyData,
+  MRRMonthData,
+  MRRPlanData,
+  MRRProcessed,
 } from "./types"
 
 // Servicios de métricas
 export {
+  // MRR (endpoint real)
+  getMRRRaw,
+  getMRR,
   // Dashboard
   getDashboardKPIs,
   getARRMetrics,

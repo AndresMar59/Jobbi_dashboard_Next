@@ -15,7 +15,71 @@ import type {
   RetentionCohorteDataPoint,
   ChurnAnalysisDataPoint,
   CalculatedMetrics,
+  MRRResponse,
+  MRRProcessed,
 } from "./types"
+
+// ============================================
+// MRR - Endpoint /micro/mrr
+// ============================================
+
+/**
+ * Obtiene datos de MRR desde el microservicio
+ * Endpoint: /micro/mrr
+ */
+export async function getMRRRaw(): Promise<MRRResponse> {
+  return api.get<MRRResponse>("/micro/mrr")
+}
+
+/**
+ * Obtiene y procesa los datos de MRR para uso en gráficas y KPIs
+ */
+export async function getMRR(): Promise<MRRProcessed> {
+  const rawData = await getMRRRaw()
+  
+  let totalMRR = 0
+  let totalSubscriptions = 0
+  const planMap = new Map<string, { mrr: number; subscriptions: number }>()
+  const monthMap = new Map<string, number>()
+  
+  // Procesar la estructura anidada
+  for (const [plan, planData] of Object.entries(rawData)) {
+    for (const [month, monthData] of Object.entries(planData)) {
+      for (const [, companyData] of Object.entries(monthData)) {
+        totalMRR += companyData.mrr
+        totalSubscriptions += companyData.subscriptions
+        
+        // Agrupar por plan
+        const planEntry = planMap.get(plan) || { mrr: 0, subscriptions: 0 }
+        planEntry.mrr += companyData.mrr
+        planEntry.subscriptions += companyData.subscriptions
+        planMap.set(plan, planEntry)
+        
+        // Agrupar por mes
+        const monthMRR = monthMap.get(month) || 0
+        monthMap.set(month, monthMRR + companyData.mrr)
+      }
+    }
+  }
+  
+  // Convertir a arrays
+  const mrrByPlan = Array.from(planMap.entries()).map(([plan, data]) => ({
+    plan,
+    mrr: data.mrr,
+    subscriptions: data.subscriptions,
+  }))
+  
+  const mrrByMonth = Array.from(monthMap.entries())
+    .map(([month, mrr]) => ({ month, mrr }))
+    .sort((a, b) => a.month.localeCompare(b.month))
+  
+  return {
+    totalMRR,
+    mrrByPlan,
+    mrrByMonth,
+    totalSubscriptions,
+  }
+}
 
 // ============================================
 // DASHBOARD - Página principal
