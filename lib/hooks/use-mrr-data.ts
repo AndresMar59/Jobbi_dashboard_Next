@@ -3,15 +3,17 @@
 import useSWR from "swr"
 import type { MRRResponse } from "@/lib/api/types"
 
-const API_BASE_URL = "https://fast-api-liart-nine.vercel.app"
-
 // Fetcher para SWR
 const fetcher = async (url: string): Promise<MRRResponse> => {
+  console.log("[v0] Fetching MRR data from:", url)
   const response = await fetch(url)
   if (!response.ok) {
+    console.log("[v0] Fetch error - status:", response.status)
     throw new Error("Error fetching MRR data")
   }
-  return response.json()
+  const data = await response.json()
+  console.log("[v0] Fetched MRR raw response:", data)
+  return data
 }
 
 // Mapeo de meses
@@ -70,7 +72,7 @@ export function useMRRData(options: UseMRRDataOptions = {}) {
   const { year = "2026", month = "Todos", plan = "Todos" } = options
 
   const { data: rawData, error, isLoading } = useSWR<MRRResponse>(
-    `${API_BASE_URL}/micro/mrr`,
+    "/api/mrr",
     fetcher,
     {
       revalidateOnFocus: false,
@@ -79,10 +81,14 @@ export function useMRRData(options: UseMRRDataOptions = {}) {
     }
   )
 
+  console.log("[v0] useMRRData - isLoading:", isLoading, "error:", error, "rawData:", rawData)
+
   // Procesar los datos con los filtros aplicados
   const processedData: MRRProcessedData | null = rawData
     ? processData(rawData, year, month, plan)
     : null
+
+  console.log("[v0] useMRRData - processedData:", processedData)
 
   return {
     data: processedData,
