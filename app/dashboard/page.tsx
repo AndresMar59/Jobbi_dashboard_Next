@@ -4,6 +4,7 @@ import { Sidebar } from "@/components/dashboard/sidebar"
 import { Navbar } from "@/components/dashboard/navbar"
 import { DashboardFilters } from "@/components/dashboard/dashboard-filters"
 import { KPICard } from "@/components/dashboard/kpi-card-clean"
+import { MRRKPICard } from "@/components/dashboard/mrr-kpi-card"
 import { ARRMetricsChart } from "@/components/dashboard/arr-metrics-chart"
 import { CACLTVChart } from "@/components/dashboard/cac-ltv-chart"
 import { DollarChurnChart } from "@/components/dashboard/dollar-churn-chart"
@@ -13,16 +14,18 @@ import { ARPAClientesChart } from "@/components/dashboard/arpa-clientes-chart"
 import { MRR2025Chart } from "@/components/dashboard/mrr-2025-chart"
 import { TicketPromedioChart } from "@/components/dashboard/ticket-promedio-chart"
 import { DCPAMRPAChart } from "@/components/dashboard/dcpa-mrpa-chart"
-import { DollarSign, Users, TrendingUp, TrendingDown, Percent } from "lucide-react"
+import { FiltersProvider } from "@/lib/contexts/filters-context"
+import { DollarSign, Users, TrendingUp, TrendingDown } from "lucide-react"
 
 export default function DashboardMVP() {
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <Sidebar />
+    <FiltersProvider>
+      <div className="flex min-h-screen bg-background">
+        <Sidebar />
 
-      <div className="flex-1 flex flex-col lg:ml-64">
-        <Navbar />
+        <div className="flex-1 flex flex-col lg:ml-64">
+          <Navbar />
 
         <main className="flex-1 p-6 lg:p-8">
           <DashboardFilters />
@@ -42,7 +45,7 @@ export default function DashboardMVP() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
             <KPICard title="Expanciones" value="23" change="+8.7% vs mes anterior" icon={TrendingUp} trend="up" />
             <KPICard title="Downgrade" value="5" change="-3.2% vs mes anterior" icon={TrendingDown} trend="down" />
-            <KPICard title="% MRR" value="8.7%" change="+4.5% vs mes anterior" icon={Percent} trend="up" />
+            <MRRKPICard />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -69,7 +72,8 @@ export default function DashboardMVP() {
             <TicketPromedioChart />
           </div>
         </main>
+        </div>
       </div>
-    </div>
+    </FiltersProvider>
   )
 }

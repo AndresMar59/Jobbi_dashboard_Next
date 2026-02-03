@@ -1,22 +1,25 @@
 "use client"
 
-import { useState } from "react"
+import { useFilters } from "@/lib/contexts/filters-context"
+import { useMRRData } from "@/lib/hooks/use-mrr-data"
 
 export function DashboardFilters() {
-  const [selectedMonth, setSelectedMonth] = useState("Todos")
-  const [selectedYear, setSelectedYear] = useState("Año")
-  const [selectedPlan, setSelectedPlan] = useState("Plan")
+  const { filters, setYear, setMonth, setPlan } = useFilters()
+  const { data } = useMRRData({ year: filters.year })
 
   const months = ["Todos", "Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
-  const years = ["Año", "2025", "2026"]
-  const plans = ["Tipo de plan", "Básico", "Pro", "Enterprise"]
+  const years = ["2025", "2026"]
+  
+  // Obtener planes disponibles del microservicio
+  const plans = ["Todos", ...(data?.availablePlans || [])]
 
   return (
     <div className="mb-6 flex flex-wrap gap-3">
       <select
-        value={selectedYear}
-        onChange={(e) => setSelectedYear(e.target.value)}
-        className="h-10 rounded-md border border-input bg-muted/50  px-4 py-2 text-sm font-medium transition-colors text-muted-foreground"      >
+        value={filters.year}
+        onChange={(e) => setYear(e.target.value)}
+        className="h-10 rounded-md border border-input bg-muted/50 px-4 py-2 text-sm font-medium transition-colors text-muted-foreground"
+      >
         {years.map((year) => (
           <option key={year} value={year}>
             {year}
@@ -26,13 +29,13 @@ export function DashboardFilters() {
 
       <div className="flex items-center gap-2">
         <select
-          value={selectedPlan}
-          onChange={(e) => setSelectedPlan(e.target.value)}
-          className="h-10 rounded-md border border-input bg-muted/50  px-4 py-2 text-sm font-medium transition-colors text-muted-foreground"
+          value={filters.plan}
+          onChange={(e) => setPlan(e.target.value)}
+          className="h-10 rounded-md border border-input bg-muted/50 px-4 py-2 text-sm font-medium transition-colors text-muted-foreground"
         >
           {plans.map((plan) => (
             <option key={plan} value={plan}>
-              {plan}
+              {plan === "Todos" ? "Tipo de plan" : plan}
             </option>
           ))}
         </select>
@@ -43,9 +46,9 @@ export function DashboardFilters() {
         {months.map((month) => (
           <button
             key={month}
-            onClick={() => setSelectedMonth(month)}
+            onClick={() => setMonth(month)}
             className={`px-3 py-1.5 text-sm font-medium rounded transition-colors ${
-              selectedMonth === month
+              filters.month === month
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:text-foreground"
             }`}
