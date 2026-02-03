@@ -15,8 +15,10 @@ import { MRR2025Chart } from "@/components/dashboard/mrr-2025-chart"
 import { TicketPromedioChart } from "@/components/dashboard/ticket-promedio-chart"
 import { DCPAMRPAChart } from "@/components/dashboard/dcpa-mrpa-chart"
 import { DollarSign, Users, TrendingUp, TrendingDown, Activity, Percent } from "lucide-react"
+import { useEffect } from "react"
 
 export default function DashboardMVP() {
+
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar />
