@@ -1,37 +1,64 @@
 "use client"
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell } from "recharts"
+import { useARPUData } from "@/lib/hooks/use-arpu-data"
+import { useState } from "react"
 
-const data = [
-  { mes: "Ene", clientes: 20, arpa: 20 },
-  { mes: "Feb", clientes: 22, arpa: 21 },
-  { mes: "Mar", clientes: 25, arpa: 23 },
-  { mes: "Abr", clientes: 30, arpa: 25 },
-  { mes: "May", clientes: 35, arpa: 27 },
-  { mes: "Jun", clientes: 42, arpa: 30 },
-  { mes: "Jul", clientes: 48, arpa: 32 },
-  { mes: "Ago", clientes: 45, arpa: 28 },
-  { mes: "Sep", clientes: 42, arpa: 26 },
-  { mes: "Oct", clientes: 40, arpa: 28 },
-  { mes: "Nov", clientes: 45, arpa: 35 },
-  { mes: "Dic", clientes: 48, arpa: 42 },
-]
+const COLORS = ["#09124F", "#710cacff", "#10b981", "#f59e0b", "#ef4444", "#6366f1"]
 
 export function ARPAClientesChart() {
+  const [selectedPlan, setSelectedPlan] = useState("Todos")
+  const { data, isLoading, error } = useARPUData({ plan: selectedPlan })
+
+  if (isLoading) {
+    return (
+      <div className="rounded-lg border bg-card p-6">
+        <h3 className="text-lg font-semibold text-card-foreground mb-4">ARPU por Plan</h3>
+        <div className="h-[350px] flex items-center justify-center text-muted-foreground">
+          Cargando datos...
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !data) {
+    return (
+      <div className="rounded-lg border bg-card p-6">
+        <h3 className="text-lg font-semibold text-card-foreground mb-4">ARPU por Plan</h3>
+        <div className="h-[350px] flex items-center justify-center text-muted-foreground">
+          Error al cargar datos
+        </div>
+      </div>
+    )
+  }
+
+  // Preparar datos para el gráfico de barras
+  const chartData = data.arpuByPlan.map((item, index) => ({
+    name: item.plan,
+    arpu: item.arpu,
+    color: COLORS[index % COLORS.length],
+  }))
+
   return (
     <div className="rounded-lg border bg-card p-6">
-      <h3 className="text-lg font-semibold text-card-foreground mb-4">ARPA vs # clientes activos</h3>
+      <h3 className="text-lg font-semibold text-card-foreground mb-4">ARPU por Plan</h3>
 
       <ResponsiveContainer width="100%" height={350}>
-        <LineChart data={data} margin={{ top: 10, right: 20, left: 10, bottom: 20 }}>
+        <BarChart data={chartData} margin={{ top: 10, right: 20, left: 10, bottom: 20 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-          <XAxis dataKey="mes" stroke="#6b7280" tickMargin={10} interval={0} tick={{ fontSize: 12 }} height={40} padding={{ left: 20, right: 20 }}/>
-
-          <YAxis yAxisId="left" stroke="#6b7280" tick={{ fontSize: 12 }} tickFormatter={(v) =>
-    `$${v.toLocaleString("en-US", { minimumFractionDigits: 0 })}`}  width={30}/>
-
-          <YAxis yAxisId="right" orientation="right" stroke="#9297a0ff" tick={{ fontSize: 12 }} strokeDasharray= "4 4"
-           width={10} />
+          <XAxis 
+            dataKey="name" 
+            stroke="#6b7280" 
+            tickMargin={10} 
+            tick={{ fontSize: 12 }} 
+            height={40} 
+          />
+          <YAxis 
+            stroke="#6b7280" 
+            tick={{ fontSize: 12 }} 
+            tickFormatter={(v) => `$${v.toLocaleString("en-US", { minimumFractionDigits: 0 })}`}  
+            width={50}
+          />
           <Legend
             verticalAlign="top"
             height={30}
@@ -44,40 +71,30 @@ export function ARPAClientesChart() {
               border: "1px solid #e5e7eb",
               borderRadius: "6px",
             }}
+            formatter={(value: number) => [`$${value.toFixed(2)}`, "ARPU"]}
           />
-          <Line
-            yAxisId="left"
-            type="monotone"
-            dataKey="clientes"
-            stroke="#09124F"
-            strokeWidth={2}
-          //  dot={{ r: 4 }}
-            name="# clientes activos"
-          />
-          <Line
-            yAxisId="right"
-            type="monotone"
-            dataKey="arpa"
-            stroke="#e60c0cff"
-            strokeWidth={2}
-           // dot={{ r: 4 }}
-            name="ARPA $"
-          />
-        </LineChart>
+          <Bar 
+            dataKey="arpu" 
+            name="ARPU $"
+            radius={[4, 4, 0, 0]}
+          >
+            {chartData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={entry.color} />
+            ))}
+          </Bar>
+        </BarChart>
       </ResponsiveContainer>
 
       <div className="mt-4 space-y-2">
-        <select className="w-full h-10 rounded-md border border-input bg-muted/30 px-3 py-2 text-sm font-medium transition-colors text-muted-foreground">
-          <option>Tipo de empresa</option>
-          <option>Enterprise</option>
-          <option>SMB</option>
-          <option>Startup</option>
-        </select>
-        <select className="w-full h-10 rounded-md border border-input bg-muted/30 px-3 py-2 text-sm font-medium transition-colors text-muted-foreground">
-          <option>Tipo de plan</option>
-          <option>Básico</option>
-          <option>Pro</option>
-          <option>Enterprise</option>
+        <select 
+          className="w-full h-10 rounded-md border border-input bg-muted/30 px-3 py-2 text-sm font-medium transition-colors text-muted-foreground"
+          value={selectedPlan}
+          onChange={(e) => setSelectedPlan(e.target.value)}
+        >
+          <option value="Todos">Todos los planes</option>
+          {data.plans.map((plan) => (
+            <option key={plan} value={plan}>{plan}</option>
+          ))}
         </select>
       </div>
     </div>
