@@ -589,19 +589,22 @@ export async function getCAC(): Promise<CACProcessed> {
   
   const cacByMonth: CACProcessed["cacByMonth"] = []
   
-  for (const [month, data] of Object.entries(rawData)) {
+  // Estructura: { [month]: cac_value }
+  for (const [month, cac] of Object.entries(rawData)) {
     cacByMonth.push({
       month,
-      cac: data.cac,
-      marketingCost: data.total_marketing_cost,
-      newCustomers: data.new_customers,
+      cac: typeof cac === 'number' ? cac : 0,
     })
   }
   
   cacByMonth.sort((a, b) => a.month.localeCompare(b.month))
   
+  const currentCAC = cacByMonth[cacByMonth.length - 1]?.cac || 0
+  const previousCAC = cacByMonth[cacByMonth.length - 2]?.cac || 0
+  
   return {
-    currentCAC: cacByMonth[cacByMonth.length - 1]?.cac || 0,
+    currentCAC,
+    previousCAC,
     cacByMonth,
   }
 }
@@ -717,7 +720,7 @@ export async function getCACRatio(): Promise<CACRatioProcessed> {
     mrrNewData.newMRRByMonth.map(item => [item.month, item.newMRR])
   )
   const cacByMonth = new Map(
-    cacData.cacByMonth.map(item => [item.month, item.marketingCost])
+    cacData.cacByMonth.map(item => [item.month, item.cac])
   )
   
   // Obtener todos los meses únicos

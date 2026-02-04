@@ -274,19 +274,17 @@ export interface UsuariosChurnedProcessed {
 
 // ============================================
 // CAC - Respuesta del endpoint /costs/cac
+// Estructura: { [month]: cac_value } (acumulado=true)
 // ============================================
 
 export interface CACResponse {
-  [month: string]: {
-    cac: number
-    total_marketing_cost: number
-    new_customers: number
-  }
+  [month: string]: number
 }
 
 export interface CACProcessed {
   currentCAC: number
-  cacByMonth: { month: string; cac: number; marketingCost: number; newCustomers: number }[]
+  previousCAC: number
+  cacByMonth: { month: string; cac: number }[]
 }
 
 // ============================================
