@@ -80,6 +80,9 @@ export type {
   // New ARR (métrica anualizada con proyección)
   NewARRDataPoint,
   NewARRProcessed,
+  // Churn ARR (métrica anualizada con proyección)
+  ChurnARRDataPoint,
+  ChurnARRProcessed,
 } from "./types"
 
 // Servicios de métricas
@@ -138,4 +141,6 @@ export {
   getCACPaybackCalculated,
   // New ARR (métrica anualizada con proyección)
   getNewARR,
+  // Churn ARR (métrica anualizada con proyección)
+  getChurnARR,
 } from "./metrics"

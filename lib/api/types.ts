@@ -482,3 +482,24 @@ export interface NewARRProcessed {
   newARRByMonth: NewARRDataPoint[]
   lastRealMonth: string
 }
+
+// ============================================
+// CHURN ARR - Métrica anualizada con proyección
+// Fórmula: Churn ARR = Churn MRR × 12
+// Proyección: usa el último mes con datos para los meses restantes
+// ============================================
+
+export interface ChurnARRDataPoint {
+  month: string
+  churnMRR: number
+  churnARR: number // churnMRR × 12
+  isProjected: boolean // true si es proyección del último mes real
+}
+
+export interface ChurnARRProcessed {
+  totalChurnARR: number // Suma de todos los ARR (reales + proyectados)
+  currentChurnMRR: number // Último MRR real
+  annualizedChurnARR: number // currentChurnMRR × 12
+  churnARRByMonth: ChurnARRDataPoint[]
+  lastRealMonth: string
+}
