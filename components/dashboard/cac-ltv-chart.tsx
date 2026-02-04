@@ -3,7 +3,6 @@
 import { Bar, BarChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import useSWR from "swr"
 import { useFilters } from "@/lib/contexts/filters-context"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface CACResponse {
   [month: string]: number
@@ -100,19 +99,18 @@ export function CACLTVChart() {
     <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
       <div className="mb-4 flex items-center justify-between">
         <h3 className="text-lg font-semibold text-card-foreground">CAC VS LTV</h3>
-        <Select value={selectedPlan || "Todos"} onValueChange={handlePlanChange}>
-          <SelectTrigger className="w-[140px] h-8 text-sm">
-            <SelectValue placeholder="Tipo de plan" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Todos">Todos</SelectItem>
-            {availablePlans.map((plan) => (
-              <SelectItem key={plan} value={plan}>
-                {plan}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <select
+          value={selectedPlan || "Todos"}
+          onChange={(e) => handlePlanChange(e.target.value)}
+          className="h-8 px-3 text-sm border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          <option value="Todos">Todos</option>
+          {availablePlans.map((plan) => (
+            <option key={plan} value={plan}>
+              {plan}
+            </option>
+          ))}
+        </select>
       </div>
       <ResponsiveContainer width="100%" height={350}>
         <BarChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
