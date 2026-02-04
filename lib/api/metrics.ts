@@ -201,24 +201,64 @@ export async function getARPURaw(): Promise<ARPUResponse> {
 export async function getARPU(): Promise<ARPUProcessed> {
   const rawData = await getARPURaw()
   
-  let totalRevenue = 0
-  let totalCompanies = 0
-  const arpuByPlan: ARPUProcessed["arpuByPlan"] = []
+  const plans: string[] = []
+  const arpuByPlanAndMonth: ARPUProcessed["arpuByPlanAndMonth"] = []
+  const monthMap = new Map<string, { totalArpu: number; count: number }>()
+  const planMap = new Map<string, { totalArpu: number; totalUsers: number; count: number }>()
   
-  for (const [plan, data] of Object.entries(rawData)) {
-    totalRevenue += data.total_revenue
-    totalCompanies += data.active_companies
-    arpuByPlan.push({
-      plan,
-      arpu: data.arpu,
-      totalRevenue: data.total_revenue,
-      activeCompanies: data.active_companies,
-    })
+  // Procesar estructura: Plan > Mes > { arpu, users }
+  for (const [plan, monthsData] of Object.entries(rawData)) {
+    if (!plans.includes(plan)) plans.push(plan)
+    
+    for (const [month, data] of Object.entries(monthsData)) {
+      arpuByPlanAndMonth.push({
+        plan,
+        month,
+        arpu: data.arpu,
+        users: data.users,
+      })
+      
+      // Agregar al mapa de meses
+      const monthEntry = monthMap.get(month) || { totalArpu: 0, count: 0 }
+      monthEntry.totalArpu += data.arpu
+      monthEntry.count += 1
+      monthMap.set(month, monthEntry)
+      
+      // Agregar al mapa de planes
+      const planEntry = planMap.get(plan) || { totalArpu: 0, totalUsers: 0, count: 0 }
+      planEntry.totalArpu += data.arpu
+      planEntry.totalUsers += data.users
+      planEntry.count += 1
+      planMap.set(plan, planEntry)
+    }
   }
   
+  // Convertir a arrays
+  const arpuByMonth = Array.from(monthMap.entries())
+    .map(([month, data]) => ({
+      month,
+      arpu: data.count > 0 ? data.totalArpu / data.count : 0,
+    }))
+    .sort((a, b) => a.month.localeCompare(b.month))
+  
+  const arpuByPlan = Array.from(planMap.entries()).map(([plan, data]) => ({
+    plan,
+    arpu: data.count > 0 ? data.totalArpu / data.count : 0,
+    users: data.totalUsers,
+  }))
+  
+  // Calcular ARPU total y actual
+  const allArpus = arpuByPlanAndMonth.map(item => item.arpu)
+  const totalARPU = allArpus.length > 0 ? allArpus.reduce((a, b) => a + b, 0) / allArpus.length : 0
+  const currentARPU = arpuByMonth[arpuByMonth.length - 1]?.arpu || 0
+  
   return {
-    totalARPU: totalCompanies > 0 ? totalRevenue / totalCompanies : 0,
+    totalARPU,
+    currentARPU,
     arpuByPlan,
+    arpuByMonth,
+    arpuByPlanAndMonth,
+    plans,
   }
 }
 

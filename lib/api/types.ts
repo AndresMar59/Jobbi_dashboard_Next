@@ -92,19 +92,27 @@ export interface ChurnMRRProcessed {
 
 // ============================================
 // ARPU - Respuesta del endpoint /micro/arpu
+// Estructura: { [plan]: { [month]: { arpu, users } } }
 // ============================================
+
+export interface ARPUMonthData {
+  arpu: number
+  users: number
+}
 
 export interface ARPUResponse {
   [plan: string]: {
-    arpu: number
-    total_revenue: number
-    active_companies: number
+    [month: string]: ARPUMonthData
   }
 }
 
 export interface ARPUProcessed {
   totalARPU: number
-  arpuByPlan: { plan: string; arpu: number; totalRevenue: number; activeCompanies: number }[]
+  currentARPU: number
+  arpuByPlan: { plan: string; arpu: number; users: number }[]
+  arpuByMonth: { month: string; arpu: number }[]
+  arpuByPlanAndMonth: { plan: string; month: string; arpu: number; users: number }[]
+  plans: string[]
 }
 
 // ============================================
