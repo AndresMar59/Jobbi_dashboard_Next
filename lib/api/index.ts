@@ -26,24 +26,101 @@ export type {
   MRRMonthData,
   MRRPlanData,
   MRRProcessed,
+  // MRR New
+  MRRNewResponse,
+  MRRNewProcessed,
+  // Churn MRR
+  ChurnMRRResponse,
+  ChurnMRRProcessed,
+  // ARPU
+  ARPUResponse,
+  ARPUProcessed,
+  // LTV
+  LTVResponse,
+  LTVProcessed,
+  // Ticket Promedio
+  TicketPromedioResponse,
+  TicketPromedioProcessed,
+  // Tasa Retention
+  TasaRetentionResponse,
+  TasaRetentionProcessed,
+  // Tasa Churn
+  TasaChurnResponse,
+  TasaChurnProcessed,
+  // Revenue Churn
+  RevenueChurnResponse,
+  RevenueChurnProcessed,
+  // Usuarios Activos
+  UsuariosActivosResponse,
+  UsuariosActivosProcessed,
+  // Usuarios Nuevos
+  UsuariosNuevosResponse,
+  UsuariosNuevosProcessed,
+  // Usuarios Churned
+  UsuariosChurnedResponse,
+  UsuariosChurnedProcessed,
+  // CAC
+  CACResponse,
+  CACProcessed,
+  // Unit Economics
+  UnitEconomicsResponse,
+  UnitEconomicsProcessed,
+  // Expenses
+  ExpensesResponse,
+  ExpensesProcessed,
+  // Income
+  IncomeResponse,
+  IncomeProcessed,
 } from "./types"
 
 // Servicios de métricas
 export {
-  // MRR (endpoint real)
+  // MRR
   getMRRRaw,
   getMRR,
-  // Dashboard
-  getDashboardKPIs,
-  getARRMetrics,
-  getCACPayback,
-  getCACvsLTV,
-  getDCPAMRPA,
+  // MRR New
+  getMRRNewRaw,
+  getMRRNew,
+  // Churn MRR
+  getChurnMRRRaw,
+  getChurnMRR,
+  // ARPU
+  getARPURaw,
+  getARPU,
+  // LTV
+  getLTVRaw,
+  getLTV,
+  // Ticket Promedio
+  getTicketPromedioRaw,
   getTicketPromedio,
-  // Retención
-  getRetentionKPIs,
-  getRetentionCohorte,
-  getChurnAnalysis,
-  // Cálculos
-  calculateMetrics,
+  // Tasa Retention
+  getTasaRetentionRaw,
+  getTasaRetention,
+  // Tasa Churn
+  getTasaChurnRaw,
+  getTasaChurn,
+  // Revenue Churn
+  getRevenueChurnRaw,
+  getRevenueChurn,
+  // Usuarios Activos
+  getUsuariosActivosRaw,
+  getUsuariosActivos,
+  // Usuarios Nuevos
+  getUsuariosNuevosRaw,
+  getUsuariosNuevos,
+  // Usuarios Churned
+  getUsuariosChurnedRaw,
+  getUsuariosChurned,
+  // CAC
+  getCACRaw,
+  getCAC,
+  // Unit Economics
+  getUnitEconomicsRaw,
+  getUnitEconomics,
+  // Expenses
+  getExpensesRaw,
+  getExpenses,
+  // Income
+  getIncomeRaw,
+  getIncome,
 } from "./metrics"

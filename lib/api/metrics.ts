@@ -1,39 +1,67 @@
 /**
  * Servicios para obtener métricas del microservicio
- * Aquí defines las funciones que llaman a cada endpoint de tu API
+ * Funciones que llaman a cada endpoint de tu API
  */
 
-import { api } from "./client"
 import type {
-  DashboardKPIs,
-  ARRMetricsDataPoint,
-  CACPaybackDataPoint,
-  CACLTVData,
-  DCPAMRPADataPoint,
-  TicketPromedioDataPoint,
-  RetentionKPIs,
-  RetentionCohorteDataPoint,
-  ChurnAnalysisDataPoint,
-  CalculatedMetrics,
   MRRResponse,
   MRRProcessed,
+  MRRNewResponse,
+  MRRNewProcessed,
+  ChurnMRRResponse,
+  ChurnMRRProcessed,
+  ARPUResponse,
+  ARPUProcessed,
+  LTVResponse,
+  LTVProcessed,
+  TicketPromedioResponse,
+  TicketPromedioProcessed,
+  TasaRetentionResponse,
+  TasaRetentionProcessed,
+  TasaChurnResponse,
+  TasaChurnProcessed,
+  RevenueChurnResponse,
+  RevenueChurnProcessed,
+  UsuariosActivosResponse,
+  UsuariosActivosProcessed,
+  UsuariosNuevosResponse,
+  UsuariosNuevosProcessed,
+  UsuariosChurnedResponse,
+  UsuariosChurnedProcessed,
+  CACResponse,
+  CACProcessed,
+  UnitEconomicsResponse,
+  UnitEconomicsProcessed,
+  ExpensesResponse,
+  ExpensesProcessed,
+  IncomeResponse,
+  IncomeProcessed,
 } from "./types"
 
 // ============================================
-// MRR - Endpoint /micro/mrr
+// FETCHER GENÉRICO
 // ============================================
 
-/**
- * Obtiene datos de MRR desde el microservicio
- * Endpoint: /micro/mrr
- */
-export async function getMRRRaw(): Promise<MRRResponse> {
-  return api.get<MRRResponse>("/micro/mrr")
+async function fetchMicro<T>(endpoint: string): Promise<T> {
+  const response = await fetch(`/api/micro/${endpoint}`)
+  if (!response.ok) throw new Error(`Error fetching ${endpoint}`)
+  return response.json()
 }
 
-/**
- * Obtiene y procesa los datos de MRR para uso en gráficas y KPIs
- */
+async function fetchCosts<T>(endpoint: string): Promise<T> {
+  const response = await fetch(`/api/costs/${endpoint}`)
+  if (!response.ok) throw new Error(`Error fetching ${endpoint}`)
+  return response.json()
+}
+
+// ============================================
+// MRR - /micro/mrr
+// ============================================
+
+export async function getMRRRaw(): Promise<MRRResponse> {
+  return fetchMicro<MRRResponse>("mrr")
+}
+
 export async function getMRR(): Promise<MRRProcessed> {
   const rawData = await getMRRRaw()
   
@@ -42,233 +70,575 @@ export async function getMRR(): Promise<MRRProcessed> {
   const planMap = new Map<string, { mrr: number; subscriptions: number }>()
   const monthMap = new Map<string, number>()
   
-  // Procesar la estructura anidada
   for (const [plan, planData] of Object.entries(rawData)) {
     for (const [month, monthData] of Object.entries(planData)) {
       for (const [, companyData] of Object.entries(monthData)) {
         totalMRR += companyData.mrr
         totalSubscriptions += companyData.subscriptions
         
-        // Agrupar por plan
         const planEntry = planMap.get(plan) || { mrr: 0, subscriptions: 0 }
         planEntry.mrr += companyData.mrr
         planEntry.subscriptions += companyData.subscriptions
         planMap.set(plan, planEntry)
         
-        // Agrupar por mes
         const monthMRR = monthMap.get(month) || 0
         monthMap.set(month, monthMRR + companyData.mrr)
       }
     }
   }
   
-  // Convertir a arrays
-  const mrrByPlan = Array.from(planMap.entries()).map(([plan, data]) => ({
-    plan,
-    mrr: data.mrr,
-    subscriptions: data.subscriptions,
-  }))
-  
-  const mrrByMonth = Array.from(monthMap.entries())
-    .map(([month, mrr]) => ({ month, mrr }))
-    .sort((a, b) => a.month.localeCompare(b.month))
-  
   return {
     totalMRR,
-    mrrByPlan,
-    mrrByMonth,
+    mrrByPlan: Array.from(planMap.entries()).map(([plan, data]) => ({
+      plan,
+      mrr: data.mrr,
+      subscriptions: data.subscriptions,
+    })),
+    mrrByMonth: Array.from(monthMap.entries())
+      .map(([month, mrr]) => ({ month, mrr }))
+      .sort((a, b) => a.month.localeCompare(b.month)),
     totalSubscriptions,
   }
 }
 
 // ============================================
-// DASHBOARD - Página principal
+// MRR NEW - /micro/mrr_new
 // ============================================
 
-/**
- * Obtiene los KPIs principales del dashboard
- * TODO: Actualizar endpoint cuando esté disponible
- */
-export async function getDashboardKPIs(): Promise<DashboardKPIs> {
-  // return api.get<DashboardKPIs>("/dashboard/kpis")
+export async function getMRRNewRaw(): Promise<MRRNewResponse> {
+  return fetchMicro<MRRNewResponse>("mrr_new")
+}
+
+export async function getMRRNew(): Promise<MRRNewProcessed> {
+  const rawData = await getMRRNewRaw()
   
-  // Datos de ejemplo mientras se configura el endpoint real
+  let totalNewMRR = 0
+  const planMap = new Map<string, { newMRR: number; subscriptions: number }>()
+  const monthMap = new Map<string, number>()
+  
+  for (const [plan, planData] of Object.entries(rawData)) {
+    for (const [month, monthData] of Object.entries(planData)) {
+      for (const [, companyData] of Object.entries(monthData)) {
+        totalNewMRR += companyData.new_MRR
+        
+        const planEntry = planMap.get(plan) || { newMRR: 0, subscriptions: 0 }
+        planEntry.newMRR += companyData.new_MRR
+        planEntry.subscriptions += companyData.subscriptions
+        planMap.set(plan, planEntry)
+        
+        const monthMRR = monthMap.get(month) || 0
+        monthMap.set(month, monthMRR + companyData.new_MRR)
+      }
+    }
+  }
+  
   return {
-    arpu: { value: 125.50, change: 12.3, trend: "up" },
-    cacRatio: { value: "3.2x", change: 5.1, trend: "up" },
-    companyActivos: { value: 847, change: 15.3, trend: "up" },
-    expansiones: { value: 23, change: 8.7, trend: "up" },
-    downgrade: { value: 5, change: -3.2, trend: "down" },
-    mrr: { value: "8.7%", change: 4.5, trend: "up" },
+    totalNewMRR,
+    newMRRByPlan: Array.from(planMap.entries()).map(([plan, data]) => ({
+      plan,
+      newMRR: data.newMRR,
+      subscriptions: data.subscriptions,
+    })),
+    newMRRByMonth: Array.from(monthMap.entries())
+      .map(([month, newMRR]) => ({ month, newMRR }))
+      .sort((a, b) => a.month.localeCompare(b.month)),
   }
 }
 
-/**
- * Obtiene datos para el gráfico ARR Metrics
- */
-export async function getARRMetrics(): Promise<ARRMetricsDataPoint[]> {
-  // return api.get<ARRMetricsDataPoint[]>("/metrics/arr")
-  
-  return [
-    { mes: "Ene", churnARR: 2000, expansionARR: 8000, netNewARR: 12000, newDinero: 5000 },
-    { mes: "Feb", churnARR: 2500, expansionARR: 9000, netNewARR: 13000, newDinero: 5500 },
-    { mes: "Mar", churnARR: 2200, expansionARR: 10000, netNewARR: 14000, newDinero: 6000 },
-    { mes: "Abr", churnARR: 2800, expansionARR: 11000, netNewARR: 15000, newDinero: 7000 },
-    { mes: "May", churnARR: 3000, expansionARR: 12000, netNewARR: 16000, newDinero: 8000 },
-    { mes: "Jun", churnARR: 2700, expansionARR: 14000, netNewARR: 18000, newDinero: 9000 },
-    { mes: "Jul", churnARR: 3200, expansionARR: 15000, netNewARR: 20000, newDinero: 10000 },
-    { mes: "Ago", churnARR: 3500, expansionARR: 17000, netNewARR: 22000, newDinero: 11000 },
-    { mes: "Sep", churnARR: 3300, expansionARR: 18000, netNewARR: 24000, newDinero: 12000 },
-    { mes: "Oct", churnARR: 4000, expansionARR: 20000, netNewARR: 26000, newDinero: 13000 },
-    { mes: "Nov", churnARR: 3800, expansionARR: 22000, netNewARR: 28000, newDinero: 14000 },
-    { mes: "Dic", churnARR: 4200, expansionARR: 24000, netNewARR: 30000, newDinero: 15000 },
-  ]
+// ============================================
+// CHURN MRR - /micro/churn_mrr
+// ============================================
+
+export async function getChurnMRRRaw(): Promise<ChurnMRRResponse> {
+  return fetchMicro<ChurnMRRResponse>("churn_mrr")
 }
 
-/**
- * Obtiene datos para el gráfico CAC Payback
- */
-export async function getCACPayback(): Promise<CACPaybackDataPoint[]> {
-  // return api.get<CACPaybackDataPoint[]>("/metrics/cac-payback")
+export async function getChurnMRR(): Promise<ChurnMRRProcessed> {
+  const rawData = await getChurnMRRRaw()
   
-  return [
-    { mes: "Ene", cacPayback: 10 },
-    { mes: "Feb", cacPayback: 9 },
-    { mes: "Mar", cacPayback: 10 },
-    { mes: "Abr", cacPayback: 11 },
-    { mes: "May", cacPayback: 12 },
-    { mes: "Jun", cacPayback: 13 },
-    { mes: "Jul", cacPayback: 14 },
-    { mes: "Ago", cacPayback: 15 },
-    { mes: "Sep", cacPayback: 16 },
-    { mes: "Oct", cacPayback: 18 },
-    { mes: "Nov", cacPayback: 20 },
-    { mes: "Dic", cacPayback: 22 },
-  ]
-}
-
-/**
- * Obtiene datos para el gráfico CAC vs LTV
- */
-export async function getCACvsLTV(): Promise<CACLTVData> {
-  // return api.get<CACLTVData>("/metrics/cac-ltv")
+  let totalChurnMRR = 0
+  const planMap = new Map<string, number>()
+  const monthMap = new Map<string, number>()
+  
+  for (const [plan, planData] of Object.entries(rawData)) {
+    for (const [month, monthData] of Object.entries(planData)) {
+      for (const [, companyData] of Object.entries(monthData)) {
+        totalChurnMRR += companyData.churned_MRR
+        
+        const planChurn = planMap.get(plan) || 0
+        planMap.set(plan, planChurn + companyData.churned_MRR)
+        
+        const monthChurn = monthMap.get(month) || 0
+        monthMap.set(month, monthChurn + companyData.churned_MRR)
+      }
+    }
+  }
   
   return {
-    cac: 6.5,
-    ltv: 25,
+    totalChurnMRR,
+    churnMRRByPlan: Array.from(planMap.entries()).map(([plan, churnMRR]) => ({
+      plan,
+      churnMRR,
+    })),
+    churnMRRByMonth: Array.from(monthMap.entries())
+      .map(([month, churnMRR]) => ({ month, churnMRR }))
+      .sort((a, b) => a.month.localeCompare(b.month)),
   }
 }
 
-/**
- * Obtiene datos para el gráfico DCPA vs MRPA
- */
-export async function getDCPAMRPA(): Promise<DCPAMRPADataPoint[]> {
-  // return api.get<DCPAMRPADataPoint[]>("/metrics/dcpa-mrpa")
-  
-  return [
-    { mes: "Ene", dcpa: 100, mrpa: 120 },
-    { mes: "Feb", dcpa: 110, mrpa: 130 },
-    { mes: "Mar", dcpa: 105, mrpa: 125 },
-    { mes: "Abr", dcpa: 115, mrpa: 140 },
-    { mes: "May", dcpa: 120, mrpa: 145 },
-    { mes: "Jun", dcpa: 130, mrpa: 155 },
-    { mes: "Jul", dcpa: 125, mrpa: 150 },
-    { mes: "Ago", dcpa: 135, mrpa: 160 },
-    { mes: "Sep", dcpa: 140, mrpa: 165 },
-    { mes: "Oct", dcpa: 145, mrpa: 170 },
-    { mes: "Nov", dcpa: 150, mrpa: 175 },
-    { mes: "Dic", dcpa: 155, mrpa: 180 },
-  ]
-}
-
-/**
- * Obtiene datos para el gráfico Ticket Promedio
- */
-export async function getTicketPromedio(): Promise<TicketPromedioDataPoint[]> {
-  // return api.get<TicketPromedioDataPoint[]>("/metrics/ticket-promedio")
-  
-  return [
-    { mes: "Ene", ticket: 45 },
-    { mes: "Feb", ticket: 48 },
-    { mes: "Mar", ticket: 52 },
-    { mes: "Abr", ticket: 49 },
-    { mes: "May", ticket: 55 },
-    { mes: "Jun", ticket: 58 },
-    { mes: "Jul", ticket: 62 },
-    { mes: "Ago", ticket: 59 },
-    { mes: "Sep", ticket: 65 },
-    { mes: "Oct", ticket: 68 },
-    { mes: "Nov", ticket: 72 },
-    { mes: "Dic", ticket: 75 },
-  ]
-}
-
 // ============================================
-// RETENCIÓN - Página de retención
+// ARPU - /micro/arpu
 // ============================================
 
-/**
- * Obtiene los KPIs de la página de retención
- */
-export async function getRetentionKPIs(): Promise<RetentionKPIs> {
-  // return api.get<RetentionKPIs>("/retention/kpis")
+export async function getARPURaw(): Promise<ARPUResponse> {
+  return fetchMicro<ARPUResponse>("arpu")
+}
+
+export async function getARPU(): Promise<ARPUProcessed> {
+  const rawData = await getARPURaw()
+  
+  let totalRevenue = 0
+  let totalCompanies = 0
+  const arpuByPlan: ARPUProcessed["arpuByPlan"] = []
+  
+  for (const [plan, data] of Object.entries(rawData)) {
+    totalRevenue += data.total_revenue
+    totalCompanies += data.active_companies
+    arpuByPlan.push({
+      plan,
+      arpu: data.arpu,
+      totalRevenue: data.total_revenue,
+      activeCompanies: data.active_companies,
+    })
+  }
   
   return {
-    tasaRetencion: { value: 805, change: 6.5, trend: "up" },
-    churnRate: { value: "2.3%", change: -0.5, trend: "up" },
-    nps: { value: 72, change: 5, trend: "up" },
-    healthScore: { value: "85%", change: 3.2, trend: "up" },
+    totalARPU: totalCompanies > 0 ? totalRevenue / totalCompanies : 0,
+    arpuByPlan,
   }
 }
 
-/**
- * Obtiene datos de retención por cohorte
- */
-export async function getRetentionCohorte(): Promise<RetentionCohorteDataPoint[]> {
-  // return api.get<RetentionCohorteDataPoint[]>("/retention/cohorte")
-  
-  return [
-    { mes: "Ene", retencion: 100 },
-    { mes: "Feb", retencion: 95 },
-    { mes: "Mar", retencion: 90 },
-    { mes: "Abr", retencion: 87 },
-    { mes: "May", retencion: 85 },
-    { mes: "Jun", retencion: 83 },
-  ]
-}
-
-/**
- * Obtiene datos de análisis de churn
- */
-export async function getChurnAnalysis(): Promise<ChurnAnalysisDataPoint[]> {
-  // return api.get<ChurnAnalysisDataPoint[]>("/retention/churn-analysis")
-  
-  return [
-    { mes: "Ene", churn: 5, recovered: 2 },
-    { mes: "Feb", churn: 8, recovered: 3 },
-    { mes: "Mar", churn: 6, recovered: 4 },
-    { mes: "Abr", churn: 7, recovered: 3 },
-    { mes: "May", churn: 4, recovered: 2 },
-    { mes: "Jun", churn: 5, recovered: 3 },
-  ]
-}
-
 // ============================================
-// MÉTRICAS CALCULADAS
+// LTV - /micro/ltv
 // ============================================
 
-/**
- * Calcula métricas derivadas basadas en los datos del microservicio
- */
-export function calculateMetrics(
-  cac: number,
-  ltv: number,
-  monthlyRevenue: number
-): CalculatedMetrics {
+export async function getLTVRaw(): Promise<LTVResponse> {
+  return fetchMicro<LTVResponse>("ltv")
+}
+
+export async function getLTV(): Promise<LTVProcessed> {
+  const rawData = await getLTVRaw()
+  
+  let totalLTV = 0
+  let totalCompanies = 0
+  const ltvByPlan: LTVProcessed["ltvByPlan"] = []
+  
+  for (const [plan, data] of Object.entries(rawData)) {
+    totalLTV += data.ltv * data.companies
+    totalCompanies += data.companies
+    ltvByPlan.push({
+      plan,
+      ltv: data.ltv,
+      totalRevenue: data.total_revenue,
+      companies: data.companies,
+    })
+  }
+  
   return {
-    ltvCacRatio: ltv / cac,
-    paybackMonths: cac / (monthlyRevenue / 12),
-    nrr: 0, // TODO: Calcular con datos reales
-    grr: 0, // TODO: Calcular con datos reales
+    averageLTV: totalCompanies > 0 ? totalLTV / totalCompanies : 0,
+    ltvByPlan,
+  }
+}
+
+// ============================================
+// TICKET PROMEDIO - /micro/ticket_promedio
+// ============================================
+
+export async function getTicketPromedioRaw(): Promise<TicketPromedioResponse> {
+  return fetchMicro<TicketPromedioResponse>("ticket_promedio")
+}
+
+export async function getTicketPromedio(): Promise<TicketPromedioProcessed> {
+  const rawData = await getTicketPromedioRaw()
+  
+  const ticketByMonth: TicketPromedioProcessed["ticketByMonth"] = []
+  let currentTicket = 0
+  
+  for (const [month, data] of Object.entries(rawData)) {
+    ticketByMonth.push({
+      month,
+      ticket: data.prom_ticket,
+      totalRevenue: data.total_revenue,
+      invoices: data.invoice_id,
+    })
+    currentTicket = data.prom_ticket
+  }
+  
+  ticketByMonth.sort((a, b) => a.month.localeCompare(b.month))
+  
+  return {
+    currentTicket: ticketByMonth[ticketByMonth.length - 1]?.ticket || currentTicket,
+    ticketByMonth,
+  }
+}
+
+// ============================================
+// TASA RETENTION - /micro/tasa_retention
+// ============================================
+
+export async function getTasaRetentionRaw(): Promise<TasaRetentionResponse> {
+  return fetchMicro<TasaRetentionResponse>("tasa_retention")
+}
+
+export async function getTasaRetention(): Promise<TasaRetentionProcessed> {
+  const rawData = await getTasaRetentionRaw()
+  
+  const retentionByMonth: TasaRetentionProcessed["retentionByMonth"] = []
+  const planMap = new Map<string, { rate: number; count: number }>()
+  
+  for (const [month, monthData] of Object.entries(rawData)) {
+    let monthRetention = 0
+    let planCount = 0
+    
+    for (const [plan, planData] of Object.entries(monthData)) {
+      monthRetention += planData.retention_rate
+      planCount++
+      
+      const entry = planMap.get(plan) || { rate: 0, count: 0 }
+      entry.rate += planData.retention_rate
+      entry.count++
+      planMap.set(plan, entry)
+    }
+    
+    retentionByMonth.push({
+      month,
+      retentionRate: planCount > 0 ? monthRetention / planCount : 0,
+    })
+  }
+  
+  retentionByMonth.sort((a, b) => a.month.localeCompare(b.month))
+  
+  return {
+    currentRetentionRate: retentionByMonth[retentionByMonth.length - 1]?.retentionRate || 0,
+    retentionByMonth,
+    retentionByPlan: Array.from(planMap.entries()).map(([plan, data]) => ({
+      plan,
+      retentionRate: data.count > 0 ? data.rate / data.count : 0,
+    })),
+  }
+}
+
+// ============================================
+// TASA CHURN - /micro/tasa_churn
+// ============================================
+
+export async function getTasaChurnRaw(): Promise<TasaChurnResponse> {
+  return fetchMicro<TasaChurnResponse>("tasa_churn")
+}
+
+export async function getTasaChurn(): Promise<TasaChurnProcessed> {
+  const rawData = await getTasaChurnRaw()
+  
+  const churnByMonth: TasaChurnProcessed["churnByMonth"] = []
+  const planMap = new Map<string, { rate: number; count: number }>()
+  
+  for (const [month, monthData] of Object.entries(rawData)) {
+    let monthChurn = 0
+    let planCount = 0
+    
+    for (const [plan, planData] of Object.entries(monthData)) {
+      monthChurn += planData.churn_rate
+      planCount++
+      
+      const entry = planMap.get(plan) || { rate: 0, count: 0 }
+      entry.rate += planData.churn_rate
+      entry.count++
+      planMap.set(plan, entry)
+    }
+    
+    churnByMonth.push({
+      month,
+      churnRate: planCount > 0 ? monthChurn / planCount : 0,
+    })
+  }
+  
+  churnByMonth.sort((a, b) => a.month.localeCompare(b.month))
+  
+  return {
+    currentChurnRate: churnByMonth[churnByMonth.length - 1]?.churnRate || 0,
+    churnByMonth,
+    churnByPlan: Array.from(planMap.entries()).map(([plan, data]) => ({
+      plan,
+      churnRate: data.count > 0 ? data.rate / data.count : 0,
+    })),
+  }
+}
+
+// ============================================
+// REVENUE CHURN - /micro/revenue_churn
+// ============================================
+
+export async function getRevenueChurnRaw(): Promise<RevenueChurnResponse> {
+  return fetchMicro<RevenueChurnResponse>("revenue_churn")
+}
+
+export async function getRevenueChurn(): Promise<RevenueChurnProcessed> {
+  const rawData = await getRevenueChurnRaw()
+  
+  const revenueChurnByMonth: RevenueChurnProcessed["revenueChurnByMonth"] = []
+  
+  for (const [month, monthData] of Object.entries(rawData)) {
+    let monthRevenueChurn = 0
+    let planCount = 0
+    
+    for (const [, planData] of Object.entries(monthData)) {
+      monthRevenueChurn += planData.revenue_churn
+      planCount++
+    }
+    
+    revenueChurnByMonth.push({
+      month,
+      revenueChurn: planCount > 0 ? monthRevenueChurn / planCount : 0,
+    })
+  }
+  
+  revenueChurnByMonth.sort((a, b) => a.month.localeCompare(b.month))
+  
+  return {
+    currentRevenueChurn: revenueChurnByMonth[revenueChurnByMonth.length - 1]?.revenueChurn || 0,
+    revenueChurnByMonth,
+  }
+}
+
+// ============================================
+// USUARIOS ACTIVOS - /micro/usuarios_activos
+// ============================================
+
+export async function getUsuariosActivosRaw(): Promise<UsuariosActivosResponse> {
+  return fetchMicro<UsuariosActivosResponse>("usuarios_activos")
+}
+
+export async function getUsuariosActivos(): Promise<UsuariosActivosProcessed> {
+  const rawData = await getUsuariosActivosRaw()
+  
+  let totalActiveUsers = 0
+  const activeUsersByMonth: UsuariosActivosProcessed["activeUsersByMonth"] = []
+  const planMap = new Map<string, number>()
+  
+  for (const [month, monthData] of Object.entries(rawData)) {
+    const activeUsers = typeof monthData.active_users === 'number' ? monthData.active_users : 0
+    totalActiveUsers += activeUsers
+    activeUsersByMonth.push({ month, activeUsers })
+    
+    for (const [key, value] of Object.entries(monthData)) {
+      if (key !== 'active_users' && typeof value === 'object' && 'companies' in value) {
+        const companies = (value as { companies: string[] }).companies.length
+        planMap.set(key, (planMap.get(key) || 0) + companies)
+      }
+    }
+  }
+  
+  activeUsersByMonth.sort((a, b) => a.month.localeCompare(b.month))
+  
+  return {
+    totalActiveUsers,
+    activeUsersByMonth,
+    activeUsersByPlan: Array.from(planMap.entries()).map(([plan, companies]) => ({
+      plan,
+      companies,
+    })),
+  }
+}
+
+// ============================================
+// USUARIOS NUEVOS - /micro/usuarios_nuevos
+// ============================================
+
+export async function getUsuariosNuevosRaw(): Promise<UsuariosNuevosResponse> {
+  return fetchMicro<UsuariosNuevosResponse>("usuarios_nuevos")
+}
+
+export async function getUsuariosNuevos(): Promise<UsuariosNuevosProcessed> {
+  const rawData = await getUsuariosNuevosRaw()
+  
+  let totalNewUsers = 0
+  const newUsersByMonth: UsuariosNuevosProcessed["newUsersByMonth"] = []
+  const planMap = new Map<string, number>()
+  
+  for (const [month, monthData] of Object.entries(rawData)) {
+    let monthNewUsers = 0
+    
+    for (const [plan, planData] of Object.entries(monthData)) {
+      monthNewUsers += planData.new_users
+      planMap.set(plan, (planMap.get(plan) || 0) + planData.new_users)
+    }
+    
+    totalNewUsers += monthNewUsers
+    newUsersByMonth.push({ month, newUsers: monthNewUsers })
+  }
+  
+  newUsersByMonth.sort((a, b) => a.month.localeCompare(b.month))
+  
+  return {
+    totalNewUsers,
+    newUsersByMonth,
+    newUsersByPlan: Array.from(planMap.entries()).map(([plan, newUsers]) => ({
+      plan,
+      newUsers,
+    })),
+  }
+}
+
+// ============================================
+// USUARIOS CHURNED - /micro/usuarios_churned
+// ============================================
+
+export async function getUsuariosChurnedRaw(): Promise<UsuariosChurnedResponse> {
+  return fetchMicro<UsuariosChurnedResponse>("usuarios_churned")
+}
+
+export async function getUsuariosChurned(): Promise<UsuariosChurnedProcessed> {
+  const rawData = await getUsuariosChurnedRaw()
+  
+  let totalChurnedUsers = 0
+  const churnedUsersByMonth: UsuariosChurnedProcessed["churnedUsersByMonth"] = []
+  
+  for (const [month, monthData] of Object.entries(rawData)) {
+    let monthChurnedUsers = 0
+    
+    for (const [, planData] of Object.entries(monthData)) {
+      monthChurnedUsers += planData.churned_users
+    }
+    
+    totalChurnedUsers += monthChurnedUsers
+    churnedUsersByMonth.push({ month, churnedUsers: monthChurnedUsers })
+  }
+  
+  churnedUsersByMonth.sort((a, b) => a.month.localeCompare(b.month))
+  
+  return {
+    totalChurnedUsers,
+    churnedUsersByMonth,
+  }
+}
+
+// ============================================
+// CAC - /costs/cac
+// ============================================
+
+export async function getCACRaw(): Promise<CACResponse> {
+  return fetchCosts<CACResponse>("cac")
+}
+
+export async function getCAC(): Promise<CACProcessed> {
+  const rawData = await getCACRaw()
+  
+  const cacByMonth: CACProcessed["cacByMonth"] = []
+  
+  for (const [month, data] of Object.entries(rawData)) {
+    cacByMonth.push({
+      month,
+      cac: data.cac,
+      marketingCost: data.total_marketing_cost,
+      newCustomers: data.new_customers,
+    })
+  }
+  
+  cacByMonth.sort((a, b) => a.month.localeCompare(b.month))
+  
+  return {
+    currentCAC: cacByMonth[cacByMonth.length - 1]?.cac || 0,
+    cacByMonth,
+  }
+}
+
+// ============================================
+// UNIT ECONOMICS - /costs/ue
+// ============================================
+
+export async function getUnitEconomicsRaw(): Promise<UnitEconomicsResponse> {
+  return fetchCosts<UnitEconomicsResponse>("ue")
+}
+
+export async function getUnitEconomics(): Promise<UnitEconomicsProcessed> {
+  const rawData = await getUnitEconomicsRaw()
+  
+  return {
+    ltv: rawData.ltv,
+    cac: rawData.cac,
+    ltvCacRatio: rawData.ltv_cac_ratio,
+    paybackMonths: rawData.payback_months,
+  }
+}
+
+// ============================================
+// EXPENSES - /costs/expenses
+// ============================================
+
+export async function getExpensesRaw(): Promise<ExpensesResponse> {
+  return fetchCosts<ExpensesResponse>("expenses")
+}
+
+export async function getExpenses(): Promise<ExpensesProcessed> {
+  const rawData = await getExpensesRaw()
+  
+  let totalExpenses = 0
+  const expensesByMonth: ExpensesProcessed["expensesByMonth"] = []
+  const categoryMap = new Map<string, number>()
+  
+  for (const [month, data] of Object.entries(rawData)) {
+    totalExpenses += data.total_expenses
+    expensesByMonth.push({ month, expenses: data.total_expenses })
+    
+    for (const [category, amount] of Object.entries(data.categories)) {
+      categoryMap.set(category, (categoryMap.get(category) || 0) + amount)
+    }
+  }
+  
+  expensesByMonth.sort((a, b) => a.month.localeCompare(b.month))
+  
+  return {
+    totalExpenses,
+    expensesByMonth,
+    expensesByCategory: Array.from(categoryMap.entries()).map(([category, amount]) => ({
+      category,
+      amount,
+    })),
+  }
+}
+
+// ============================================
+// INCOME - /costs/income
+// ============================================
+
+export async function getIncomeRaw(): Promise<IncomeResponse> {
+  return fetchCosts<IncomeResponse>("income")
+}
+
+export async function getIncome(): Promise<IncomeProcessed> {
+  const rawData = await getIncomeRaw()
+  
+  let totalIncome = 0
+  const incomeByMonth: IncomeProcessed["incomeByMonth"] = []
+  const sourceMap = new Map<string, number>()
+  
+  for (const [month, data] of Object.entries(rawData)) {
+    totalIncome += data.total_income
+    incomeByMonth.push({ month, income: data.total_income })
+    
+    for (const [source, amount] of Object.entries(data.sources)) {
+      sourceMap.set(source, (sourceMap.get(source) || 0) + amount)
+    }
+  }
+  
+  incomeByMonth.sort((a, b) => a.month.localeCompare(b.month))
+  
+  return {
+    totalIncome,
+    incomeByMonth,
+    incomeBySource: Array.from(sourceMap.entries()).map(([source, amount]) => ({
+      source,
+      amount,
+    })),
   }
 }

@@ -44,6 +44,293 @@ export interface MRRProcessed {
 }
 
 // ============================================
+// MRR NEW - Respuesta del endpoint /micro/mrr_new
+// ============================================
+
+export interface MRRNewCompanyData {
+  new_MRR: number
+  subscriptions: number
+}
+
+export interface MRRNewMonthData {
+  [companyId: string]: MRRNewCompanyData
+}
+
+export interface MRRNewPlanData {
+  [month: string]: MRRNewMonthData
+}
+
+export interface MRRNewResponse {
+  [plan: string]: MRRNewPlanData
+}
+
+export interface MRRNewProcessed {
+  totalNewMRR: number
+  newMRRByPlan: { plan: string; newMRR: number; subscriptions: number }[]
+  newMRRByMonth: { month: string; newMRR: number }[]
+}
+
+// ============================================
+// CHURN MRR - Respuesta del endpoint /micro/churn_mrr
+// ============================================
+
+export interface ChurnMRRResponse {
+  [plan: string]: {
+    [month: string]: {
+      [companyId: string]: {
+        churned_MRR: number
+      }
+    }
+  }
+}
+
+export interface ChurnMRRProcessed {
+  totalChurnMRR: number
+  churnMRRByPlan: { plan: string; churnMRR: number }[]
+  churnMRRByMonth: { month: string; churnMRR: number }[]
+}
+
+// ============================================
+// ARPU - Respuesta del endpoint /micro/arpu
+// ============================================
+
+export interface ARPUResponse {
+  [plan: string]: {
+    arpu: number
+    total_revenue: number
+    active_companies: number
+  }
+}
+
+export interface ARPUProcessed {
+  totalARPU: number
+  arpuByPlan: { plan: string; arpu: number; totalRevenue: number; activeCompanies: number }[]
+}
+
+// ============================================
+// LTV - Respuesta del endpoint /micro/ltv
+// ============================================
+
+export interface LTVResponse {
+  [plan: string]: {
+    total_revenue: number
+    ltv: number
+    companies: number
+  }
+}
+
+export interface LTVProcessed {
+  averageLTV: number
+  ltvByPlan: { plan: string; ltv: number; totalRevenue: number; companies: number }[]
+}
+
+// ============================================
+// TICKET PROMEDIO - Respuesta del endpoint /micro/ticket_promedio
+// ============================================
+
+export interface TicketPromedioResponse {
+  [month: string]: {
+    total_revenue: number
+    Prom_ticket: number
+    invoice_id: number
+    prom_ticket: number
+  }
+}
+
+export interface TicketPromedioProcessed {
+  currentTicket: number
+  ticketByMonth: { month: string; ticket: number; totalRevenue: number; invoices: number }[]
+}
+
+// ============================================
+// TASA RETENTION - Respuesta del endpoint /micro/tasa_retention
+// ============================================
+
+export interface TasaRetentionResponse {
+  [month: string]: {
+    [plan: string]: {
+      retention_rate: number
+      retained_companies: number
+      total_companies: number
+    }
+  }
+}
+
+export interface TasaRetentionProcessed {
+  currentRetentionRate: number
+  retentionByMonth: { month: string; retentionRate: number }[]
+  retentionByPlan: { plan: string; retentionRate: number }[]
+}
+
+// ============================================
+// TASA CHURN - Respuesta del endpoint /micro/tasa_churn
+// ============================================
+
+export interface TasaChurnResponse {
+  [month: string]: {
+    [plan: string]: {
+      churn_rate: number
+      churned_companies: number
+      total_companies: number
+    }
+  }
+}
+
+export interface TasaChurnProcessed {
+  currentChurnRate: number
+  churnByMonth: { month: string; churnRate: number }[]
+  churnByPlan: { plan: string; churnRate: number }[]
+}
+
+// ============================================
+// REVENUE CHURN - Respuesta del endpoint /micro/revenue_churn
+// ============================================
+
+export interface RevenueChurnResponse {
+  [month: string]: {
+    [plan: string]: {
+      revenue_churn: number
+      churned_revenue: number
+      total_revenue: number
+    }
+  }
+}
+
+export interface RevenueChurnProcessed {
+  currentRevenueChurn: number
+  revenueChurnByMonth: { month: string; revenueChurn: number }[]
+}
+
+// ============================================
+// USUARIOS ACTIVOS - Respuesta del endpoint /micro/usuarios_activos
+// ============================================
+
+export interface UsuariosActivosResponse {
+  [month: string]: {
+    active_users: number
+    [plan: string]: {
+      companies: string[]
+    } | number
+  }
+}
+
+export interface UsuariosActivosProcessed {
+  totalActiveUsers: number
+  activeUsersByMonth: { month: string; activeUsers: number }[]
+  activeUsersByPlan: { plan: string; companies: number }[]
+}
+
+// ============================================
+// USUARIOS NUEVOS - Respuesta del endpoint /micro/usuarios_nuevos
+// ============================================
+
+export interface UsuariosNuevosResponse {
+  [month: string]: {
+    [plan: string]: {
+      companies: string[]
+      new_users: number
+    }
+  }
+}
+
+export interface UsuariosNuevosProcessed {
+  totalNewUsers: number
+  newUsersByMonth: { month: string; newUsers: number }[]
+  newUsersByPlan: { plan: string; newUsers: number }[]
+}
+
+// ============================================
+// USUARIOS CHURNED - Respuesta del endpoint /micro/usuarios_churned
+// ============================================
+
+export interface UsuariosChurnedResponse {
+  [month: string]: {
+    [plan: string]: {
+      companies: string[]
+      churned_users: number
+    }
+  }
+}
+
+export interface UsuariosChurnedProcessed {
+  totalChurnedUsers: number
+  churnedUsersByMonth: { month: string; churnedUsers: number }[]
+}
+
+// ============================================
+// CAC - Respuesta del endpoint /costs/cac
+// ============================================
+
+export interface CACResponse {
+  [month: string]: {
+    cac: number
+    total_marketing_cost: number
+    new_customers: number
+  }
+}
+
+export interface CACProcessed {
+  currentCAC: number
+  cacByMonth: { month: string; cac: number; marketingCost: number; newCustomers: number }[]
+}
+
+// ============================================
+// UNIT ECONOMICS - Respuesta del endpoint /costs/ue
+// ============================================
+
+export interface UnitEconomicsResponse {
+  ltv: number
+  cac: number
+  ltv_cac_ratio: number
+  payback_months: number
+}
+
+export interface UnitEconomicsProcessed {
+  ltv: number
+  cac: number
+  ltvCacRatio: number
+  paybackMonths: number
+}
+
+// ============================================
+// EXPENSES - Respuesta del endpoint /costs/expenses
+// ============================================
+
+export interface ExpensesResponse {
+  [month: string]: {
+    total_expenses: number
+    categories: {
+      [category: string]: number
+    }
+  }
+}
+
+export interface ExpensesProcessed {
+  totalExpenses: number
+  expensesByMonth: { month: string; expenses: number }[]
+  expensesByCategory: { category: string; amount: number }[]
+}
+
+// ============================================
+// INCOME - Respuesta del endpoint /costs/income
+// ============================================
+
+export interface IncomeResponse {
+  [month: string]: {
+    total_income: number
+    sources: {
+      [source: string]: number
+    }
+  }
+}
+
+export interface IncomeProcessed {
+  totalIncome: number
+  incomeByMonth: { month: string; income: number }[]
+  incomeBySource: { source: string; amount: number }[]
+}
+
+// ============================================
 // KPIs - Tarjetas de métricas principales
 // ============================================
 
