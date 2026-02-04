@@ -36,6 +36,7 @@ import type {
   ExpensesProcessed,
   IncomeResponse,
   IncomeProcessed,
+  CACRatioProcessed,
 } from "./types"
 
 // ============================================
@@ -640,5 +641,74 @@ export async function getIncome(): Promise<IncomeProcessed> {
       source,
       amount,
     })),
+  }
+}
+
+// ============================================
+// CAC RATIO - Métrica calculada
+// Fórmula: (Nuevo MRR × Margen Bruto %) / Costo de Ventas y Marketing (S&M)
+// Margen Bruto fijo: 70%
+// ============================================
+
+const GROSS_MARGIN = 0.70 // 70% margen bruto fijo
+
+export async function getCACRatio(): Promise<CACRatioProcessed> {
+  // Obtener datos de MRR New (numerador) y CAC/Marketing Cost (denominador)
+  const [mrrNewData, cacData] = await Promise.all([
+    getMRRNew(),
+    getCAC(),
+  ])
+  
+  // Crear mapas para acceso rápido por mes
+  const mrrNewByMonth = new Map(
+    mrrNewData.newMRRByMonth.map(item => [item.month, item.newMRR])
+  )
+  const cacByMonth = new Map(
+    cacData.cacByMonth.map(item => [item.month, item.marketingCost])
+  )
+  
+  // Obtener todos los meses únicos
+  const allMonths = new Set([
+    ...mrrNewData.newMRRByMonth.map(item => item.month),
+    ...cacData.cacByMonth.map(item => item.month),
+  ])
+  
+  // Calcular CAC Ratio para cada mes
+  const cacRatioByMonth: CACRatioProcessed["cacRatioByMonth"] = []
+  let totalCACRatio = 0
+  let validMonths = 0
+  
+  for (const month of Array.from(allMonths).sort()) {
+    const newMRR = mrrNewByMonth.get(month) || 0
+    const marketingCost = cacByMonth.get(month) || 0
+    
+    // CAC Ratio = (Nuevo MRR × Margen Bruto) / Costo Marketing
+    // Si no hay costo de marketing, el ratio es 0
+    const cacRatio = marketingCost > 0 
+      ? (newMRR * GROSS_MARGIN) / marketingCost 
+      : 0
+    
+    cacRatioByMonth.push({
+      month,
+      cacRatio,
+      newMRR,
+      grossMargin: GROSS_MARGIN,
+      marketingCost,
+    })
+    
+    if (cacRatio > 0) {
+      totalCACRatio += cacRatio
+      validMonths++
+    }
+  }
+  
+  // El CAC Ratio actual es el del último mes con datos
+  const currentCACRatio = cacRatioByMonth[cacRatioByMonth.length - 1]?.cacRatio || 0
+  const averageCACRatio = validMonths > 0 ? totalCACRatio / validMonths : 0
+  
+  return {
+    currentCACRatio,
+    cacRatioByMonth,
+    averageCACRatio,
   }
 }

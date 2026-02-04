@@ -423,3 +423,22 @@ export interface CalculatedMetrics {
   // Gross Revenue Retention
   grr: number
 }
+
+// ============================================
+// CAC RATIO - Métrica calculada
+// Fórmula: (Nuevo MRR × Margen Bruto %) / Costo de Ventas y Marketing
+// ============================================
+
+export interface CACRatioDataPoint {
+  month: string
+  cacRatio: number
+  newMRR: number
+  grossMargin: number // Porcentaje (ej: 0.70 para 70%)
+  marketingCost: number
+}
+
+export interface CACRatioProcessed {
+  currentCACRatio: number
+  cacRatioByMonth: CACRatioDataPoint[]
+  averageCACRatio: number
+}

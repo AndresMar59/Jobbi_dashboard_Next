@@ -71,6 +71,9 @@ export type {
   // Income
   IncomeResponse,
   IncomeProcessed,
+  // CAC Ratio (métrica calculada)
+  CACRatioDataPoint,
+  CACRatioProcessed,
 } from "./types"
 
 // Servicios de métricas
@@ -123,4 +126,6 @@ export {
   // Income
   getIncomeRaw,
   getIncome,
+  // CAC Ratio (métrica calculada)
+  getCACRatio,
 } from "./metrics"
