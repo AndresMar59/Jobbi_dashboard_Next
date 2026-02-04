@@ -620,11 +620,25 @@ export async function getUnitEconomicsRaw(): Promise<UnitEconomicsResponse> {
 export async function getUnitEconomics(): Promise<UnitEconomicsProcessed> {
   const rawData = await getUnitEconomicsRaw()
   
+  const dcpaByMonth: UnitEconomicsProcessed["dcpaByMonth"] = []
+  
+  // Estructura: { [month]: dcpa_value }
+  for (const [month, dcpa] of Object.entries(rawData)) {
+    dcpaByMonth.push({
+      month,
+      dcpa: typeof dcpa === 'number' ? dcpa : 0,
+    })
+  }
+  
+  dcpaByMonth.sort((a, b) => a.month.localeCompare(b.month))
+  
+  const currentDCPA = dcpaByMonth[dcpaByMonth.length - 1]?.dcpa || 0
+  const previousDCPA = dcpaByMonth[dcpaByMonth.length - 2]?.dcpa || 0
+  
   return {
-    ltv: rawData.ltv,
-    cac: rawData.cac,
-    ltvCacRatio: rawData.ltv_cac_ratio,
-    paybackMonths: rawData.payback_months,
+    currentDCPA,
+    previousDCPA,
+    dcpaByMonth,
   }
 }
 

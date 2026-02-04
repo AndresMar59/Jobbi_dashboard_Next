@@ -288,21 +288,18 @@ export interface CACProcessed {
 }
 
 // ============================================
-// UNIT ECONOMICS - Respuesta del endpoint /costs/ue
+// UNIT ECONOMICS (DCPA) - Respuesta del endpoint /costs/ue
+// Estructura: { [month]: dcpa_value } (acumulado=true)
 // ============================================
 
 export interface UnitEconomicsResponse {
-  ltv: number
-  cac: number
-  ltv_cac_ratio: number
-  payback_months: number
+  [month: string]: number
 }
 
 export interface UnitEconomicsProcessed {
-  ltv: number
-  cac: number
-  ltvCacRatio: number
-  paybackMonths: number
+  currentDCPA: number
+  previousDCPA: number
+  dcpaByMonth: { month: string; dcpa: number }[]
 }
 
 // ============================================

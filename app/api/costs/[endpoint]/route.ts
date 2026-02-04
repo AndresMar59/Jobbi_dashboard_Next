@@ -10,8 +10,8 @@ export async function GET(
   // Construir URL con parámetros
   const url = new URL(`${MICROSERVICE_URL}/costs/${endpoint}`)
   
-  // Para el endpoint CAC, agregar start_date obligatorio (inicio del año 2026)
-  if (endpoint === "cac") {
+  // Para endpoints CAC y UE, agregar start_date obligatorio (inicio del año 2026)
+  if (endpoint === "cac" || endpoint === "ue") {
     const startDate = searchParams.get("start_date") || "2026-01-01T00:00:00.000"
     url.searchParams.set("start_date", startDate)
     url.searchParams.set("acumulado", "true")
