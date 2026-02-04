@@ -20,7 +20,8 @@ interface ChartDataPoint {
 }
 
 export function TicketPromedioChart() {
-  const { year } = useFilters()
+  const { filters } = useFilters()
+  const year = filters.year
   const [data, setData] = useState<ChartDataPoint[]>([])
   const [isLoading, setIsLoading] = useState(true)
 

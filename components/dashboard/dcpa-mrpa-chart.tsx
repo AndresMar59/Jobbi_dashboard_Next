@@ -43,7 +43,8 @@ const ALL_MONTHS = [
 ]
 
 export function DCPAMRPAChart() {
-  const { year } = useFilters()
+  const { filters } = useFilters()
+  const year = filters.year
   
   const { data: dcpaData, isLoading: isLoadingDCPA } = useSWR<DCPAData>(
     "/api/costs/ue",
