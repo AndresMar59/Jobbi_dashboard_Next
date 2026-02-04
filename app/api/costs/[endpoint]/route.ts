@@ -5,9 +5,26 @@ export async function GET(
   { params }: { params: Promise<{ endpoint: string }> }
 ) {
   const { endpoint } = await params
+  const { searchParams } = new URL(request.url)
+  
+  // Construir URL con parámetros
+  const url = new URL(`${MICROSERVICE_URL}/costs/${endpoint}`)
+  
+  // Para el endpoint CAC, agregar start_date obligatorio (inicio del año 2026)
+  if (endpoint === "cac") {
+    const startDate = searchParams.get("start_date") || "2026-01-01T00:00:00.000"
+    url.searchParams.set("start_date", startDate)
+    
+    // Parámetros opcionales
+    const endDate = searchParams.get("end_date")
+    if (endDate) url.searchParams.set("end_date", endDate)
+    
+    const acumulado = searchParams.get("acumulado")
+    if (acumulado) url.searchParams.set("acumulado", acumulado)
+  }
   
   try {
-    const response = await fetch(`${MICROSERVICE_URL}/costs/${endpoint}`, {
+    const response = await fetch(url.toString(), {
       headers: {
         "Content-Type": "application/json",
       },
