@@ -38,6 +38,7 @@ import type {
   IncomeProcessed,
   CACRatioProcessed,
   CACPaybackCalculatedProcessed,
+  NewARRProcessed,
 } from "./types"
 
 // ============================================
@@ -765,5 +766,85 @@ export async function getCACPaybackCalculated(): Promise<CACPaybackCalculatedPro
     currentCACPayback,
     cacPaybackByMonth,
     averageCACPayback,
+  }
+}
+
+// ============================================
+// NEW ARR - Métrica anualizada con proyección
+// Fórmula: New ARR = New MRR × 12
+// Proyección: el último mes real se usa para los meses restantes del año
+// ============================================
+
+const ALL_MONTHS = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
+
+export async function getNewARR(year: string = "2026"): Promise<NewARRProcessed> {
+  const mrrNewData = await getMRRNew()
+  
+  // Filtrar solo los meses del año solicitado y ordenar
+  const realMonthsData = mrrNewData.newMRRByMonth
+    .filter(item => item.month.startsWith(year))
+    .sort((a, b) => a.month.localeCompare(b.month))
+  
+  if (realMonthsData.length === 0) {
+    return {
+      totalNewARR: 0,
+      currentNewMRR: 0,
+      annualizedNewARR: 0,
+      newARRByMonth: [],
+      lastRealMonth: "",
+    }
+  }
+  
+  // Obtener el último mes con datos reales
+  const lastRealData = realMonthsData[realMonthsData.length - 1]
+  const lastRealMonth = lastRealData.month
+  const currentNewMRR = lastRealData.newMRR
+  const lastMonthNumber = parseInt(lastRealMonth.split("-")[1])
+  
+  // Crear mapa de meses reales
+  const realDataMap = new Map(realMonthsData.map(item => [item.month, item.newMRR]))
+  
+  // Construir array con datos reales + proyecciones
+  const newARRByMonth: NewARRProcessed["newARRByMonth"] = []
+  let totalNewARR = 0
+  
+  for (const monthNum of ALL_MONTHS) {
+    const monthKey = `${year}-${monthNum}`
+    const monthInt = parseInt(monthNum)
+    
+    let newMRR: number
+    let isProjected: boolean
+    
+    if (realDataMap.has(monthKey)) {
+      // Datos reales
+      newMRR = realDataMap.get(monthKey)!
+      isProjected = false
+    } else if (monthInt > lastMonthNumber) {
+      // Proyección: usar el último mes real
+      newMRR = currentNewMRR
+      isProjected = true
+    } else {
+      // Mes anterior sin datos: 0
+      newMRR = 0
+      isProjected = false
+    }
+    
+    const newARR = newMRR * 12
+    totalNewARR += newARR
+    
+    newARRByMonth.push({
+      month: monthKey,
+      newMRR,
+      newARR,
+      isProjected,
+    })
+  }
+  
+  return {
+    totalNewARR,
+    currentNewMRR,
+    annualizedNewARR: currentNewMRR * 12,
+    newARRByMonth,
+    lastRealMonth,
   }
 }

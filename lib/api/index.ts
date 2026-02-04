@@ -77,6 +77,9 @@ export type {
   // CAC Payback (métrica calculada)
   CACPaybackCalculatedDataPoint,
   CACPaybackCalculatedProcessed,
+  // New ARR (métrica anualizada con proyección)
+  NewARRDataPoint,
+  NewARRProcessed,
 } from "./types"
 
 // Servicios de métricas
@@ -133,4 +136,6 @@ export {
   getCACRatio,
   // CAC Payback (métrica calculada)
   getCACPaybackCalculated,
+  // New ARR (métrica anualizada con proyección)
+  getNewARR,
 } from "./metrics"

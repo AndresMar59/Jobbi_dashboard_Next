@@ -461,3 +461,24 @@ export interface CACPaybackCalculatedProcessed {
   cacPaybackByMonth: CACPaybackCalculatedDataPoint[]
   averageCACPayback: number
 }
+
+// ============================================
+// NEW ARR - Métrica anualizada con proyección
+// Fórmula: New ARR = New MRR × 12
+// Proyección: usa el último mes con datos para los meses restantes
+// ============================================
+
+export interface NewARRDataPoint {
+  month: string
+  newMRR: number
+  newARR: number // newMRR × 12
+  isProjected: boolean // true si es proyección del último mes real
+}
+
+export interface NewARRProcessed {
+  totalNewARR: number // Suma de todos los ARR (reales + proyectados)
+  currentNewMRR: number // Último MRR real
+  annualizedNewARR: number // currentNewMRR × 12
+  newARRByMonth: NewARRDataPoint[]
+  lastRealMonth: string
+}
