@@ -256,20 +256,27 @@ export interface UsuariosNuevosProcessed {
 
 // ============================================
 // USUARIOS CHURNED - Respuesta del endpoint /micro/usuarios_churned
+// Estructura: { [month]: { [plan]: { companies: [], churned_users: number } } }
 // ============================================
+
+export interface UsuariosChurnedPlanData {
+  companies: string[]
+  churned_users: number
+}
 
 export interface UsuariosChurnedResponse {
   [month: string]: {
-    [plan: string]: {
-      companies: string[]
-      churned_users: number
-    }
+    [plan: string]: UsuariosChurnedPlanData
   }
 }
 
 export interface UsuariosChurnedProcessed {
-  totalChurnedUsers: number
+  currentChurnedUsers: number
+  previousChurnedUsers: number
   churnedUsersByMonth: { month: string; churnedUsers: number }[]
+  churnedUsersByPlan: { plan: string; churnedUsers: number }[]
+  churnedByPlanAndMonth: { plan: string; month: string; churnedUsers: number; companies: string[] }[]
+  plans: string[]
 }
 
 // ============================================

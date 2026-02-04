@@ -554,25 +554,46 @@ export async function getUsuariosChurnedRaw(): Promise<UsuariosChurnedResponse> 
 export async function getUsuariosChurned(): Promise<UsuariosChurnedProcessed> {
   const rawData = await getUsuariosChurnedRaw()
   
-  let totalChurnedUsers = 0
   const churnedUsersByMonth: UsuariosChurnedProcessed["churnedUsersByMonth"] = []
+  const churnedByPlanAndMonth: UsuariosChurnedProcessed["churnedByPlanAndMonth"] = []
+  const planMap = new Map<string, number>()
+  const plans = new Set<string>()
   
+  // Estructura: { [month]: { [plan]: { companies, churned_users } } }
   for (const [month, monthData] of Object.entries(rawData)) {
     let monthChurnedUsers = 0
     
-    for (const [, planData] of Object.entries(monthData)) {
+    for (const [plan, planData] of Object.entries(monthData)) {
+      plans.add(plan)
       monthChurnedUsers += planData.churned_users
+      planMap.set(plan, (planMap.get(plan) || 0) + planData.churned_users)
+      
+      churnedByPlanAndMonth.push({
+        plan,
+        month,
+        churnedUsers: planData.churned_users,
+        companies: planData.companies,
+      })
     }
     
-    totalChurnedUsers += monthChurnedUsers
     churnedUsersByMonth.push({ month, churnedUsers: monthChurnedUsers })
   }
   
   churnedUsersByMonth.sort((a, b) => a.month.localeCompare(b.month))
   
+  const currentChurnedUsers = churnedUsersByMonth[churnedUsersByMonth.length - 1]?.churnedUsers || 0
+  const previousChurnedUsers = churnedUsersByMonth[churnedUsersByMonth.length - 2]?.churnedUsers || 0
+  
   return {
-    totalChurnedUsers,
+    currentChurnedUsers,
+    previousChurnedUsers,
     churnedUsersByMonth,
+    churnedUsersByPlan: Array.from(planMap.entries()).map(([plan, churnedUsers]) => ({
+      plan,
+      churnedUsers,
+    })),
+    churnedByPlanAndMonth,
+    plans: Array.from(plans),
   }
 }
 
