@@ -338,37 +338,24 @@ export async function getTasaRetention(): Promise<TasaRetentionProcessed> {
   const rawData = await getTasaRetentionRaw()
   
   const retentionByMonth: TasaRetentionProcessed["retentionByMonth"] = []
-  const planMap = new Map<string, { rate: number; count: number }>()
   
-  for (const [month, monthData] of Object.entries(rawData)) {
-    let monthRetention = 0
-    let planCount = 0
-    
-    for (const [plan, planData] of Object.entries(monthData)) {
-      monthRetention += planData.retention_rate
-      planCount++
-      
-      const entry = planMap.get(plan) || { rate: 0, count: 0 }
-      entry.rate += planData.retention_rate
-      entry.count++
-      planMap.set(plan, entry)
-    }
-    
+  // Estructura simple: { [month]: retention_rate }
+  for (const [month, retentionRate] of Object.entries(rawData)) {
     retentionByMonth.push({
       month,
-      retentionRate: planCount > 0 ? monthRetention / planCount : 0,
+      retentionRate: typeof retentionRate === 'number' ? retentionRate : 0,
     })
   }
   
   retentionByMonth.sort((a, b) => a.month.localeCompare(b.month))
   
+  const currentRetentionRate = retentionByMonth[retentionByMonth.length - 1]?.retentionRate || 0
+  const previousRetentionRate = retentionByMonth[retentionByMonth.length - 2]?.retentionRate || 0
+  
   return {
-    currentRetentionRate: retentionByMonth[retentionByMonth.length - 1]?.retentionRate || 0,
+    currentRetentionRate,
+    previousRetentionRate,
     retentionByMonth,
-    retentionByPlan: Array.from(planMap.entries()).map(([plan, data]) => ({
-      plan,
-      retentionRate: data.count > 0 ? data.rate / data.count : 0,
-    })),
   }
 }
 

@@ -152,22 +152,17 @@ export interface TicketPromedioProcessed {
 
 // ============================================
 // TASA RETENTION - Respuesta del endpoint /micro/tasa_retention
+// Estructura: { [month]: retention_rate }
 // ============================================
 
 export interface TasaRetentionResponse {
-  [month: string]: {
-    [plan: string]: {
-      retention_rate: number
-      retained_companies: number
-      total_companies: number
-    }
-  }
+  [month: string]: number
 }
 
 export interface TasaRetentionProcessed {
   currentRetentionRate: number
+  previousRetentionRate: number
   retentionByMonth: { month: string; retentionRate: number }[]
-  retentionByPlan: { plan: string; retentionRate: number }[]
 }
 
 // ============================================

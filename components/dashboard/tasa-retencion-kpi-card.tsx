@@ -5,15 +5,9 @@ import { UserCheck, TrendingUp, TrendingDown } from "lucide-react"
 import useSWR from "swr"
 import { useFilters } from "@/lib/contexts/filters-context"
 
-// Estructura: { [month]: { [plan]: { retention_rate, retained_companies, total_companies } } }
+// Estructura simple: { [month]: retention_rate }
 interface TasaRetentionResponse {
-  [month: string]: {
-    [plan: string]: {
-      retention_rate: number
-      retained_companies: number
-      total_companies: number
-    }
-  }
+  [month: string]: number
 }
 
 const fetcher = (url: string) => fetch(url).then(res => res.json())
@@ -30,36 +24,41 @@ export function TasaRetencionKPICard() {
   const processData = () => {
     if (!rawData) return { currentRate: 0, previousRate: 0, percentChange: 0 }
 
-    const monthMap = new Map<string, { totalRate: number; count: number }>()
+    const retentionByMonth: { month: string; rate: number }[] = []
 
-    for (const [month, monthData] of Object.entries(rawData)) {
+    // Estructura simple: { [month]: retention_rate }
+    for (const [month, retentionRate] of Object.entries(rawData)) {
       // Filtrar por año
       if (!month.startsWith(filters.year)) continue
 
-      let totalRate = 0
-      let count = 0
-
-      for (const [plan, planData] of Object.entries(monthData)) {
-        // Filtrar por plan si está seleccionado
-        if (filters.plan !== "Todos" && plan !== filters.plan) continue
-
-        totalRate += planData.retention_rate
-        count += 1
-      }
-
-      if (count > 0) {
-        monthMap.set(month, { totalRate, count })
-      }
+      retentionByMonth.push({
+        month,
+        rate: typeof retentionRate === 'number' ? retentionRate : 0,
+      })
     }
 
-    const sortedMonths = Array.from(monthMap.entries())
-      .sort((a, b) => a[0].localeCompare(b[0]))
+    // Ordenar por mes
+    retentionByMonth.sort((a, b) => a.month.localeCompare(b.month))
 
-    const currentData = sortedMonths[sortedMonths.length - 1]
-    const previousData = sortedMonths[sortedMonths.length - 2]
+    // Si hay filtro de mes específico, usar ese mes
+    let currentRate = 0
+    let previousRate = 0
 
-    const currentRate = currentData ? (currentData[1].totalRate / currentData[1].count) : 0
-    const previousRate = previousData ? (previousData[1].totalRate / previousData[1].count) : 0
+    if (filters.month !== "Todos") {
+      const monthKey = `${filters.year}-${filters.month}`
+      const monthData = retentionByMonth.find(m => m.month === monthKey)
+      currentRate = monthData?.rate || 0
+      
+      // Buscar mes anterior
+      const monthIndex = retentionByMonth.findIndex(m => m.month === monthKey)
+      if (monthIndex > 0) {
+        previousRate = retentionByMonth[monthIndex - 1].rate
+      }
+    } else {
+      // Usar último mes disponible
+      currentRate = retentionByMonth[retentionByMonth.length - 1]?.rate || 0
+      previousRate = retentionByMonth[retentionByMonth.length - 2]?.rate || 0
+    }
 
     const percentChange = previousRate > 0 
       ? ((currentRate - previousRate) / previousRate) * 100 
