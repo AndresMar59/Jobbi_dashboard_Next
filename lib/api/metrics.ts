@@ -37,6 +37,7 @@ import type {
   IncomeResponse,
   IncomeProcessed,
   CACRatioProcessed,
+  CACPaybackCalculatedProcessed,
 } from "./types"
 
 // ============================================
@@ -710,5 +711,59 @@ export async function getCACRatio(): Promise<CACRatioProcessed> {
     currentCACRatio,
     cacRatioByMonth,
     averageCACRatio,
+  }
+}
+
+// ============================================
+// CAC PAYBACK - Métrica calculada
+// Fórmula: CAC / (ARPU Mensual × Margen Bruto %)
+// Margen Bruto fijo: 70%
+// ============================================
+
+export async function getCACPaybackCalculated(): Promise<CACPaybackCalculatedProcessed> {
+  // Obtener datos de CAC (numerador) y ARPU (denominador)
+  const [cacData, arpuData] = await Promise.all([
+    getCAC(),
+    getARPU(),
+  ])
+  
+  // ARPU es un valor único por plan, usamos el ARPU total
+  const arpu = arpuData.totalARPU
+  
+  // Calcular CAC Payback para cada mes
+  const cacPaybackByMonth: CACPaybackCalculatedProcessed["cacPaybackByMonth"] = []
+  let totalCACPayback = 0
+  let validMonths = 0
+  
+  for (const cacMonth of cacData.cacByMonth) {
+    const cac = cacMonth.cac
+    
+    // CAC Payback = CAC / (ARPU × Margen Bruto)
+    // Si ARPU es 0, el payback es 0
+    const denominator = arpu * GROSS_MARGIN
+    const cacPayback = denominator > 0 ? cac / denominator : 0
+    
+    cacPaybackByMonth.push({
+      month: cacMonth.month,
+      cacPayback,
+      cac,
+      arpu,
+      grossMargin: GROSS_MARGIN,
+    })
+    
+    if (cacPayback > 0) {
+      totalCACPayback += cacPayback
+      validMonths++
+    }
+  }
+  
+  // El CAC Payback actual es el del último mes con datos
+  const currentCACPayback = cacPaybackByMonth[cacPaybackByMonth.length - 1]?.cacPayback || 0
+  const averageCACPayback = validMonths > 0 ? totalCACPayback / validMonths : 0
+  
+  return {
+    currentCACPayback,
+    cacPaybackByMonth,
+    averageCACPayback,
   }
 }

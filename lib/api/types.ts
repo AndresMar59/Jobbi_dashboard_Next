@@ -442,3 +442,22 @@ export interface CACRatioProcessed {
   cacRatioByMonth: CACRatioDataPoint[]
   averageCACRatio: number
 }
+
+// ============================================
+// CAC PAYBACK - Métrica calculada
+// Fórmula: CAC / (ARPU Mensual × Margen Bruto %)
+// ============================================
+
+export interface CACPaybackCalculatedDataPoint {
+  month: string
+  cacPayback: number // En meses
+  cac: number
+  arpu: number
+  grossMargin: number
+}
+
+export interface CACPaybackCalculatedProcessed {
+  currentCACPayback: number
+  cacPaybackByMonth: CACPaybackCalculatedDataPoint[]
+  averageCACPayback: number
+}

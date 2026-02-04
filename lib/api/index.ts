@@ -74,6 +74,9 @@ export type {
   // CAC Ratio (métrica calculada)
   CACRatioDataPoint,
   CACRatioProcessed,
+  // CAC Payback (métrica calculada)
+  CACPaybackCalculatedDataPoint,
+  CACPaybackCalculatedProcessed,
 } from "./types"
 
 // Servicios de métricas
@@ -128,4 +131,6 @@ export {
   getIncome,
   // CAC Ratio (métrica calculada)
   getCACRatio,
+  // CAC Payback (métrica calculada)
+  getCACPaybackCalculated,
 } from "./metrics"
