@@ -211,21 +211,28 @@ export interface RevenueChurnProcessed {
 
 // ============================================
 // USUARIOS ACTIVOS - Respuesta del endpoint /micro/usuarios_activos
+// Estructura: { [month]: { active_users: number, [plan]: { companies: [] } } }
 // ============================================
 
+export interface UsuariosActivosPlanData {
+  companies: string[]
+}
+
+export interface UsuariosActivosMonthData {
+  active_users?: number
+  [plan: string]: UsuariosActivosPlanData | number | undefined
+}
+
 export interface UsuariosActivosResponse {
-  [month: string]: {
-    active_users: number
-    [plan: string]: {
-      companies: string[]
-    } | number
-  }
+  [month: string]: UsuariosActivosMonthData
 }
 
 export interface UsuariosActivosProcessed {
-  totalActiveUsers: number
-  activeUsersByMonth: { month: string; activeUsers: number }[]
-  activeUsersByPlan: { plan: string; companies: number }[]
+  currentActiveCompanies: number
+  previousActiveCompanies: number
+  activeCompaniesByMonth: { month: string; activeCompanies: number }[]
+  activeCompaniesByPlan: { plan: string; companies: number }[]
+  plans: string[]
 }
 
 // ============================================

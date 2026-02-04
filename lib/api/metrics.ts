@@ -465,32 +465,42 @@ export async function getUsuariosActivosRaw(): Promise<UsuariosActivosResponse> 
 export async function getUsuariosActivos(): Promise<UsuariosActivosProcessed> {
   const rawData = await getUsuariosActivosRaw()
   
-  let totalActiveUsers = 0
-  const activeUsersByMonth: UsuariosActivosProcessed["activeUsersByMonth"] = []
+  const activeCompaniesByMonth: UsuariosActivosProcessed["activeCompaniesByMonth"] = []
   const planMap = new Map<string, number>()
+  const plans = new Set<string>()
   
   for (const [month, monthData] of Object.entries(rawData)) {
-    const activeUsers = typeof monthData.active_users === 'number' ? monthData.active_users : 0
-    totalActiveUsers += activeUsers
-    activeUsersByMonth.push({ month, activeUsers })
+    // Contar companies activas en este mes sumando todas las companies de cada plan
+    let monthActiveCompanies = 0
     
     for (const [key, value] of Object.entries(monthData)) {
-      if (key !== 'active_users' && typeof value === 'object' && 'companies' in value) {
-        const companies = (value as { companies: string[] }).companies.length
-        planMap.set(key, (planMap.get(key) || 0) + companies)
+      if (key !== 'active_users' && typeof value === 'object' && value !== null && 'companies' in value) {
+        const planData = value as { companies: string[] }
+        const companiesCount = planData.companies.length
+        monthActiveCompanies += companiesCount
+        plans.add(key)
+        planMap.set(key, (planMap.get(key) || 0) + companiesCount)
       }
     }
+    
+    activeCompaniesByMonth.push({ month, activeCompanies: monthActiveCompanies })
   }
   
-  activeUsersByMonth.sort((a, b) => a.month.localeCompare(b.month))
+  activeCompaniesByMonth.sort((a, b) => a.month.localeCompare(b.month))
+  
+  // Obtener el valor actual (último mes) y anterior
+  const currentActiveCompanies = activeCompaniesByMonth[activeCompaniesByMonth.length - 1]?.activeCompanies || 0
+  const previousActiveCompanies = activeCompaniesByMonth[activeCompaniesByMonth.length - 2]?.activeCompanies || 0
   
   return {
-    totalActiveUsers,
-    activeUsersByMonth,
-    activeUsersByPlan: Array.from(planMap.entries()).map(([plan, companies]) => ({
+    currentActiveCompanies,
+    previousActiveCompanies,
+    activeCompaniesByMonth,
+    activeCompaniesByPlan: Array.from(planMap.entries()).map(([plan, companies]) => ({
       plan,
       companies,
     })),
+    plans: Array.from(plans),
   }
 }
 

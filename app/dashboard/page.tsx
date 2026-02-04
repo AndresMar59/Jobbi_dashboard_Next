@@ -6,6 +6,7 @@ import { DashboardFilters } from "@/components/dashboard/dashboard-filters"
 import { KPICard } from "@/components/dashboard/kpi-card-clean"
 import { MRRKPICard } from "@/components/dashboard/mrr-kpi-card"
 import { ARPUKPICard } from "@/components/dashboard/arpu-kpi-card"
+import { CompanyActivosKPICard } from "@/components/dashboard/company-activos-kpi-card"
 import { ARRMetricsChart } from "@/components/dashboard/arr-metrics-chart"
 import { CACLTVChart } from "@/components/dashboard/cac-ltv-chart"
 import { DollarChurnChart } from "@/components/dashboard/dollar-churn-chart"
@@ -33,7 +34,7 @@ export default function DashboardMVP() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
             <ARPUKPICard />
             <KPICard title="CAC RATIO" value="3.2x" change="+5.1% vs mes anterior" icon={TrendingUp} trend="up" />
-            <KPICard title="# Company Activos" value="847" change="+15.3% vs mes anterior" icon={Users} trend="up" />
+            <CompanyActivosKPICard />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
