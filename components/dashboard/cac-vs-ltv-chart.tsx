@@ -2,8 +2,6 @@
 
 import { Bar, BarChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import useSWR from "swr"
-import { useFilters } from "@/lib/contexts/filters-context"
-import { MONTH_MAP, MONTH_LABELS } from "@/lib/hooks/use-api-data"
 
 interface CACResponse {
   [month: string]: number
@@ -22,49 +20,27 @@ interface LTVResponse {
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 export function CACVsLTVChart() {
-  const { filters } = useFilters()
-  const year = filters.year
-  const month = filters.month
-
   const { data: cacData } = useSWR<CACResponse>(
     `/api/costs/cac?start_date=2025-12-31T23:59:59.999&acumulado=true`,
     fetcher
   )
   const { data: ltvData } = useSWR<LTVResponse>(`/api/micro/ltv`, fetcher)
 
-  // CAC: filtrar por año y mes
+  // CAC: promedio global de todas las fechas
   let cacValue = 0
   if (cacData) {
-    if (month !== "Todos") {
-      // Si hay mes específico, usar ese mes
-      const monthNum = MONTH_MAP[month]
-      const key = `${year}-${monthNum}`
-      cacValue = cacData[key] || 0
-    } else {
-      // Si es "Todos", promediar todos los meses del año
-      const cacMonths = Object.entries(cacData)
-        .filter(([m]) => m.startsWith(year))
-        .map(([, v]) => v)
-      cacValue = cacMonths.length > 0 ? cacMonths.reduce((a, b) => a + b, 0) / cacMonths.length : 0
-    }
+    const cacValues = Object.values(cacData)
+    cacValue = cacValues.length > 0 ? cacValues.reduce((a, b) => a + b, 0) / cacValues.length : 0
   }
 
-  // LTV: promedio global (sin segmentación por plan)
+  // LTV: promedio global de todos los planes
   let ltvValue = 0
   if (ltvData) {
     let totalLtv = 0
     let count = 0
     
     for (const [, planMonths] of Object.entries(ltvData)) {
-      for (const [monthKey, data] of Object.entries(planMonths)) {
-        const [dataYear, dataMonth] = monthKey.split("-")
-        
-        // Filtrar por año
-        if (year !== "Todos" && dataYear !== year) continue
-        
-        // Filtrar por mes si se especifica
-        if (month !== "Todos" && dataMonth !== MONTH_MAP[month]) continue
-        
+      for (const [, data] of Object.entries(planMonths)) {
         totalLtv += data.ltv
         count++
       }
@@ -77,8 +53,6 @@ export function CACVsLTVChart() {
     { name: "CAC", value: cacValue },
     { name: "LTV", value: ltvValue },
   ]
-
-  const monthLabel = month !== "Todos" ? ` - ${month}` : ""
 
   return (
     <div className="bg-card rounded-xl border border-border p-6">
@@ -105,7 +79,7 @@ export function CACVsLTVChart() {
       </div>
 
       <p className="text-xs text-muted-foreground mt-3">
-        CAC promedio anual {year}{monthLabel} | LTV global
+        CAC promedio global | LTV promedio global
       </p>
     </div>
   )
