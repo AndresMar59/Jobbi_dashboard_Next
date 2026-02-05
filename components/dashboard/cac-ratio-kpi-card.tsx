@@ -8,15 +8,10 @@ export function CACRatioKPICard() {
   const { filters } = useFilters()
 
   // CAC Ratio solo responde a filtros de fecha (no plan)
-  const cacResult = useCACRatioData({
+  const { currentCACRatio, previousCACRatio, isLoading } = useCACRatioData({
     year: filters.year,
     month: filters.month,
   })
-  const { currentCACRatio, previousCACRatio, isLoading, chartData } = cacResult
-
-  console.log("[v0] CAC Ratio - chartData:", chartData)
-  console.log("[v0] CAC Ratio - current:", currentCACRatio, "previous:", previousCACRatio)
-  console.log("[v0] CAC Ratio - error:", cacResult.error)
 
   // Calcular cambio porcentual vs mes anterior
   const changePercent = previousCACRatio > 0
