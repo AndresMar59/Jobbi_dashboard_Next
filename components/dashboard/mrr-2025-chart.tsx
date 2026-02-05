@@ -7,17 +7,17 @@ import { Loader2 } from "lucide-react"
 
 export function MRR2025Chart() {
   const { filters, setPlan } = useFilters()
-  const { data: mrrData, isLoading: mrrLoading, error: mrrError } = useMRRData({
+  const { chartData: mrrData, isLoading: mrrLoading, error: mrrError } = useMRRData({
     year: filters.year,
     month: filters.month,
     plan: filters.plan,
   })
-  const { data: newMrrData } = useMRRNewData({
+  const { chartData: newMrrData } = useMRRNewData({
     year: filters.year,
     month: filters.month,
     plan: filters.plan,
   })
-  const { data: churnMrrData } = useChurnMRRData({
+  const { chartData: churnMrrData } = useChurnMRRData({
     year: filters.year,
     month: filters.month,
     plan: filters.plan,
@@ -27,12 +27,12 @@ export function MRR2025Chart() {
   const { plans: availablePlans } = useMRRData({ year: filters.year })
 
   // Combinar datos de las tres APIs por mes
-  const chartData = (mrrData?.chartData || []).map((mrrPoint) => {
+  const chartData = (mrrData || []).map((mrrPoint) => {
     // Encontrar los puntos correspondientes en los otros datasets
-    const newMrrPoint = newMrrData?.chartData?.find(
+    const newMrrPoint = newMrrData?.find(
       (p) => p.month === mrrPoint.month
     )
-    const churnMrrPoint = churnMrrData?.chartData?.find(
+    const churnMrrPoint = churnMrrData?.find(
       (p) => p.month === mrrPoint.month
     )
 
@@ -51,11 +51,6 @@ export function MRR2025Chart() {
       expansionMRR: expansionMRR,
     }
   })
-
-  console.log("[v0] MRR Data:", mrrData)
-  console.log("[v0] NewMRR Data:", newMrrData)
-  console.log("[v0] ChurnMRR Data:", churnMrrData)
-  console.log("[v0] Combined Chart Data:", chartData)
 
   const isLoading = mrrLoading
 
