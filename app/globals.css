@@ -6,7 +6,7 @@
 :root {
   /* Updated color palette to match purple/violet gradient theme from Jobbi */
   --background: oklch(0.98 0.01 280);
-  --foreground: oklch(0.98 0 0);
+  --foreground: oklch(0.15 0.02 280);
   --card: oklch(0.99 0.005 280);
   --card-foreground: oklch(0.15 0.02 280);
   --popover: oklch(0.99 0.005 280);
