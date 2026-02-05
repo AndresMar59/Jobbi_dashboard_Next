@@ -7,11 +7,15 @@ import { useARPUData } from "@/lib/hooks/use-api-data"
 
 export function ARPUKPICard() {
   const { filters } = useFilters()
-  const { currentARPU, previousARPU, isLoading } = useARPUData({
+  const arpuResult = useARPUData({
     year: filters.year,
     month: filters.month,
     plan: filters.plan,
   })
+  const { currentARPU, previousARPU, isLoading, error } = arpuResult
+  
+  console.log("[v0] ARPU KPI - filters:", filters)
+  console.log("[v0] ARPU KPI - result:", { currentARPU, previousARPU, isLoading, error, chartData: arpuResult.chartData })
 
   // Calcular cambio porcentual vs mes anterior
   const change = previousARPU > 0
