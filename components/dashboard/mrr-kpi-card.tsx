@@ -28,7 +28,7 @@ export function MRRKPICard() {
   return (
     <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
       <div className="flex items-start justify-between mb-2">
-        <p className="text-sm text-muted-foreground">% MRR</p>
+        <p className="text-sm text-muted-foreground">$ MRR</p>
         <Percent className="h-4 w-4 text-muted-foreground" />
       </div>
       

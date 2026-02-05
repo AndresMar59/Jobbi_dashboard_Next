@@ -93,7 +93,7 @@ export function ARPUKPICard() {
         </CardContent>
       </Card>
     )
-  }
+  }  
 
   return (
     <Card className="bg-card border border-border shadow-sm">

@@ -24,7 +24,7 @@ export interface MRRCompanyData {
 }
 
 export interface MRRMonthData {
-  [companyId: string]: MRRCompanyData
+  [plan_id: string]: MRRCompanyData
 }
 
 export interface MRRPlanData {
@@ -53,7 +53,7 @@ export interface MRRNewCompanyData {
 }
 
 export interface MRRNewMonthData {
-  [companyId: string]: MRRNewCompanyData
+  [Nivel_id: string]: MRRNewCompanyData
 }
 
 export interface MRRNewPlanData {
@@ -68,6 +68,7 @@ export interface MRRNewProcessed {
   totalNewMRR: number
   newMRRByPlan: { plan: string; newMRR: number; subscriptions: number }[]
   newMRRByMonth: { month: string; newMRR: number }[]
+  totalSubscriptions: number
 }
 
 // ============================================
@@ -77,7 +78,7 @@ export interface MRRNewProcessed {
 export interface ChurnMRRResponse {
   [plan: string]: {
     [month: string]: {
-      [companyId: string]: {
+      [NIVEL_ID: string]: {
         churned_MRR: number
       }
     }
@@ -170,13 +171,7 @@ export interface TasaRetentionProcessed {
 // ============================================
 
 export interface TasaChurnResponse {
-  [month: string]: {
-    [plan: string]: {
-      churn_rate: number
-      churned_companies: number
-      total_companies: number
-    }
-  }
+  [month: string]: number
 }
 
 export interface TasaChurnProcessed {
@@ -190,13 +185,7 @@ export interface TasaChurnProcessed {
 // ============================================
 
 export interface RevenueChurnResponse {
-  [month: string]: {
-    [plan: string]: {
-      revenue_churn: number
-      churned_revenue: number
-      total_revenue: number
-    }
-  }
+  [month: string]: number
 }
 
 export interface RevenueChurnProcessed {
@@ -226,8 +215,8 @@ export interface UsuariosActivosProcessed {
   currentActiveCompanies: number
   previousActiveCompanies: number
   activeCompaniesByMonth: { month: string; activeCompanies: number }[]
-  activeCompaniesByPlan: { plan: string; companies: number }[]
-  plans: string[]
+  activeCompaniesByPlan: []
+  plans: []
 }
 
 // ============================================
@@ -342,6 +331,26 @@ export interface IncomeProcessed {
   incomeBySource: { source: string; amount: number }[]
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // ============================================
 // KPIs - Tarjetas de métricas principales
 // ============================================
@@ -435,6 +444,19 @@ export interface CalculatedMetrics {
   // Gross Revenue Retention
   grr: number
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // ============================================
 // CAC RATIO - Métrica calculada
