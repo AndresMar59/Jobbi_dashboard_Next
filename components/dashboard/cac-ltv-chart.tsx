@@ -18,7 +18,7 @@ interface LTVResponse {
   [plan: string]: LTVPlanData
 }
 
-const fetcher = async (url: string) => {
+const fetchJSON = async (url: string) => {
   const response = await fetch(url)
   if (!response.ok) throw new Error("Error fetching data")
   return response.json()
@@ -28,61 +28,51 @@ const fetcher = async (url: string) => {
 export function CACLTVChart() {
   const { filters, setFilters } = useFilters()
   const selectedPlan = filters.plan
-  
-  // Fetch CAC data
+
   const { data: cacData, isLoading: cacLoading } = useSWR<CACResponse>(
     "/api/costs/cac",
-    fetcher,
+    fetchJSON,
     { revalidateOnFocus: false }
   )
-  
-  // Fetch LTV data
+
   const { data: ltvData, isLoading: ltvLoading } = useSWR<LTVResponse>(
     "/api/micro/ltv",
-    fetcher,
+    fetchJSON,
     { revalidateOnFocus: false }
   )
-  
+
   const isLoading = cacLoading || ltvLoading
-  
-  // Calcular CAC promedio anual
+
   const calculateAverageCAC = (): number => {
     if (!cacData) return 0
-    const values = Object.values(cacData).filter(v => typeof v === 'number')
+    const values = Object.values(cacData).filter(v => typeof v === "number")
     if (values.length === 0) return 0
     return values.reduce((sum, val) => sum + val, 0) / values.length
   }
-  
-  // Calcular LTV (global o por plan)
+
   const calculateLTV = (): number => {
     if (!ltvData) return 0
-    
     if (selectedPlan && selectedPlan !== "Todos") {
-      // LTV del plan seleccionado
       return ltvData[selectedPlan]?.ltv || 0
     }
-    
-    // LTV global (promedio de todos los planes)
     const plans = Object.values(ltvData)
     if (plans.length === 0) return 0
     return plans.reduce((sum, plan) => sum + plan.ltv, 0) / plans.length
   }
-  
-  // Obtener planes disponibles
+
   const availablePlans = ltvData ? Object.keys(ltvData) : []
-  
   const averageCAC = calculateAverageCAC()
   const ltv = calculateLTV()
-  
+
   const chartData = [
     { name: "CAC", value: averageCAC },
     { name: "LTV", value: ltv },
   ]
-  
+
   const handlePlanChange = (value: string) => {
     setFilters({ plan: value })
   }
-  
+
   if (isLoading) {
     return (
       <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
@@ -95,7 +85,7 @@ export function CACLTVChart() {
       </div>
     )
   }
-  
+
   return (
     <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
       <div className="mb-4 flex items-center justify-between">
@@ -116,12 +106,7 @@ export function CACLTVChart() {
       <ResponsiveContainer width="100%" height={350}>
         <BarChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-          <XAxis
-            dataKey="name"
-            stroke="#6b7280"
-            tickMargin={10}
-            tick={{ fontSize: 12 }}
-          />
+          <XAxis dataKey="name" stroke="#6b7280" tickMargin={10} tick={{ fontSize: 12 }} />
           <YAxis
             stroke="#6b7280"
             width={50}
@@ -129,11 +114,7 @@ export function CACLTVChart() {
             tickFormatter={(v) => `$${v.toFixed(0)}`}
           />
           <Tooltip
-            contentStyle={{
-              backgroundColor: "#fff",
-              border: "1px solid #e5e7eb",
-              borderRadius: "6px",
-            }}
+            contentStyle={{ backgroundColor: "#fff", border: "1px solid #e5e7eb", borderRadius: "6px" }}
             formatter={(value: number) => [`$${value.toFixed(2)}`, ""]}
           />
           <Bar dataKey="value" fill="#09124F" radius={[4, 4, 0, 0]} barSize={60} />
