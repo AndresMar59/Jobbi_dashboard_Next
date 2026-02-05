@@ -34,7 +34,7 @@ import type {
 // CONSTANTES DE NEGOCIO
 // ============================================
 
-export const GROSS_MARGIN = 0.70  // Margen bruto 70%
+export const GROSS_MARGIN = 0.80  // Margen bruto 80%
 export const ALL_MONTHS = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
 
 // ============================================
