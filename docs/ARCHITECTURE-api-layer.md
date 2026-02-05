@@ -1,43 +1,60 @@
 # Arquitectura de la Capa de API
 
-Este documento explica como funciona el sistema de consumo de endpoints, calculo de metricas, el archivo index, y el sistema de filtros globales.
+Este documento explica como funciona el sistema de consumo de endpoints, calculo de metricas, el sistema de filtros globales, y como agregar nuevas metricas.
 
 ---
 
 ## 1. Vision General
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        FRONTEND (Next.js)                        │
-├─────────────────────────────────────────────────────────────────┤
-│  Componentes UI                                                  │
-│  (KPI Cards, Charts)                                            │
-│       │                                                          │
-│       ▼                                                          │
-│  Hooks (useSWR)  ◄──────► FiltersContext (año, mes, plan)       │
-│       │                                                          │
-│       ▼                                                          │
-│  lib/api/metrics.ts  (procesamiento de datos)                   │
-│       │                                                          │
-│       ▼                                                          │
-│  lib/api/client.ts   (fetch HTTP)                               │
-│       │                                                          │
-│       ▼                                                          │
-│  Route Handlers (/api/micro/*, /api/costs/*)                    │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    MICROSERVICIO EXTERNO                         │
-│            https://fast-api-liart-nine.vercel.app               │
-├─────────────────────────────────────────────────────────────────┤
-│  /micro/mrr                                                      │
-│  /micro/arpu                                                     │
-│  /micro/ltv                                                      │
-│  /costs/cac                                                      │
-│  /costs/ue                                                       │
-│  ... (16 endpoints total)                                        │
-└─────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                       FRONTEND (Next.js)                          │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                    │
+│  Componentes UI (KPI Cards, Charts, Tables)                       │
+│       │ importan hooks                                             │
+│       ▼                                                            │
+│  ┌────────────────────────────────────────────┐                    │
+│  │  HOOKS (lib/hooks/)                         │                   │
+│  │                                             │                   │
+│  │  use-api-data.ts    → Hooks de APIs         │                   │
+│  │    useMRRData()       Cada hook:            │                   │
+│  │    useARPUData()      1. Fetch via SWR      │                   │
+│  │    useLTVData()       2. Filtra por año/    │                   │
+│  │    useCACData()          mes/plan           │                   │
+│  │    ...                3. Continuidad (0s)   │                   │
+│  │                                             │                   │
+│  │  use-metric-data.ts → Hooks de Metricas     │                   │
+│  │    useCACRatioData()  Cada hook:            │                   │
+│  │    useNewARRData()    1. Fetch multi-API    │                   │
+│  │    useChurnARRData()  2. Calcula formula    │                   │
+│  │    useCACPaybackData()3. Filtra resultado   │                   │
+│  └───────┬──────────────────┬──────────────────┘                   │
+│          │                  │                                      │
+│          │ SWR fetch        │ Funciones puras                      │
+│          ▼                  ▼                                      │
+│  ┌───────────────┐  ┌────────────────────────┐                     │
+│  │ Route Handlers │  │ lib/api/metrics.ts      │                    │
+│  │ /api/micro/*   │  │  calculateCACRatio()    │                    │
+│  │ /api/costs/*   │  │  calculateNewARR()      │                    │
+│  │  (proxy+cache) │  │  calculateChurnARR()    │                    │
+│  └───────┬────────┘  │  calculateCACPayback()  │                    │
+│          │           └────────────────────────┘                     │
+│          ▼                                                         │
+│  ┌─────────────────────────────────────────┐                       │
+│  │ lib/api/types.ts                         │                      │
+│  │  Interfaces de respuesta de APIs         │                      │
+│  │  Interfaces de metricas calculadas       │                      │
+│  └─────────────────────────────────────────┘                       │
+├──────────────────────────────────────────────────────────────────┤
+│  FiltersContext (lib/contexts/filters-context.tsx)                 │
+│  Estado global: { year, month, plan }                             │
+│  Los componentes leen filtros → pasan a hooks como opciones       │
+├──────────────────────────────────────────────────────────────────┤
+│                       BACKEND                                      │
+│  Microservicio: https://fast-api-liart-nine.vercel.app            │
+│  /micro/mrr, /micro/arpu, /costs/cac, etc.                       │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -47,558 +64,239 @@ Este documento explica como funciona el sistema de consumo de endpoints, calculo
 ```
 lib/
 ├── api/
-│   ├── index.ts      # Exportaciones centralizadas
-│   ├── types.ts      # Tipos TypeScript (Request/Response/Processed)
-│   ├── client.ts     # Funciones HTTP para llamar a los route handlers
-│   └── metrics.ts    # Funciones de procesamiento de datos
-├── contexts/
-│   └── filters-context.tsx  # Context de filtros globales
-└── hooks/
-    ├── use-mrr-data.ts      # Hook especifico para MRR
-    └── use-arpu-data.ts     # Hook especifico para ARPU
-
-app/api/
-├── micro/
-│   └── [endpoint]/route.ts  # Proxy para /micro/*
-└── costs/
-    └── [endpoint]/route.ts  # Proxy para /costs/*
+│   ├── client.ts        # Cliente HTTP generico (apiClient, api.get/post)
+│   ├── types.ts         # Interfaces de respuesta + metricas calculadas
+│   ├── metrics.ts       # Fetcher SWR + funciones de calculo de metricas
+│   └── index.ts         # Re-exporta todo para imports limpios
+├── hooks/
+│   ├── use-api-data.ts  # Hooks para TODAS las APIs (14 hooks)
+│   └── use-metric-data.ts # Hooks para metricas calculadas (4 hooks)
+└── contexts/
+    └── filters-context.tsx # Estado global de filtros (año, mes, plan)
 ```
 
 ---
 
-## 3. Flujo de Datos Detallado
+## 3. Distincion: APIs vs Metricas
 
-### Paso 1: Componente solicita datos
+### APIs (ya calculadas en backend)
+- Los datos vienen listos del microservicio
+- Solo se filtran en el UI (año, mes, plan)
+- NO se hacen calculos adicionales
+- Si falta un mes o plan → se muestra como 0 (continuidad)
 
-```typescript
-// Ejemplo: components/dashboard/mrr-kpi-card.tsx
-
-import useSWR from "swr"
-import { getMRR } from "@/lib/api"
-import { useFilters } from "@/lib/contexts/filters-context"
-
-export function MRRKPICard() {
-  const { filters } = useFilters()
-  
-  // useSWR maneja cache, revalidacion, y loading states
-  const { data, error, isLoading } = useSWR("mrr", getMRR)
-  
-  // Filtrar datos segun los filtros globales
-  const filteredData = filterByYearAndPlan(data, filters)
-  
-  return <Card>{/* render */}</Card>
-}
-```
-
-### Paso 2: Funcion de API procesa la solicitud
-
-```typescript
-// lib/api/metrics.ts
-
-// 1. Funcion Raw - obtiene datos crudos
-async function getMRRRaw(): Promise<MRRResponse> {
-  return fetchFromMicroservice("mrr")
-}
-
-// 2. Funcion Procesada - normaliza y calcula
-export async function getMRR(): Promise<MRRProcessed> {
-  const rawData = await getMRRRaw()
-  
-  // Transformar estructura del API a estructura normalizada
-  const mrrByMonth = []
-  const mrrByPlanAndMonth = []
-  
-  for (const [plan, months] of Object.entries(rawData)) {
-    for (const [month, data] of Object.entries(months)) {
-      mrrByPlanAndMonth.push({
-        plan,
-        month,
-        mrr: data.mrr,
-        companies: data.companies
-      })
-    }
-  }
-  
-  // Ordenar cronologicamente
-  mrrByMonth.sort((a, b) => a.month.localeCompare(b.month))
-  
-  // Calcular valores derivados
-  const currentMRR = mrrByMonth[mrrByMonth.length - 1]?.mrr || 0
-  const previousMRR = mrrByMonth[mrrByMonth.length - 2]?.mrr || 0
-  
-  return {
-    currentMRR,
-    previousMRR,
-    totalMRR,
-    mrrByMonth,
-    mrrByPlanAndMonth,
-    plans
-  }
-}
-```
-
-### Paso 3: Cliente HTTP hace la llamada
-
-```typescript
-// lib/api/client.ts
-
-const API_BASE = "/api"
-
-export async function fetchFromMicroservice(endpoint: string) {
-  const response = await fetch(`${API_BASE}/micro/${endpoint}`)
-  
-  if (!response.ok) {
-    throw new Error(`Error fetching ${endpoint}`)
-  }
-  
-  return response.json()
-}
-```
-
-### Paso 4: Route Handler proxea al microservicio
-
-```typescript
-// app/api/micro/[endpoint]/route.ts
-
-const MICROSERVICE_URL = "https://fast-api-liart-nine.vercel.app"
-
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ endpoint: string }> }
-) {
-  const { endpoint } = await params
-  
-  const response = await fetch(`${MICROSERVICE_URL}/micro/${endpoint}`, {
-    headers: { "Content-Type": "application/json" },
-    next: { revalidate: 60 }  // Cache por 60 segundos
-  })
-  
-  const data = await response.json()
-  return Response.json(data)
-}
-```
+### Metricas (calculadas en frontend)
+- Combinan datos de 2+ APIs
+- Aplican formulas de negocio
+- Cada metrica define su nivel de segregacion
+- Ejemplos: CAC Ratio, New ARR, Churn ARR, CAC Payback
 
 ---
 
-## 4. Sistema de Tipos
+## 4. APIs Disponibles
 
-### Patron de Nombrado
+### Estructura con niveles: plan > mes > nivel_id
+| Endpoint | Hook | Filtros | Key valores |
+|----------|------|---------|-------------|
+| `/micro/mrr` | `useMRRData()` | año, mes, plan | mrr, subscriptions |
+| `/micro/mrr_new` | `useMRRNewData()` | año, mes, plan | new_MRR, subscriptions |
+| `/micro/churn_mrr` | `useChurnMRRData()` | año, mes, plan | Chur_MRR, subscriptions |
+| `/micro/arpu` | `useARPUData()` | año, mes, plan | arpu, users |
 
-```typescript
-// Para cada endpoint hay 2-3 tipos:
+### Estructura: mes > plan
+| Endpoint | Hook | Filtros | Key valores |
+|----------|------|---------|-------------|
+| `/micro/usuarios_activos` | `useUsuariosActivosData()` | año, mes, plan | active_users, companies[] |
+| `/micro/usuarios_nuevos` | `useUsuariosNuevosData()` | año, mes, plan | new_users, companies[] |
+| `/micro/usuarios_churned` | `useUsuariosChurnedData()` | año, mes, plan | churned_users, companies[] |
 
-// 1. Response - estructura exacta del API externo
-interface MRRResponse {
-  [plan: string]: {
-    [month: string]: {
-      mrr: number
-      companies: string[]
-    }
-  }
-}
+### Estructura: solo fecha (sin plan)
+| Endpoint | Hook | Filtros | Valor |
+|----------|------|---------|-------|
+| `/micro/tasa_retention` | `useTasaRetentionData()` | año, mes | porcentaje |
+| `/micro/tasa_churn` | `useTasaChurnData()` | año, mes | porcentaje |
+| `/micro/revenue_churn` | `useRevenueChurnData()` | año, mes | dolares |
+| `/micro/ticket_promedio` | `useTicketPromedioData()` | año, mes | prom_ticket |
+| `/costs/cac` | `useCACData()` | año, mes | dolares (acumulado) |
+| `/costs/ue` | `useUnitEconomicsData()` | año, mes | dolares (acumulado) |
 
-// 2. Processed - estructura normalizada para el frontend
-interface MRRProcessed {
-  currentMRR: number           // Valor del ultimo mes
-  previousMRR: number          // Valor del mes anterior (para calcular %)
-  totalMRR: number             // Suma total
-  mrrByMonth: Array<{...}>     // Array ordenado por mes
-  mrrByPlanAndMonth: Array<{...}>  // Array con plan+mes
-  plans: string[]              // Lista de planes disponibles
-}
-
-// 3. DataPoint (opcional) - para puntos individuales
-interface MRRDataPoint {
-  month: string
-  mrr: number
-}
-```
-
-### Beneficios de esta Estructura
-
-1. **Type Safety**: TypeScript valida que usemos los datos correctamente
-2. **Autocompletado**: El IDE sugiere propiedades disponibles
-3. **Documentacion**: Los tipos sirven como documentacion del API
-4. **Refactoring**: Cambios en la estructura se detectan en compile-time
+### Estructura: solo plan (sin fecha)
+| Endpoint | Hook | Filtros | Valores |
+|----------|------|---------|---------|
+| `/micro/ltv` | `useLTVData()` | plan | ltv, total_revenue, companies |
 
 ---
 
-## 5. Archivo Index (`lib/api/index.ts`)
+## 5. Metricas Calculadas
 
-El archivo index centraliza todas las exportaciones:
+| Metrica | Hook | Formula | APIs fuente | Nivel |
+|---------|------|---------|-------------|-------|
+| CAC Ratio | `useCACRatioData()` | (New MRR * 0.70) / CAC | mrr_new + cac | solo fecha |
+| New ARR | `useNewARRData()` | New MRR * 12 | mrr_new | plan + fecha |
+| Churn ARR | `useChurnARRData()` | Churn MRR * 12 | churn_mrr | plan + fecha |
+| CAC Payback | `useCACPaybackData()` | CAC / (ARPU avg * 0.70) | cac + arpu | solo fecha |
 
-```typescript
-// Exportar tipos
-export type {
-  // Metricas base
-  MRRResponse,
-  MRRProcessed,
-  MRRDataPoint,
-  
-  // Costos
-  CACResponse,
-  CACProcessed,
-  
-  // Metricas calculadas
-  CACRatioProcessed,
-  CACPaybackCalculatedProcessed,
-  // ... etc
-} from "./types"
-
-// Exportar funciones
-export {
-  // Metricas base
-  getMRR,
-  getARPU,
-  getLTV,
-  
-  // Costos
-  getCAC,
-  getUnitEconomics,
-  
-  // Metricas calculadas
-  getCACRatio,
-  getCACPaybackCalculated,
-  getNewARR,
-  getChurnARR,
-  // ... etc
-} from "./metrics"
-```
-
-### Uso en Componentes
-
-```typescript
-// ANTES (sin index): imports multiples
-import { getMRR } from "@/lib/api/metrics"
-import { MRRProcessed } from "@/lib/api/types"
-import { fetchFromMicroservice } from "@/lib/api/client"
-
-// DESPUES (con index): import unico
-import { getMRR, MRRProcessed } from "@/lib/api"
-```
+### Reglas especiales:
+- **CAC Ratio**: Si New MRR = 0, ratio = 0. Si CAC = 0, usar 1 como divisor.
+- **New ARR / Churn ARR**: Proyeccion del ultimo mes real para los meses restantes del anio.
+- **CAC Payback**: ARPU se promedia entre todos los planes (NO basarse en users).
+- **Margen Bruto**: Constante fija del 70% (GROSS_MARGIN = 0.70)
 
 ---
 
 ## 6. Sistema de Filtros Globales
 
-### Estructura del Context
-
-```typescript
-// lib/contexts/filters-context.tsx
-
-interface Filters {
-  year: string   // "2024", "2025", "2026"
-  month: string  // "Todos", "01", "02", ..., "12"
-  plan: string   // "Todos", "Free", "Starter", "Pro", etc.
-}
-
-interface FiltersContextType {
-  filters: Filters
-  setFilters: (filters: Filters) => void
-  updateFilter: (key: keyof Filters, value: string) => void
+### FiltersContext
+```tsx
+// Estado global
+interface FiltersState {
+  year: string   // "2026"
+  month: string  // "Todos" | "Ene" | "Feb" | ...
+  plan: string   // "Todos" | "Free" | "Starter" | ...
 }
 ```
 
-### Provider en Layout
-
-```typescript
-// app/dashboard/page.tsx
-
-import { FiltersProvider } from "@/lib/contexts/filters-context"
-
-export default function DashboardPage() {
-  return (
-    <FiltersProvider>
-      <DashboardFilters />  {/* Controles de filtro */}
-      <MRRKPICard />        {/* Se actualiza con filtros */}
-      <ARPUKPICard />       {/* Se actualiza con filtros */}
-      {/* ... */}
-    </FiltersProvider>
-  )
-}
+### Flujo de filtrado
 ```
+1. Usuario selecciona filtros en DashboardFilters
+2. FiltersContext actualiza el estado
+3. Componentes leen filtros via useFilters()
+4. Pasan filtros como opciones a los hooks
+5. Hooks filtran la data cruda del SWR
 
-### Uso en Componentes
-
-```typescript
-// Componente que usa filtros
-export function MRRKPICard() {
+Componente:
   const { filters } = useFilters()
-  const { data } = useSWR("mrr", getMRR)
-  
-  // Filtrar por año
-  const yearData = data?.mrrByPlanAndMonth.filter(
-    item => item.month.startsWith(filters.year)
+  const { chartData, currentMRR } = useMRRData({
+    year: filters.year,
+    month: filters.month,
+    plan: filters.plan,
+  })
+```
+
+### Mapeo de meses
+Los filtros usan etiquetas ("Ene", "Feb") y la data usa "01", "02".
+Los hooks hacen la conversion automaticamente:
+```
+"Ene" → "01"  |  "Jul" → "07"
+"Feb" → "02"  |  "Ago" → "08"
+"Mar" → "03"  |  "Sep" → "09"
+"Abr" → "04"  |  "Oct" → "10"
+"May" → "05"  |  "Nov" → "11"
+"Jun" → "06"  |  "Dic" → "12"
+```
+
+### Continuidad
+Cuando un mes no tiene datos, se rellena con 0.
+Los hooks generan los 12 meses del anio siempre,
+independientemente de cuantos meses tenga la data real.
+
+---
+
+## 7. Route Handlers (Proxy)
+
+### /api/micro/[endpoint]/route.ts
+- Proxy generico: recibe `endpoint` de la URL, llama a `MICROSERVICE_URL/micro/{endpoint}`
+- Cache: `next: { revalidate: 60 }` (60 segundos)
+- No requiere parametros especiales
+
+### /api/costs/[endpoint]/route.ts
+- Proxy generico para endpoints de costos
+- Para `cac` y `ue`: agrega automaticamente `start_date=2025-12-31T23:59:59.999` y `acumulado=true`
+- Cache: 60 segundos
+
+---
+
+## 8. Uso de SWR
+
+Todos los hooks usan SWR con configuracion compartida:
+```ts
+const SWR_CONFIG = {
+  revalidateOnFocus: false,
+  revalidateOnReconnect: false,
+  refreshInterval: 60000, // 60 segundos
+}
+```
+
+**Deduplicacion**: Si multiples componentes usan el mismo hook (ej: `useMRRData`), SWR hace una sola peticion HTTP porque comparten la misma key (`"/api/micro/mrr"`).
+
+**Cache**: La data se cachea en el cliente y se refresca cada 60s. El route handler tambien cachea 60s en el server.
+
+---
+
+## 9. Como agregar un nuevo endpoint
+
+### Paso 1: Agregar tipo en types.ts
+```ts
+export interface NuevoEndpointResponse {
+  [month: string]: { valor: number }
+}
+```
+
+### Paso 2: Agregar hook en use-api-data.ts
+```ts
+export function useNuevoEndpointData(options: FilterOptions = {}) {
+  const { year = "2026", month = "Todos" } = options
+  const { data, error, isLoading } = useSWR<NuevoEndpointResponse>(
+    "/api/micro/nuevo_endpoint", fetcher, SWR_CONFIG
   )
-  
-  // Filtrar por mes (si no es "Todos")
-  const monthData = filters.month !== "Todos"
-    ? yearData?.filter(item => item.month.endsWith(filters.month))
-    : yearData
-  
-  // Filtrar por plan (si no es "Todos")
-  const finalData = filters.plan !== "Todos"
-    ? monthData?.filter(item => item.plan === filters.plan)
-    : monthData
-  
-  // Calcular valor actual
-  const currentValue = calculateSum(finalData)
-  
-  return <Card value={currentValue} />
+  // ... filtrar y retornar
 }
 ```
 
-### Flujo de Actualizacion
-
-```
-Usuario cambia filtro "Plan" a "Starter"
-         │
-         ▼
-DashboardFilters llama updateFilter("plan", "Starter")
-         │
-         ▼
-FiltersContext actualiza state
-         │
-         ▼
-React re-renderiza todos los componentes suscritos
-         │
-         ▼
-Cada componente filtra sus datos con el nuevo valor
-         │
-         ▼
-UI actualizada mostrando solo datos de "Starter"
+### Paso 3: Exportar tipo en index.ts (opcional)
+```ts
+export type { NuevoEndpointResponse } from "./types"
 ```
 
----
-
-## 7. Metricas Calculadas
-
-Algunas metricas no vienen directamente del API, se calculan combinando datos:
-
-### CAC Ratio
-
-```typescript
-// Formula: (New MRR x Margen Bruto) / CAC
-export async function getCACRatio(): Promise<CACRatioProcessed> {
-  const [mrrNewData, cacData] = await Promise.all([
-    getMRRNew(),
-    getCAC()
-  ])
-  
-  const GROSS_MARGIN = 0.70  // 70%
-  
-  const cacRatioByMonth = []
-  
-  for (const month of allMonths) {
-    const newMRR = mrrNewData.get(month) || 0
-    const cac = cacData.get(month) || 0
-    
-    // Si CAC es 0, ratio es 0 (evitar division por cero)
-    const ratio = cac > 0 ? (newMRR * GROSS_MARGIN) / cac : 0
-    
-    cacRatioByMonth.push({ month, cacRatio: ratio })
-  }
-  
-  return { cacRatioByMonth, currentCACRatio, averageCACRatio }
-}
-```
-
-### CAC Payback
-
-```typescript
-// Formula: CAC / (ARPU x Margen Bruto)
-// Resultado en meses
-export async function getCACPaybackCalculated() {
-  const [cacData, arpuData] = await Promise.all([
-    getCAC(),
-    getARPU()
-  ])
-  
-  const arpu = arpuData.totalARPU
-  const denominator = arpu * GROSS_MARGIN
-  
-  // Si ARPU es 0, payback es 0
-  const cacPayback = denominator > 0 
-    ? cacData.currentCAC / denominator 
-    : 0
-  
-  return { currentCACPayback: cacPayback }
-}
-```
-
-### ARR con Proyeccion
-
-```typescript
-// Formula: MRR x 12
-// Proyeccion: ultimo mes real se usa para meses futuros
-export async function getNewARR(year = "2026") {
-  const mrrNewData = await getMRRNew()
-  
-  // Encontrar ultimo mes con datos reales
-  const realMonths = mrrNewData.filter(m => m.month.startsWith(year))
-  const lastRealMonth = realMonths[realMonths.length - 1]
-  
-  const newARRByMonth = []
-  
-  for (const monthNum of ["01", "02", ..., "12"]) {
-    const monthKey = `${year}-${monthNum}`
-    
-    let newMRR
-    let isProjected
-    
-    if (hasRealData(monthKey)) {
-      newMRR = getRealData(monthKey)
-      isProjected = false
-    } else if (monthKey > lastRealMonth) {
-      // Proyectar usando ultimo mes real
-      newMRR = lastRealMonth.newMRR
-      isProjected = true
-    } else {
-      newMRR = 0
-      isProjected = false
-    }
-    
-    newARRByMonth.push({
-      month: monthKey,
-      newMRR,
-      newARR: newMRR * 12,
-      isProjected
-    })
-  }
-  
-  return { newARRByMonth, totalNewARR, annualizedNewARR }
-}
-```
-
----
-
-## 8. Manejo de Errores y Loading States
-
-### En Componentes con SWR
-
-```typescript
-export function MRRKPICard() {
-  const { data, error, isLoading } = useSWR("mrr", getMRR)
-  
-  // Estado de carga
-  if (isLoading) {
-    return <Skeleton className="h-32 w-full" />
-  }
-  
-  // Estado de error
-  if (error) {
-    return <Card className="text-red-500">Error cargando datos</Card>
-  }
-  
-  // Datos no disponibles
-  if (!data) {
-    return <Card>Sin datos</Card>
-  }
-  
-  // Render normal
-  return <Card value={data.currentMRR} />
-}
-```
-
-### En Route Handlers
-
-```typescript
-export async function GET(request, { params }) {
-  try {
-    const response = await fetch(url)
-    
-    if (!response.ok) {
-      return Response.json(
-        { error: `Error del microservicio: ${response.status}` },
-        { status: response.status }
-      )
-    }
-    
-    const data = await response.json()
-    return Response.json(data)
-    
-  } catch (error) {
-    return Response.json(
-      { error: "Error de conexion con el microservicio" },
-      { status: 500 }
-    )
-  }
-}
-```
-
----
-
-## 9. Cache y Revalidacion
-
-### En Route Handlers (Server-side)
-
-```typescript
-// Cache por 60 segundos en el servidor
-const response = await fetch(url, {
-  next: { revalidate: 60 }
-})
-```
-
-### En Componentes con SWR (Client-side)
-
-```typescript
-// SWR maneja cache automaticamente
-// - Muestra datos cacheados inmediatamente
-// - Revalida en background
-// - Actualiza UI cuando llegan datos nuevos
-
-const { data } = useSWR("mrr", getMRR, {
-  revalidateOnFocus: true,      // Revalidar al volver a la tab
-  revalidateOnReconnect: true,  // Revalidar al reconectar internet
-  dedupingInterval: 2000        // Evitar llamadas duplicadas en 2s
+### Paso 4: Usar en componente
+```tsx
+const { filters } = useFilters()
+const { chartData, isLoading } = useNuevoEndpointData({
+  year: filters.year,
+  month: filters.month,
 })
 ```
 
 ---
 
-## 10. Agregar un Nuevo Endpoint
+## 10. Como agregar una nueva metrica calculada
 
-### Checklist
+### Paso 1: Agregar tipos resultado en types.ts
+```ts
+export interface NuevaMetricaResult {
+  currentValue: number
+  previousValue: number
+  dataByMonth: { month: string; value: number }[]
+}
+```
 
-1. **Agregar tipos en `types.ts`**:
-   ```typescript
-   export interface NuevoResponse { ... }
-   export interface NuevoProcessed { ... }
-   ```
+### Paso 2: Agregar funcion de calculo en metrics.ts
+```ts
+export function calculateNuevaMetrica(
+  api1Data: API1Response,
+  api2Data: API2Response
+): NuevaMetricaResult {
+  // Formula pura, sin fetch
+}
+```
 
-2. **Agregar funcion en `metrics.ts`**:
-   ```typescript
-   async function getNuevoRaw(): Promise<NuevoResponse> {
-     return fetchFromMicroservice("nuevo")
-   }
-   
-   export async function getNuevo(): Promise<NuevoProcessed> {
-     const rawData = await getNuevoRaw()
-     // procesar...
-     return processedData
-   }
-   ```
+### Paso 3: Agregar hook en use-metric-data.ts
+```ts
+export function useNuevaMetricaData(options = {}) {
+  const { data: api1 } = useSWR("/api/micro/api1", fetcher, SWR_CONFIG)
+  const { data: api2 } = useSWR("/api/micro/api2", fetcher, SWR_CONFIG)
 
-3. **Exportar en `index.ts`**:
-   ```typescript
-   export type { NuevoResponse, NuevoProcessed } from "./types"
-   export { getNuevo } from "./metrics"
-   ```
+  const result = useMemo(() => {
+    if (!api1 || !api2) return null
+    return calculateNuevaMetrica(api1, api2)
+  }, [api1, api2])
 
-4. **Si el endpoint necesita parametros especiales**, actualizar el route handler:
-   ```typescript
-   // app/api/micro/[endpoint]/route.ts o app/api/costs/[endpoint]/route.ts
-   if (endpoint === "nuevo") {
-     url.searchParams.set("param", "value")
-   }
-   ```
+  return { ...result, isLoading, error }
+}
+```
 
-5. **Crear componente que consume los datos**:
-   ```typescript
-   import { getNuevo } from "@/lib/api"
-   
-   export function NuevoCard() {
-     const { data } = useSWR("nuevo", getNuevo)
-     // render...
-   }
-   ```
+### Paso 4: Exportar en index.ts
+```ts
+export { calculateNuevaMetrica } from "./metrics"
+export type { NuevaMetricaResult } from "./types"
+```

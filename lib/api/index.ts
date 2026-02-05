@@ -1,146 +1,62 @@
 /**
  * Punto de entrada principal para la capa de API
- * Exporta todos los servicios, tipos y utilidades
+ * 
+ * Exporta:
+ * - Cliente HTTP base
+ * - Tipos de respuesta de APIs
+ * - Tipos de metricas calculadas
+ * - Fetcher generico para SWR
+ * - Funciones de calculo de metricas
  */
 
 // Cliente base
 export { api, apiClient } from "./client"
 
-// Tipos e interfaces
+// Tipos de respuesta de APIs (Section 1 de types.ts)
 export type {
-  ApiResponse,
-  KPIData,
-  DashboardKPIs,
-  ARRMetricsDataPoint,
-  CACPaybackDataPoint,
-  CACLTVData,
-  DCPAMRPADataPoint,
-  TicketPromedioDataPoint,
-  RetentionKPIs,
-  RetentionCohorteDataPoint,
-  ChurnAnalysisDataPoint,
-  CalculatedMetrics,
-  // MRR
   MRRResponse,
-  MRRCompanyData,
-  MRRMonthData,
-  MRRPlanData,
-  MRRProcessed,
-  // MRR New
   MRRNewResponse,
-  MRRNewProcessed,
-  // Churn MRR
   ChurnMRRResponse,
-  ChurnMRRProcessed,
-  // ARPU
   ARPUResponse,
-  ARPUProcessed,
-  // LTV
   LTVResponse,
-  LTVProcessed,
-  // Ticket Promedio
   TicketPromedioResponse,
-  TicketPromedioProcessed,
-  // Tasa Retention
   TasaRetentionResponse,
-  TasaRetentionProcessed,
-  // Tasa Churn
   TasaChurnResponse,
-  TasaChurnProcessed,
-  // Revenue Churn
   RevenueChurnResponse,
-  RevenueChurnProcessed,
-  // Usuarios Activos
   UsuariosActivosResponse,
-  UsuariosActivosProcessed,
-  // Usuarios Nuevos
   UsuariosNuevosResponse,
-  UsuariosNuevosProcessed,
-  // Usuarios Churned
   UsuariosChurnedResponse,
-  UsuariosChurnedProcessed,
-  // CAC
   CACResponse,
-  CACProcessed,
-  // Unit Economics
   UnitEconomicsResponse,
-  UnitEconomicsProcessed,
-  // Expenses
-  ExpensesResponse,
-  ExpensesProcessed,
-  // Income
-  IncomeResponse,
-  IncomeProcessed,
-  // CAC Ratio (métrica calculada)
-  CACRatioDataPoint,
-  CACRatioProcessed,
-  // CAC Payback (métrica calculada)
-  CACPaybackCalculatedDataPoint,
-  CACPaybackCalculatedProcessed,
-  // New ARR (métrica anualizada con proyección)
-  NewARRDataPoint,
-  NewARRProcessed,
-  // Churn ARR (métrica anualizada con proyección)
-  ChurnARRDataPoint,
-  ChurnARRProcessed,
 } from "./types"
 
-// Servicios de métricas
+// Tipos de metricas calculadas (Section 2 de types.ts)
+export type {
+  // CAC Ratio
+  CACRatioDataPoint,
+  CACRatioResult,
+  // New ARR
+  NewARRDataPoint,
+  NewARRResult,
+  // Churn ARR
+  ChurnARRDataPoint,
+  ChurnARRResult,
+  // CAC Payback
+  CACPaybackDataPoint,
+  CACPaybackResult,
+} from "./types"
+
+// Fetcher generico para SWR y constantes
 export {
-  // MRR
-  getMRRRaw,
-  getMRR,
-  // MRR New
-  getMRRNewRaw,
-  getMRRNew,
-  // Churn MRR
-  getChurnMRRRaw,
-  getChurnMRR,
-  // ARPU
-  getARPURaw,
-  getARPU,
-  // LTV
-  getLTVRaw,
-  getLTV,
-  // Ticket Promedio
-  getTicketPromedioRaw,
-  getTicketPromedio,
-  // Tasa Retention
-  getTasaRetentionRaw,
-  getTasaRetention,
-  // Tasa Churn
-  getTasaChurnRaw,
-  getTasaChurn,
-  // Revenue Churn
-  getRevenueChurnRaw,
-  getRevenueChurn,
-  // Usuarios Activos
-  getUsuariosActivosRaw,
-  getUsuariosActivos,
-  // Usuarios Nuevos
-  getUsuariosNuevosRaw,
-  getUsuariosNuevos,
-  // Usuarios Churned
-  getUsuariosChurnedRaw,
-  getUsuariosChurned,
-  // CAC
-  getCACRaw,
-  getCAC,
-  // Unit Economics
-  getUnitEconomicsRaw,
-  getUnitEconomics,
-  // Expenses
-  getExpensesRaw,
-  getExpenses,
-  // Income
-  getIncomeRaw,
-  getIncome,
-  // CAC Ratio (métrica calculada)
-  getCACRatio,
-  // CAC Payback (métrica calculada)
-  getCACPaybackCalculated,
-  // New ARR (métrica anualizada con proyección)
-  getNewARR,
-  // Churn ARR (métrica anualizada con proyección)
-  getChurnARR,
+  fetcher,
+  GROSS_MARGIN,
+  ALL_MONTHS,
+} from "./metrics"
+
+// Funciones de calculo de metricas
+export {
+  calculateCACRatio,
+  calculateNewARR,
+  calculateChurnARR,
+  calculateCACPayback,
 } from "./metrics"

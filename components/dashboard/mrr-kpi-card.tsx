@@ -2,7 +2,7 @@
 
 import { Percent, Loader2, TrendingUpIcon, TrendingDownIcon } from "lucide-react"
 import { useFilters } from "@/lib/contexts/filters-context"
-import { useMRRData } from "@/lib/hooks/use-mrr-data"
+import { useMRRData } from "@/lib/hooks/use-api-data"
 
 export function MRRKPICard() {
   const { filters } = useFilters()

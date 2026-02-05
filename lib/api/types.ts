@@ -1,125 +1,95 @@
 /**
- * Tipos e interfaces para los datos del microservicio
- * Define aquí las estructuras de datos que devuelve tu API
+ * TIPOS DE RESPUESTA DE APIs Y METRICAS CALCULADAS
+ * 
+ * SECCION 1: Interfaces de respuesta de APIs
+ *   - Representan exactamente lo que devuelve cada endpoint
+ *   - Las APIs ya vienen calculadas, solo se filtran en el UI
+ *   - Ante ausencia de mes o plan, se agrega con valor 0 para continuidad
+ * 
+ * SECCION 2: Interfaces de metricas calculadas
+ *   - Se calculan en el frontend a partir de una o mas APIs
+ *   - Cada metrica indica su formula, endpoints fuente y nivel de segregacion
  */
 
 // ============================================
-// TIPOS BASE - Respuestas del microservicio
+// SECCION 1: RESPUESTAS DE APIs
 // ============================================
 
-export interface ApiResponse<T> {
-  data: T
-  success: boolean
-  message?: string
-}
-
-// ============================================
-// MRR - Respuesta del endpoint /micro/mrr
-// ============================================
-
-// Estructura: { [plan]: { [mes]: { [company_id]: { mrr, subscriptions } } } }
-export interface MRRCompanyData {
-  mrr: number
-  subscriptions: number
-}
-
-export interface MRRMonthData {
-  [plan_id: string]: MRRCompanyData
-}
-
-export interface MRRPlanData {
-  [month: string]: MRRMonthData
-}
-
+// --------------------------------------------
+// MRR - /micro/mrr
+// Niveles: plan > mes > nivel_id (ignorar nivel_id)
+// Valores: mrr, subscriptions
+// Puede faltar mes o plan -> 0
+// --------------------------------------------
 export interface MRRResponse {
-  [plan: string]: MRRPlanData
-}
-
-// Datos procesados de MRR para uso en gráficas
-export interface MRRProcessed {
-  totalMRR: number
-  mrrByPlan: { plan: string; mrr: number; subscriptions: number }[]
-  mrrByMonth: { month: string; mrr: number }[]
-  totalSubscriptions: number
-}
-
-// ============================================
-// MRR NEW - Respuesta del endpoint /micro/mrr_new
-// ============================================
-
-export interface MRRNewCompanyData {
-  new_MRR: number
-  subscriptions: number
-}
-
-export interface MRRNewMonthData {
-  [Nivel_id: string]: MRRNewCompanyData
-}
-
-export interface MRRNewPlanData {
-  [month: string]: MRRNewMonthData
-}
-
-export interface MRRNewResponse {
-  [plan: string]: MRRNewPlanData
-}
-
-export interface MRRNewProcessed {
-  totalNewMRR: number
-  newMRRByPlan: { plan: string; newMRR: number; subscriptions: number }[]
-  newMRRByMonth: { month: string; newMRR: number }[]
-  totalSubscriptions: number
-}
-
-// ============================================
-// CHURN MRR - Respuesta del endpoint /micro/churn_mrr
-// ============================================
-
-export interface ChurnMRRResponse {
   [plan: string]: {
     [month: string]: {
-      [NIVEL_ID: string]: {
-        churned_MRR: number
+      [nivelId: string]: {
+        mrr: number
+        subscriptions: number
       }
     }
   }
 }
 
-export interface ChurnMRRProcessed {
-  totalChurnMRR: number
-  churnMRRByPlan: { plan: string; churnMRR: number }[]
-  churnMRRByMonth: { month: string; churnMRR: number }[]
-}
-
-// ============================================
-// ARPU - Respuesta del endpoint /micro/arpu
-// Estructura: { [plan]: { [month]: { arpu, users } } }
-// ============================================
-
-export interface ARPUMonthData {
-  arpu: number
-  users: number
-}
-
-export interface ARPUResponse {
+// --------------------------------------------
+// MRR NEW - /micro/mrr_new
+// Niveles: plan > mes > nivel_id (ignorar nivel_id)
+// Valores: new_MRR, subscriptions
+// Puede faltar mes o plan -> 0
+// --------------------------------------------
+export interface MRRNewResponse {
   [plan: string]: {
-    [month: string]: ARPUMonthData
+    [month: string]: {
+      [nivelId: string]: {
+        new_MRR: number
+        subscriptions: number
+      }
+    }
   }
 }
 
-export interface ARPUProcessed {
-  totalARPU: number
-  currentARPU: number
-  arpuByPlan: { plan: string; arpu: number; users: number }[]
-  arpuByMonth: { month: string; arpu: number }[]
-  arpuByPlanAndMonth: { plan: string; month: string; arpu: number; users: number }[]
-  plans: string[]
+// --------------------------------------------
+// CHURN MRR - /micro/churn_mrr
+// Niveles: plan > mes > nivel_id (ignorar nivel_id)
+// Valores: Chur_MRR, subscriptions
+// Puede faltar mes o plan -> 0
+// --------------------------------------------
+export interface ChurnMRRResponse {
+  [plan: string]: {
+    [month: string]: {
+      [nivelId: string]: {
+        Chur_MRR: number
+        subscriptions: number
+      }
+    }
+  }
 }
 
-// ============================================
-// LTV - Respuesta del endpoint /micro/ltv
-// ============================================
+// --------------------------------------------
+// ARPU - /micro/arpu
+// Niveles: plan > mes
+// Valores: arpu, users
+// Para global mensual: promediar arpu de todos los planes
+//   (NO basarse en users, pueden ser los mismos entre meses)
+// Puede faltar mes o plan -> 0
+// --------------------------------------------
+export interface ARPUResponse {
+  [plan: string]: {
+    [month: string]: {
+      arpu: number
+      users: number
+    }
+  }
+}
 
+// --------------------------------------------
+// LTV - /micro/ltv
+// Niveles: solo plan (sin fecha)
+// Valores: total_revenue, ltv, companies
+// El valor puede cambiar en el tiempo
+// Siempre existiran los planes registrados
+// --------------------------------------------
 export interface LTVResponse {
   [plan: string]: {
     total_revenue: number
@@ -128,15 +98,13 @@ export interface LTVResponse {
   }
 }
 
-export interface LTVProcessed {
-  averageLTV: number
-  ltvByPlan: { plan: string; ltv: number; totalRevenue: number; companies: number }[]
-}
-
-// ============================================
-// TICKET PROMEDIO - Respuesta del endpoint /micro/ticket_promedio
-// ============================================
-
+// --------------------------------------------
+// TICKET PROMEDIO - /micro/ticket_promedio
+// Niveles: solo fecha (sin plan)
+// Valor clave: prom_ticket (minuscula)
+// Prom_ticket (mayuscula) puede venir como 0, ignorar
+// Para global: promediar todos los meses
+// --------------------------------------------
 export interface TicketPromedioResponse {
   [month: string]: {
     total_revenue: number
@@ -146,83 +114,60 @@ export interface TicketPromedioResponse {
   }
 }
 
-export interface TicketPromedioProcessed {
-  currentTicket: number
-  ticketByMonth: { month: string; ticket: number; totalRevenue: number; invoices: number }[]
-}
-
-// ============================================
-// TASA RETENTION - Respuesta del endpoint /micro/tasa_retention
-// Estructura: { [month]: retention_rate }
-// ============================================
-
+// --------------------------------------------
+// TASA RETENTION - /micro/tasa_retention
+// Niveles: solo fecha (sin plan)
+// Valor: porcentaje (100 = 100%)
+// Siempre hay continuidad salvo meses futuros
+// --------------------------------------------
 export interface TasaRetentionResponse {
   [month: string]: number
 }
 
-export interface TasaRetentionProcessed {
-  currentRetentionRate: number
-  previousRetentionRate: number
-  retentionByMonth: { month: string; retentionRate: number }[]
-}
-
-// ============================================
-// TASA CHURN - Respuesta del endpoint /micro/tasa_churn
-// ============================================
-
+// --------------------------------------------
+// TASA CHURN - /micro/tasa_churn
+// Niveles: solo fecha (sin plan)
+// Valor: porcentaje (0 = 0%)
+// Siempre hay continuidad salvo meses futuros
+// --------------------------------------------
 export interface TasaChurnResponse {
   [month: string]: number
 }
 
-export interface TasaChurnProcessed {
-  currentChurnRate: number
-  churnByMonth: { month: string; churnRate: number }[]
-  churnByPlan: { plan: string; churnRate: number }[]
-}
-
-// ============================================
-// REVENUE CHURN - Respuesta del endpoint /micro/revenue_churn
-// ============================================
-
+// --------------------------------------------
+// REVENUE CHURN - /micro/revenue_churn
+// Niveles: solo fecha (sin plan)
+// Valor: monto en dolares
+// Siempre hay continuidad salvo meses futuros
+// --------------------------------------------
 export interface RevenueChurnResponse {
   [month: string]: number
 }
 
-export interface RevenueChurnProcessed {
-  currentRevenueChurn: number
-  revenueChurnByMonth: { month: string; revenueChurn: number }[]
-}
-
-// ============================================
-// USUARIOS ACTIVOS - Respuesta del endpoint /micro/usuarios_activos
-// Estructura: { [month]: { active_users: number, [plan]: { companies: [] } } }
-// ============================================
-
-export interface UsuariosActivosPlanData {
-  companies: string[]
-}
-
-export interface UsuariosActivosMonthData {
-  active_users?: number
-  [plan: string]: UsuariosActivosPlanData | number | undefined
-}
-
+// --------------------------------------------
+// USUARIOS ACTIVOS - /micro/usuarios_activos
+// Niveles: mes > plan
+// active_users: a nivel del mes (total del mes, no por plan)
+// Para activos por plan: contar companies[] de cada plan
+// Si falta active_users, plan o mes -> 0
+// Puede no haber continuidad
+// --------------------------------------------
 export interface UsuariosActivosResponse {
-  [month: string]: UsuariosActivosMonthData
+  [month: string]: {
+    active_users?: number
+    [plan: string]: {
+      companies: string[]
+    } | number | undefined
+  }
 }
 
-export interface UsuariosActivosProcessed {
-  currentActiveCompanies: number
-  previousActiveCompanies: number
-  activeCompaniesByMonth: { month: string; activeCompanies: number }[]
-  activeCompaniesByPlan: []
-  plans: []
-}
-
-// ============================================
-// USUARIOS NUEVOS - Respuesta del endpoint /micro/usuarios_nuevos
-// ============================================
-
+// --------------------------------------------
+// USUARIOS NUEVOS - /micro/usuarios_nuevos
+// Niveles: mes > plan
+// Valores: companies[] (ignorar), new_users
+// Si falta new_users, plan o mes -> 0
+// Puede no haber continuidad
+// --------------------------------------------
 export interface UsuariosNuevosResponse {
   [month: string]: {
     [plan: string]: {
@@ -232,308 +177,133 @@ export interface UsuariosNuevosResponse {
   }
 }
 
-export interface UsuariosNuevosProcessed {
-  totalNewUsers: number
-  newUsersByMonth: { month: string; newUsers: number }[]
-  newUsersByPlan: { plan: string; newUsers: number }[]
-}
-
-// ============================================
-// USUARIOS CHURNED - Respuesta del endpoint /micro/usuarios_churned
-// Estructura: { [month]: { [plan]: { companies: [], churned_users: number } } }
-// ============================================
-
-export interface UsuariosChurnedPlanData {
-  companies: string[]
-  churned_users: number
-}
-
+// --------------------------------------------
+// USUARIOS CHURNED - /micro/usuarios_churned
+// Niveles: mes > plan
+// Valores: companies[] (ignorar), churned_users
+// Si falta churned_users, plan o mes -> 0
+// Puede no haber continuidad
+// --------------------------------------------
 export interface UsuariosChurnedResponse {
   [month: string]: {
-    [plan: string]: UsuariosChurnedPlanData
+    [plan: string]: {
+      companies: string[]
+      churned_users: number
+    }
   }
 }
 
-export interface UsuariosChurnedProcessed {
-  currentChurnedUsers: number
-  previousChurnedUsers: number
-  churnedUsersByMonth: { month: string; churnedUsers: number }[]
-  churnedUsersByPlan: { plan: string; churnedUsers: number }[]
-  churnedByPlanAndMonth: { plan: string; month: string; churnedUsers: number; companies: string[] }[]
-  plans: string[]
-}
-
-// ============================================
-// CAC - Respuesta del endpoint /costs/cac
-// Estructura: { [month]: cac_value } (acumulado=true)
-// ============================================
-
+// --------------------------------------------
+// CAC - /costs/cac
+// Params: start_date (obligatorio: 2025-12-31T23:59:59.999), acumulado=true
+// Niveles: solo fecha
+// Valor: monto acumulado en dolares
+// Puede no haber continuidad
+// --------------------------------------------
 export interface CACResponse {
   [month: string]: number
 }
 
-export interface CACProcessed {
-  currentCAC: number
-  previousCAC: number
-  cacByMonth: { month: string; cac: number }[]
-}
-
-// ============================================
-// UNIT ECONOMICS (DCPA) - Respuesta del endpoint /costs/ue
-// Estructura: { [month]: dcpa_value } (acumulado=true)
-// ============================================
-
+// --------------------------------------------
+// UNIT ECONOMICS / DCPA - /costs/ue
+// Params: start_date (obligatorio: 2025-12-31T23:59:59.999), acumulado=true
+// Niveles: solo fecha
+// Valor: monto acumulado en dolares
+// Puede no haber continuidad
+// --------------------------------------------
 export interface UnitEconomicsResponse {
   [month: string]: number
 }
 
-export interface UnitEconomicsProcessed {
-  currentDCPA: number
-  previousDCPA: number
-  dcpaByMonth: { month: string; dcpa: number }[]
-}
 
 // ============================================
-// EXPENSES - Respuesta del endpoint /costs/expenses
+// SECCION 2: METRICAS CALCULADAS
 // ============================================
 
-export interface ExpensesResponse {
-  [month: string]: {
-    total_expenses: number
-    categories: {
-      [category: string]: number
-    }
-  }
-}
-
-export interface ExpensesProcessed {
-  totalExpenses: number
-  expensesByMonth: { month: string; expenses: number }[]
-  expensesByCategory: { category: string; amount: number }[]
-}
-
-// ============================================
-// INCOME - Respuesta del endpoint /costs/income
-// ============================================
-
-export interface IncomeResponse {
-  [month: string]: {
-    total_income: number
-    sources: {
-      [source: string]: number
-    }
-  }
-}
-
-export interface IncomeProcessed {
-  totalIncome: number
-  incomeByMonth: { month: string; income: number }[]
-  incomeBySource: { source: string; amount: number }[]
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// ============================================
-// KPIs - Tarjetas de métricas principales
-// ============================================
-
-export interface KPIData {
-  value: number | string
-  change: number // Porcentaje de cambio vs periodo anterior
-  trend: "up" | "down" | "neutral"
-}
-
-export interface DashboardKPIs {
-  arpu: KPIData
-  cacRatio: KPIData
-  companyActivos: KPIData
-  expansiones: KPIData
-  downgrade: KPIData
-  mrr: KPIData
-}
-
-// ============================================
-// GRÁFICAS - Datos para visualizaciones
-// ============================================
-
-// ARR Metrics Chart
-export interface ARRMetricsDataPoint {
-  mes: string
-  churnARR: number
-  expansionARR: number
-  netNewARR: number
-  newDinero: number
-}
-
-// CAC Payback Chart
-export interface CACPaybackDataPoint {
-  mes: string
-  cacPayback: number
-}
-
-// CAC vs LTV Chart
-export interface CACLTVData {
-  cac: number
-  ltv: number
-}
-
-// DCPA vs MRPA Chart
-export interface DCPAMRPADataPoint {
-  mes: string
-  dcpa: number
-  mrpa: number
-}
-
-// Ticket Promedio Chart
-export interface TicketPromedioDataPoint {
-  mes: string
-  ticket: number
-}
-
-// ============================================
-// RETENCIÓN - Página de retención
-// ============================================
-
-export interface RetentionKPIs {
-  tasaRetencion: KPIData
-  churnRate: KPIData
-  nps: KPIData
-  healthScore: KPIData
-}
-
-export interface RetentionCohorteDataPoint {
-  mes: string
-  retencion: number
-}
-
-export interface ChurnAnalysisDataPoint {
-  mes: string
-  churn: number
-  recovered: number
-}
-
-// ============================================
-// MÉTRICAS CALCULADAS - Variables derivadas
-// ============================================
-
-export interface CalculatedMetrics {
-  // Ratio LTV/CAC
-  ltvCacRatio: number
-  // Payback period en meses
-  paybackMonths: number
-  // Net Revenue Retention
-  nrr: number
-  // Gross Revenue Retention
-  grr: number
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// ============================================
-// CAC RATIO - Métrica calculada
-// Fórmula: (Nuevo MRR × Margen Bruto %) / Costo de Ventas y Marketing
-// ============================================
-
+// --------------------------------------------
+// CAC RATIO
+// Formula: (New MRR global mes * GROSS_MARGIN) / CAC mes
+// Endpoints: /micro/mrr_new + /costs/cac
+// Nivel: solo fecha (sin plan, porque CAC es mensual)
+// Reglas:
+//   - Si New MRR del mes = 0 -> CAC Ratio = 0
+//   - Si CAC del mes = 0 -> usar 1 como divisor (rendimiento completo)
+// --------------------------------------------
 export interface CACRatioDataPoint {
   month: string
   cacRatio: number
   newMRR: number
-  grossMargin: number // Porcentaje (ej: 0.70 para 70%)
-  marketingCost: number
-}
-
-export interface CACRatioProcessed {
-  currentCACRatio: number
-  cacRatioByMonth: CACRatioDataPoint[]
-  averageCACRatio: number
-}
-
-// ============================================
-// CAC PAYBACK - Métrica calculada
-// Fórmula: CAC / (ARPU Mensual × Margen Bruto %)
-// ============================================
-
-export interface CACPaybackCalculatedDataPoint {
-  month: string
-  cacPayback: number // En meses
   cac: number
-  arpu: number
-  grossMargin: number
 }
 
-export interface CACPaybackCalculatedProcessed {
-  currentCACPayback: number
-  cacPaybackByMonth: CACPaybackCalculatedDataPoint[]
-  averageCACPayback: number
+export interface CACRatioResult {
+  currentCACRatio: number
+  previousCACRatio: number
+  cacRatioByMonth: CACRatioDataPoint[]
 }
 
-// ============================================
-// NEW ARR - Métrica anualizada con proyección
-// Fórmula: New ARR = New MRR × 12
-// Proyección: usa el último mes con datos para los meses restantes
-// ============================================
-
+// --------------------------------------------
+// NEW ARR
+// Formula: New MRR * 12
+// Endpoint: /micro/mrr_new
+// Nivel: plan y fecha
+// Proyeccion: ultimo mes real -> se repite para meses restantes del anio
+//   (incluso si el ultimo mes es 0, la proyeccion es 0)
+// --------------------------------------------
 export interface NewARRDataPoint {
   month: string
+  plan: string
   newMRR: number
-  newARR: number // newMRR × 12
-  isProjected: boolean // true si es proyección del último mes real
+  newARR: number     // newMRR * 12
+  isProjected: boolean
 }
 
-export interface NewARRProcessed {
-  totalNewARR: number // Suma de todos los ARR (reales + proyectados)
-  currentNewMRR: number // Último MRR real
-  annualizedNewARR: number // currentNewMRR × 12
-  newARRByMonth: NewARRDataPoint[]
-  lastRealMonth: string
+export interface NewARRResult {
+  annualizedNewARR: number
+  newARRByMonth: { month: string; newARR: number; isProjected: boolean }[]
+  newARRByPlanAndMonth: NewARRDataPoint[]
+  plans: string[]
 }
 
-// ============================================
-// CHURN ARR - Métrica anualizada con proyección
-// Fórmula: Churn ARR = Churn MRR × 12
-// Proyección: usa el último mes con datos para los meses restantes
-// ============================================
-
+// --------------------------------------------
+// CHURN ARR
+// Formula: Churn MRR * 12
+// Endpoint: /micro/churn_mrr
+// Nivel: plan y fecha
+// Proyeccion: ultimo mes real -> se repite para meses restantes del anio
+//   (incluso si el ultimo mes es 0, la proyeccion es 0)
+// --------------------------------------------
 export interface ChurnARRDataPoint {
   month: string
+  plan: string
   churnMRR: number
-  churnARR: number // churnMRR × 12
-  isProjected: boolean // true si es proyección del último mes real
+  churnARR: number   // churnMRR * 12
+  isProjected: boolean
 }
 
-export interface ChurnARRProcessed {
-  totalChurnARR: number // Suma de todos los ARR (reales + proyectados)
-  currentChurnMRR: number // Último MRR real
-  annualizedChurnARR: number // currentChurnMRR × 12
-  churnARRByMonth: ChurnARRDataPoint[]
-  lastRealMonth: string
+export interface ChurnARRResult {
+  annualizedChurnARR: number
+  churnARRByMonth: { month: string; churnARR: number; isProjected: boolean }[]
+  churnARRByPlanAndMonth: ChurnARRDataPoint[]
+  plans: string[]
+}
+
+// --------------------------------------------
+// CAC PAYBACK
+// Formula: CAC / (ARPU mensual promedio global * GROSS_MARGIN)
+// Endpoints: /costs/cac + /micro/arpu
+// Nivel: solo fecha (sin plan, porque CAC es mensual y ARPU se promedia)
+// Resultado en meses
+// --------------------------------------------
+export interface CACPaybackDataPoint {
+  month: string
+  cacPayback: number  // en meses
+  cac: number
+  arpu: number
+}
+
+export interface CACPaybackResult {
+  currentCACPayback: number
+  previousCACPayback: number
+  cacPaybackByMonth: CACPaybackDataPoint[]
 }

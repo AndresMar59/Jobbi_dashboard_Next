@@ -1,17 +1,17 @@
 "use client"
 
 import { useFilters } from "@/lib/contexts/filters-context"
-import { useMRRData } from "@/lib/hooks/use-mrr-data"
+import { useMRRData } from "@/lib/hooks/use-api-data"
 
 export function DashboardFilters() {
   const { filters, setYear, setMonth, setPlan } = useFilters()
-  const { data } = useMRRData({ year: filters.year })
+  const { plans: availablePlans } = useMRRData({ year: filters.year })
 
   const months = ["Todos", "Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
   const years = ["2025", "2026"]
   
   // Obtener planes disponibles del microservicio
-  const plans = ["Todos", ...(data?.availablePlans || [])]
+  const plans = ["Todos", ...availablePlans]
 
   return (
     <div className="mb-6 flex flex-wrap gap-3">

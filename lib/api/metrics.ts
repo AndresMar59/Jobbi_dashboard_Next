@@ -1,1018 +1,372 @@
 /**
- * Servicios para obtener métricas del microservicio
- * Funciones que llaman a cada endpoint de tu API
+ * METRICS.TS - Fetcher generico y Metricas Calculadas
+ * 
+ * SECCION 1: Fetcher generico para SWR
+ *   - Una sola funcion que los hooks usan con useSWR
+ *   - Los route handlers (/api/micro/... y /api/costs/...) ya manejan
+ *     parametros obligatorios (start_date, acumulado para CAC/UE)
+ * 
+ * SECCION 2: Metricas Calculadas
+ *   - Funciones puras que reciben data cruda y retornan resultados
+ *   - NO hacen fetch por si mismas
+ *   - Se llaman desde hooks que ya tienen la data via SWR
+ * 
+ * NOTA: Las APIs NO se procesan aqui. Los hooks obtienen la data cruda
+ * via SWR y aplican filtros (año, mes, plan) directamente.
  */
 
 import type {
-  MRRResponse,
-  MRRProcessed,
   MRRNewResponse,
-  MRRNewProcessed,
   ChurnMRRResponse,
-  ChurnMRRProcessed,
   ARPUResponse,
-  ARPUProcessed,
-  LTVResponse,
-  LTVProcessed,
-  TicketPromedioResponse,
-  TicketPromedioProcessed,
-  TasaRetentionResponse,
-  TasaRetentionProcessed,
-  TasaChurnResponse,
-  TasaChurnProcessed,
-  RevenueChurnResponse,
-  RevenueChurnProcessed,
-  UsuariosActivosResponse,
-  UsuariosActivosProcessed,
-  UsuariosNuevosResponse,
-  UsuariosNuevosProcessed,
-  UsuariosChurnedResponse,
-  UsuariosChurnedProcessed,
   CACResponse,
-  CACProcessed,
-  UnitEconomicsResponse,
-  UnitEconomicsProcessed,
-  ExpensesResponse,
-  ExpensesProcessed,
-  IncomeResponse,
-  IncomeProcessed,
-  CACRatioProcessed,
-  CACPaybackCalculatedProcessed,
-  NewARRProcessed,
-  ChurnARRProcessed,
+  CACRatioResult,
+  CACRatioDataPoint,
+  NewARRResult,
+  NewARRDataPoint,
+  ChurnARRResult,
+  ChurnARRDataPoint,
+  CACPaybackResult,
+  CACPaybackDataPoint,
 } from "./types"
 
 // ============================================
-// FETCHER GENÉRICO
+// CONSTANTES DE NEGOCIO
 // ============================================
 
-async function fetchMicro<T>(endpoint: string): Promise<T> {
-  const response = await fetch(`/api/micro/${endpoint}`)
-  if (!response.ok) throw new Error(`Error fetching ${endpoint}`)
-  return response.json()
-}
-
-async function fetchCosts<T>(endpoint: string): Promise<T> {
-  const response = await fetch(`/api/costs/${endpoint}`)
-  if (!response.ok) throw new Error(`Error fetching ${endpoint}`)
-  return response.json()
-}
+export const GROSS_MARGIN = 0.70  // Margen bruto 70%
+export const ALL_MONTHS = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
 
 // ============================================
-// MRR - /micro/mrr
+// SECCION 1: FETCHER GENERICO PARA SWR
 // ============================================
+// Uso en hooks: useSWR("/api/micro/mrr", fetcher)
+// Los componentes NO llaman a esto directamente, usan hooks.
 
-export async function getMRRRaw(): Promise<MRRResponse> {
-  return fetchMicro<MRRResponse>("mrr")
-}
-
-export async function getMRR(): Promise<MRRProcessed> {
-  const rawData = await getMRRRaw()
-  
-  let totalMRR = 0
-  let totalSubscriptions = 0
-  const planMap = new Map<string, { mrr: number; subscriptions: number }>()
-  const monthMap = new Map<string, number>()
-  
-  for (const [plan, planData] of Object.entries(rawData)) {
-    for (const [month, monthData] of Object.entries(planData)) {
-      for (const [, companyData] of Object.entries(monthData)) {
-        totalMRR += companyData.mrr
-        totalSubscriptions += companyData.subscriptions
-        
-        const planEntry = planMap.get(plan) || { mrr: 0, subscriptions: 0 }
-        planEntry.mrr += companyData.mrr
-        planEntry.subscriptions += companyData.subscriptions
-        planMap.set(plan, planEntry)
-        
-        const monthMRR = monthMap.get(month) || 0
-        monthMap.set(month, monthMRR + companyData.mrr)
-      }
-    }
-  }
-  
-  return {
-    totalMRR,
-    mrrByPlan: Array.from(planMap.entries()).map(([plan, data]) => ({
-      plan,
-      mrr: data.mrr,
-      subscriptions: data.subscriptions,
-    })),
-    mrrByMonth: Array.from(monthMap.entries())
-      .map(([month, mrr]) => ({ month, mrr }))
-      .sort((a, b) => a.month.localeCompare(b.month)),
-    totalSubscriptions,
-  }
-}
-
-// ============================================
-// MRR NEW - /micro/mrr_new
-// ============================================
-
-export async function getMRRNewRaw(): Promise<MRRNewResponse> {
-  return fetchMicro<MRRNewResponse>("mrr_new")
-}
-
-export async function getMRRNew(): Promise<MRRNewProcessed> {
-  const rawData = await getMRRNewRaw()
-  
-  let totalNewMRR = 0
-  let totalSubscriptions = 0
-  const planMap = new Map<string, { newMRR: number; subscriptions: number }>()
-  const monthMap = new Map<string, number>()
-  
-  for (const [plan, planData] of Object.entries(rawData)) {
-    for (const [month, monthData] of Object.entries(planData)) {
-      for (const [, companyData] of Object.entries(monthData)) {
-        totalNewMRR += companyData.new_MRR
-        totalSubscriptions += companyData.subscriptions
-        
-        const planEntry = planMap.get(plan) || { newMRR: 0, subscriptions: 0 }
-        planEntry.newMRR += companyData.new_MRR
-        planEntry.subscriptions += companyData.subscriptions
-        planMap.set(plan, planEntry)
-        
-        const monthMRR = monthMap.get(month) || 0
-        monthMap.set(month, monthMRR + companyData.new_MRR)
-      }
-    }
-  }
-  
-  return {
-    totalNewMRR,
-    newMRRByPlan: Array.from(planMap.entries()).map(([plan, data]) => ({
-      plan,
-      newMRR: data.newMRR,
-      subscriptions: data.subscriptions,
-    })),
-    newMRRByMonth: Array.from(monthMap.entries())
-      .map(([month, newMRR]) => ({ month, newMRR }))
-      .sort((a, b) => a.month.localeCompare(b.month)),
-    totalSubscriptions, 
-  }
-}
-
-// ============================================
-// CHURN MRR - /micro/churn_mrr
-// ============================================
-
-export async function getChurnMRRRaw(): Promise<ChurnMRRResponse> {
-  return fetchMicro<ChurnMRRResponse>("churn_mrr")
-}
-
-export async function getChurnMRR(): Promise<ChurnMRRProcessed> {
-  const rawData = await getChurnMRRRaw()
-  
-  let totalChurnMRR = 0
-  const planMap = new Map<string, number>()
-  const monthMap = new Map<string, number>()
-  
-  for (const [plan, planData] of Object.entries(rawData)) {
-    for (const [month, monthData] of Object.entries(planData)) {
-      for (const [, companyData] of Object.entries(monthData)) {
-        totalChurnMRR += companyData.churned_MRR
-        
-        const planChurn = planMap.get(plan) || 0
-        planMap.set(plan, planChurn + companyData.churned_MRR)
-        
-        const monthChurn = monthMap.get(month) || 0
-        monthMap.set(month, monthChurn + companyData.churned_MRR)
-      }
-    }
-  }
-  
-  return {
-    totalChurnMRR,
-    churnMRRByPlan: Array.from(planMap.entries()).map(([plan, churnMRR]) => ({
-      plan,
-      churnMRR,
-    })),
-    churnMRRByMonth: Array.from(monthMap.entries())
-      .map(([month, churnMRR]) => ({ month, churnMRR }))
-      .sort((a, b) => a.month.localeCompare(b.month)),
-  }
-}
-
-// ============================================
-// ARPU - /micro/arpu
-// ============================================
-
-export async function getARPURaw(): Promise<ARPUResponse> {
-  return fetchMicro<ARPUResponse>("arpu")
-}
-
-export async function getARPU(): Promise<ARPUProcessed> {
-  const rawData = await getARPURaw()
-  
-  const plans: string[] = []
-  const arpuByPlanAndMonth: ARPUProcessed["arpuByPlanAndMonth"] = []
-  const monthMap = new Map<string, { totalArpu: number; count: number }>()
-  const planMap = new Map<string, { totalArpu: number; totalUsers: number; count: number }>()
-  
-  // Procesar estructura: Plan > Mes > { arpu, users }
-  for (const [plan, monthsData] of Object.entries(rawData)) {
-    if (!plans.includes(plan)) plans.push(plan)
-    
-    for (const [month, data] of Object.entries(monthsData)) {
-      arpuByPlanAndMonth.push({
-        plan,
-        month,
-        arpu: data.arpu,
-        users: data.users,
-      })
-      
-      // Agregar al mapa de meses
-      const monthEntry = monthMap.get(month) || { totalArpu: 0, count: 0 }
-      monthEntry.totalArpu += data.arpu
-      monthEntry.count += 1
-      monthMap.set(month, monthEntry)
-      
-      // Agregar al mapa de planes
-      const planEntry = planMap.get(plan) || { totalArpu: 0, totalUsers: 0, count: 0 }
-      planEntry.totalArpu += data.arpu
-      planEntry.totalUsers += data.users
-      planEntry.count += 1
-      planMap.set(plan, planEntry)
-    }
-  }
-  
-  // Convertir a arrays
-  const arpuByMonth = Array.from(monthMap.entries())
-    .map(([month, data]) => ({
-      month,
-      arpu: data.count > 0 ? data.totalArpu / data.count : 0,
-    }))
-    .sort((a, b) => a.month.localeCompare(b.month))
-  
-  const arpuByPlan = Array.from(planMap.entries()).map(([plan, data]) => ({
-    plan,
-    arpu: data.count > 0 ? data.totalArpu / data.count : 0,
-    users: data.totalUsers,
-  }))
-  
-  // Calcular ARPU total y actual
-  const allArpus = arpuByPlanAndMonth.map(item => item.arpu)
-  const totalARPU = allArpus.length > 0 ? allArpus.reduce((a, b) => a + b, 0) / allArpus.length : 0
-  const currentARPU = arpuByMonth[arpuByMonth.length - 1]?.arpu || 0
-  
-  return {
-    totalARPU,
-    currentARPU,
-    arpuByPlan,
-    arpuByMonth,
-    arpuByPlanAndMonth,
-    plans,
-  }
-}
-
-// ============================================
-// LTV - /micro/ltv
-// ============================================
-
-export async function getLTVRaw(): Promise<LTVResponse> {
-  return fetchMicro<LTVResponse>("ltv")
-}
-
-export async function getLTV(): Promise<LTVProcessed> {
-  const rawData = await getLTVRaw()
-  
-  let totalLTV = 0
-  let totalCompanies = 0
-  const ltvByPlan: LTVProcessed["ltvByPlan"] = []
-  
-  for (const [plan, data] of Object.entries(rawData)) {
-    totalLTV += data.ltv * data.companies
-    totalCompanies += data.companies
-    ltvByPlan.push({
-      plan,
-      ltv: data.ltv,
-      totalRevenue: data.total_revenue,
-      companies: data.companies,
-    })
-  }
-  
-  return {
-    averageLTV: totalCompanies > 0 ? totalLTV / totalCompanies : 0,
-    ltvByPlan,
-  }
-}
-
-// ============================================
-// TICKET PROMEDIO - /micro/ticket_promedio
-// ============================================
-
-export async function getTicketPromedioRaw(): Promise<TicketPromedioResponse> {
-  return fetchMicro<TicketPromedioResponse>("ticket_promedio")
-}
-
-export async function getTicketPromedio(): Promise<TicketPromedioProcessed> {
-  const rawData = await getTicketPromedioRaw()
-  
-  const ticketByMonth: TicketPromedioProcessed["ticketByMonth"] = []
-  let currentTicket = 0
-  
-  for (const [month, data] of Object.entries(rawData)) {
-    ticketByMonth.push({
-      month,
-      ticket: data.prom_ticket,
-      totalRevenue: data.total_revenue,
-      invoices: data.invoice_id,
-    })
-    currentTicket = data.prom_ticket
-  }
-  
-  ticketByMonth.sort((a, b) => a.month.localeCompare(b.month))
-  
-  return {
-    currentTicket: ticketByMonth[ticketByMonth.length - 1]?.ticket || currentTicket,
-    ticketByMonth,
-  }
-}
-
-// ============================================
-// TASA RETENTION - /micro/tasa_retention
-// ============================================
-
-export async function getTasaRetentionRaw(): Promise<TasaRetentionResponse> {
-  return fetchMicro<TasaRetentionResponse>("tasa_retention")
-}
-
-export async function getTasaRetention(): Promise<TasaRetentionProcessed> {
-  const rawData = await getTasaRetentionRaw()
-  
-  const retentionByMonth: TasaRetentionProcessed["retentionByMonth"] = []
-  
-  // Estructura simple: { [month]: retention_rate }
-  for (const [month, retentionRate] of Object.entries(rawData)) {
-    retentionByMonth.push({
-      month,
-      retentionRate: typeof retentionRate === 'number' ? retentionRate : 0,
-    })
-  }
-  
-  retentionByMonth.sort((a, b) => a.month.localeCompare(b.month))
-  
-  const currentRetentionRate = retentionByMonth[retentionByMonth.length - 1]?.retentionRate || 0
-  const previousRetentionRate = retentionByMonth[retentionByMonth.length - 2]?.retentionRate || 0
-  
-  return {
-    currentRetentionRate,
-    previousRetentionRate,
-    retentionByMonth,
-  }
-}
-
-// ============================================
-// TASA CHURN - /micro/tasa_churn
-// ============================================
-
-export async function getTasaChurnRaw(): Promise<TasaChurnResponse> {
-  return fetchMicro<TasaChurnResponse>("tasa_churn")
-}
-
-export async function getTasaChurn(): Promise<TasaChurnProcessed> {
-  // 1. Obtenemos los datos (asumimos que rawData es { "2024-01": 5, "2024-02": 4 })
-  const rawData = await getTasaChurnRaw()
-  
-  const churnByMonth: TasaChurnProcessed["churnByMonth"] = []
-
-  // 2. Procesamos el objeto de entrada (Mes -> Valor)
-  for (const [month, churnRate] of Object.entries(rawData)) {
-    churnByMonth.push({
-      month,
-      // Validamos que sea número (si viene basado en 100, aquí queda como 5, 8, etc.)
-      churnRate: typeof churnRate === 'number' ? churnRate : 0,
-    })
-  }
-
-  // 3. Ordenamos cronológicamente
-  churnByMonth.sort((a, b) => a.month.localeCompare(b.month))
-
-  // 4. Calculamos el valor actual (el último mes)
-  const currentChurnRate = churnByMonth[churnByMonth.length - 1]?.churnRate || 0
-
-  return {
-    currentChurnRate,
-    churnByMonth,
-    // Nota: Si la entrada no trae planes, devolvemos un array vacío o 
-    // mapeamos el total como un plan "General"
-    churnByPlan: [
-      { plan: "General", churnRate: currentChurnRate }
-    ],
-  }
-}
-// ============================================
-// REVENUE CHURN - /micro/revenue_churn
-// ============================================
-
-export async function getRevenueChurnRaw(): Promise<RevenueChurnResponse> {
-  return fetchMicro<RevenueChurnResponse>("revenue_churn")
-}
-
-export async function getRevenueChurn(): Promise<RevenueChurnProcessed> {
-  // 1. Obtenemos los datos crudos
-  // Se espera: { "2024-01": 250.50, "2024-02": 300.00 }
-  const rawData = await getRevenueChurnRaw()
-  
-  const revenueChurnByMonth: RevenueChurnProcessed["revenueChurnByMonth"] = []
-  
-  // 2. Procesamos el objeto: [mes, valor]
-  for (const [month, revenueChurn] of Object.entries(rawData)) {
-    revenueChurnByMonth.push({
-      month,
-      // Validamos que sea un número válido
-      revenueChurn: typeof revenueChurn === 'number' ? revenueChurn : 0,
-    })
-  }
-  
-  // 3. Ordenamos cronológicamente para que la gráfica tenga sentido
-  revenueChurnByMonth.sort((a, b) => a.month.localeCompare(b.month))
-  
-  // 4. Retornamos el objeto procesado
-  return {
-    // Tomamos el último mes como el valor "actual"
-    currentRevenueChurn: revenueChurnByMonth[revenueChurnByMonth.length - 1]?.revenueChurn || 0,
-    revenueChurnByMonth,
-  }
-}
-
-
-// ============================================
-// USUARIOS ACTIVOS - /micro/usuarios_activos
-// ============================================
-
-export async function getUsuariosActivosRaw(): Promise<UsuariosActivosResponse> {
-  return fetchMicro<UsuariosActivosResponse>("usuarios_activos")
-}
-
-export async function getUsuariosActivos(): Promise<UsuariosActivosProcessed> {
-  // 1. Recibimos los datos ya calculados (Ej: { "2024-01": 100 })
-  const rawData = await getUsuariosActivosRaw()
-  
-  const activeCompaniesByMonth: UsuariosActivosProcessed["activeCompaniesByMonth"] = []
-  
-  // 2. Transformamos el objeto a un Array
-  for (const [month, count] of Object.entries(rawData)) {
-    activeCompaniesByMonth.push({
-      month,
-      activeCompanies: typeof count === 'number' ? count : 0,
-    })
-  }
-  
-  // 3. Ordenamos por fecha
-  activeCompaniesByMonth.sort((a, b) => a.month.localeCompare(b.month))
-  
-  // 4. Extraemos valores clave
-  const currentActiveCompanies = activeCompaniesByMonth[activeCompaniesByMonth.length - 1]?.activeCompanies || 0
-  const previousActiveCompanies = activeCompaniesByMonth[activeCompaniesByMonth.length - 2]?.activeCompanies || 0
-  
-  return {
-    currentActiveCompanies,
-    previousActiveCompanies,
-    activeCompaniesByMonth,
-    // Como ya no procesamos planes, devolvemos un estado por defecto 
-    // o eliminamos estos campos si no los usas en la interfaz
-    activeCompaniesByPlan: [], 
-    plans: [],
-  }
-}
-
-// ============================================
-// USUARIOS NUEVOS - /micro/usuarios_nuevos
-// ============================================
-
-export async function getUsuariosNuevosRaw(): Promise<UsuariosNuevosResponse> {
-  return fetchMicro<UsuariosNuevosResponse>("usuarios_nuevos")
-}
-
-export async function getUsuariosNuevos(): Promise<UsuariosNuevosProcessed> {
-  const rawData = await getUsuariosNuevosRaw()
-  
-  let totalNewUsers = 0
-  const newUsersByMonth: UsuariosNuevosProcessed["newUsersByMonth"] = []
-  const planMap = new Map<string, number>()
-  
-  for (const [month, monthData] of Object.entries(rawData)) {
-    let monthNewUsers = 0
-    
-    for (const [plan, planData] of Object.entries(monthData)) {
-      monthNewUsers += planData.new_users
-      planMap.set(plan, (planMap.get(plan) || 0) + planData.new_users)
-    }
-    
-    totalNewUsers += monthNewUsers
-    newUsersByMonth.push({ month, newUsers: monthNewUsers })
-  }
-  
-  newUsersByMonth.sort((a, b) => a.month.localeCompare(b.month))
-  
-  return {
-    totalNewUsers,
-    newUsersByMonth,
-    newUsersByPlan: Array.from(planMap.entries()).map(([plan, newUsers]) => ({
-      plan,
-      newUsers,
-    })),
-  }
-}
-
-// ============================================
-// USUARIOS CHURNED - /micro/usuarios_churned
-// ============================================
-
-export async function getUsuariosChurnedRaw(): Promise<UsuariosChurnedResponse> {
-  return fetchMicro<UsuariosChurnedResponse>("usuarios_churned")
-}
-
-export async function getUsuariosChurned(): Promise<UsuariosChurnedProcessed> {
-  const rawData = await getUsuariosChurnedRaw()
-  
-  const churnedUsersByMonth: UsuariosChurnedProcessed["churnedUsersByMonth"] = []
-  const churnedByPlanAndMonth: UsuariosChurnedProcessed["churnedByPlanAndMonth"] = []
-  const planMap = new Map<string, number>()
-  const plans = new Set<string>()
-  
-  // Estructura: { [month]: { [plan]: { companies, churned_users } } }
-  for (const [month, monthData] of Object.entries(rawData)) {
-    let monthChurnedUsers = 0
-    
-    for (const [plan, planData] of Object.entries(monthData)) {
-      plans.add(plan)
-      monthChurnedUsers += planData.churned_users
-      planMap.set(plan, (planMap.get(plan) || 0) + planData.churned_users)
-      
-      churnedByPlanAndMonth.push({
-        plan,
-        month,
-        churnedUsers: planData.churned_users,
-        companies: planData.companies,
-      })
-    }
-    
-    churnedUsersByMonth.push({ month, churnedUsers: monthChurnedUsers })
-  }
-  
-  churnedUsersByMonth.sort((a, b) => a.month.localeCompare(b.month))
-  
-  const currentChurnedUsers = churnedUsersByMonth[churnedUsersByMonth.length - 1]?.churnedUsers || 0
-  const previousChurnedUsers = churnedUsersByMonth[churnedUsersByMonth.length - 2]?.churnedUsers || 0
-  
-  return {
-    currentChurnedUsers,
-    previousChurnedUsers,
-    churnedUsersByMonth,
-    churnedUsersByPlan: Array.from(planMap.entries()).map(([plan, churnedUsers]) => ({
-      plan,
-      churnedUsers,
-    })),
-    churnedByPlanAndMonth,
-    plans: Array.from(plans),
-  }
-}
-
-// ============================================
-// CAC - /costs/cac
-// ============================================
-
-export async function getCACRaw(): Promise<CACResponse> {
-  return fetchCosts<CACResponse>("cac")
-}
-
-export async function getCAC(): Promise<CACProcessed> {
-  const rawData = await getCACRaw()
-  
-  const cacByMonth: CACProcessed["cacByMonth"] = []
-  
-  // Estructura: { [month]: cac_value }
-  for (const [month, cac] of Object.entries(rawData)) {
-    cacByMonth.push({
-      month,
-      cac: typeof cac === 'number' ? cac : 0,
-    })
-  }
-  
-  cacByMonth.sort((a, b) => a.month.localeCompare(b.month))
-  
-  const currentCAC = cacByMonth[cacByMonth.length - 1]?.cac || 0
-  const previousCAC = cacByMonth[cacByMonth.length - 2]?.cac || 0
-  
-  return {
-    currentCAC,
-    previousCAC,
-    cacByMonth,
-  }
-}
-
-// ============================================
-// UNIT ECONOMICS - /costs/ue
-// ============================================
-
-export async function getUnitEconomicsRaw(): Promise<UnitEconomicsResponse> {
-  return fetchCosts<UnitEconomicsResponse>("ue")
-}
-
-export async function getUnitEconomics(): Promise<UnitEconomicsProcessed> {
-  const rawData = await getUnitEconomicsRaw()
-  
-  const dcpaByMonth: UnitEconomicsProcessed["dcpaByMonth"] = []
-  
-  // Estructura: { [month]: dcpa_value }
-  for (const [month, dcpa] of Object.entries(rawData)) {
-    dcpaByMonth.push({
-      month,
-      dcpa: typeof dcpa === 'number' ? dcpa : 0,
-    })
-  }
-  
-  dcpaByMonth.sort((a, b) => a.month.localeCompare(b.month))
-  
-  const currentDCPA = dcpaByMonth[dcpaByMonth.length - 1]?.dcpa || 0
-  const previousDCPA = dcpaByMonth[dcpaByMonth.length - 2]?.dcpa || 0
-  
-  return {
-    currentDCPA,
-    previousDCPA,
-    dcpaByMonth,
-  }
-}
-
-// ============================================
-// EXPENSES - /costs/expenses
-// ============================================
-
-export async function getExpensesRaw(): Promise<ExpensesResponse> {
-  return fetchCosts<ExpensesResponse>("expenses")
-}
-
-export async function getExpenses(): Promise<ExpensesProcessed> {
-  const rawData = await getExpensesRaw()
-  
-  let totalExpenses = 0
-  const expensesByMonth: ExpensesProcessed["expensesByMonth"] = []
-  const categoryMap = new Map<string, number>()
-  
-  for (const [month, data] of Object.entries(rawData)) {
-    totalExpenses += data.total_expenses
-    expensesByMonth.push({ month, expenses: data.total_expenses })
-    
-    for (const [category, amount] of Object.entries(data.categories)) {
-      categoryMap.set(category, (categoryMap.get(category) || 0) + amount)
-    }
-  }
-  
-  expensesByMonth.sort((a, b) => a.month.localeCompare(b.month))
-  
-  return {
-    totalExpenses,
-    expensesByMonth,
-    expensesByCategory: Array.from(categoryMap.entries()).map(([category, amount]) => ({
-      category,
-      amount,
-    })),
-  }
-}
-
-// ============================================
-// INCOME - /costs/income
-// ============================================
-
-export async function getIncomeRaw(): Promise<IncomeResponse> {
-  return fetchCosts<IncomeResponse>("income")
-}
-
-export async function getIncome(): Promise<IncomeProcessed> {
-  const rawData = await getIncomeRaw()
-  
-  let totalIncome = 0
-  const incomeByMonth: IncomeProcessed["incomeByMonth"] = []
-  const sourceMap = new Map<string, number>()
-  
-  for (const [month, data] of Object.entries(rawData)) {
-    totalIncome += data.total_income
-    incomeByMonth.push({ month, income: data.total_income })
-    
-    for (const [source, amount] of Object.entries(data.sources)) {
-      sourceMap.set(source, (sourceMap.get(source) || 0) + amount)
-    }
-  }
-  
-  incomeByMonth.sort((a, b) => a.month.localeCompare(b.month))
-  
-  return {
-    totalIncome,
-    incomeByMonth,
-    incomeBySource: Array.from(sourceMap.entries()).map(([source, amount]) => ({
-      source,
-      amount,
-    })),
-  }
-}
-
-// ============================================
-// CAC RATIO - Métrica calculada
-// Fórmula: (Nuevo MRR × Margen Bruto %) / Costo de Ventas y Marketing (S&M)
-// Margen Bruto fijo: 70%
-// ============================================
-
-const GROSS_MARGIN = 0.80 // 70% margen bruto fijo
-
-export async function getCACRatio(): Promise<CACRatioProcessed> {
-  const [mrrNewData, cacData] = await Promise.all([
-    getMRRNew(),
-    getCAC(),
-  ])
-  
-  const mrrNewByMonth = new Map(mrrNewData.newMRRByMonth.map(item => [item.month, item.newMRR]))
-  const cacByMonth = new Map(cacData.cacByMonth.map(item => [item.month, item.cac]))
-  
-  // 1. Encontrar el rango real de fechas
-  const rawMonths = [
-    ...mrrNewData.newMRRByMonth.map(item => item.month),
-    ...cacData.cacByMonth.map(item => item.month),
-  ].sort();
-
-  if (rawMonths.length === 0) return { currentCACRatio: 0, cacRatioByMonth: [], averageCACRatio: 0 };
-
-  // 2. Generar el array de TODOS los meses entre el primero y el último
-  const startMonth = new Date(rawMonths[0] + "-01");
-  const endMonth = new Date(rawMonths[rawMonths.length - 1] + "-01");
-  const allMonths: string[] = [];
-
-  let current = new Date(startMonth);
-  while (current <= endMonth) {
-    allMonths.push(current.toISOString().substring(0, 7)); // Formato "YYYY-MM"
-    current.setMonth(current.getMonth() + 1);
-  }
-
-  // 3. Calcular CAC Ratio usando la lista completa de meses
-  const cacRatioByMonth: CACRatioProcessed["cacRatioByMonth"] = []
-  let totalCACRatio = 0
-  let validMonths = 0
-  
-  for (const month of allMonths) {
-    // ... dentro del loop for (const month of allMonths)
-
-const newMRR = mrrNewByMonth.get(month) || 0
-let marketingCost = cacByMonth.get(month) || 0
-
-// LÓGICA SOLICITADA:
-// 1. Si New MRR es 0, el ratio será 0 (independientemente del CAC).
-// 2. Si hay New MRR pero el CAC es 0, forzamos CAC a 1 para mostrar el rendimiento total.
-let cacRatio = 0
-
-if (newMRR > 0) {
-  const effectiveCAC = marketingCost > 0 ? marketingCost : 1
-  cacRatio = (newMRR * GROSS_MARGIN) / effectiveCAC
-} else {
-  cacRatio = 0
-}
-
-cacRatioByMonth.push({
-  month,
-  cacRatio,
-  newMRR,
-  grossMargin: GROSS_MARGIN,
-  marketingCost: marketingCost, // Guardamos el 0 real para el tooltip/gráfica
+export const fetcher = (url: string) => fetch(url).then(res => {
+  if (!res.ok) throw new Error(`Error ${res.status}`)
+  return res.json()
 })
-    
-    if (cacRatio > 0) {
-      totalCACRatio += cacRatio
-      validMonths++
+
+
+// ============================================
+// SECCION 2: METRICAS CALCULADAS
+// ============================================
+// Funciones puras: reciben data cruda -> retornan resultado calculado.
+// Se invocan desde los hooks despues de obtener la data via SWR.
+
+
+// --------------------------------------------
+// CAC RATIO
+// Formula: (New MRR global mes * GROSS_MARGIN) / CAC mes
+// Nivel: solo fecha (New MRR se suma globalmente por mes, sin plan)
+// Reglas:
+//   - Si New MRR del mes = 0 -> CAC Ratio = 0
+//   - Si CAC del mes = 0 -> usar 1 como divisor (rendimiento completo)
+// --------------------------------------------
+
+export function calculateCACRatio(
+  mrrNewData: MRRNewResponse,
+  cacData: CACResponse
+): CACRatioResult {
+  // 1. Sumar New MRR global por mes (todos los planes, todos los nivel_ids)
+  const newMRRByMonth = new Map<string, number>()
+
+  for (const [, planMonths] of Object.entries(mrrNewData)) {
+    for (const [month, nivelIds] of Object.entries(planMonths)) {
+      let monthTotal = newMRRByMonth.get(month) || 0
+      for (const [, data] of Object.entries(nivelIds)) {
+        monthTotal += data.new_MRR
+      }
+      newMRRByMonth.set(month, monthTotal)
     }
   }
-  
-  const currentCACRatio = cacRatioByMonth[cacRatioByMonth.length - 1]?.cacRatio || 0
-  const averageCACRatio = validMonths > 0 ? totalCACRatio / validMonths : 0
-  
-  return {
-    currentCACRatio,
-    cacRatioByMonth,
-    averageCACRatio,
-  }
-}
 
-// ============================================
-// CAC PAYBACK - Métrica calculada
-// Fórmula: CAC / (ARPU Mensual × Margen Bruto %)
-// Margen Bruto fijo: 70%
-// ============================================
-
-export async function getCACPaybackCalculated(): Promise<CACPaybackCalculatedProcessed> {
-  // 1. Obtener datos
-  const [cacData, arpuData] = await Promise.all([
-    getCAC(),
-    getARPU(),
+  // 2. Unir todos los meses de ambas fuentes
+  const allMonths = new Set<string>([
+    ...newMRRByMonth.keys(),
+    ...Object.keys(cacData),
   ])
-  
-  const arpu = arpuData.totalARPU
-  const cacByMonthMap = new Map(cacData.cacByMonth.map(item => [item.month, item.cac]))
-  
-  // 2. Identificar el rango de meses (Relleno de huecos)
-  const rawMonths = cacData.cacByMonth.map(item => item.month).sort()
-  if (rawMonths.length === 0) return { currentCACPayback: 0, cacPaybackByMonth: [], averageCACPayback: 0 }
+  const sortedMonths = Array.from(allMonths).sort()
 
-  const startMonth = new Date(rawMonths[0] + "-01")
-  const endMonth = new Date(rawMonths[rawMonths.length - 1] + "-01")
-  const allMonths: string[] = []
+  // 3. Calcular CAC Ratio por mes
+  const cacRatioByMonth: CACRatioDataPoint[] = sortedMonths.map(month => {
+    const newMRR = newMRRByMonth.get(month) || 0
+    const cac = cacData[month] || 0
 
-  let current = new Date(startMonth)
-  while (current <= endMonth) {
-    allMonths.push(current.toISOString().substring(0, 7))
-    current.setMonth(current.getMonth() + 1)
-  }
-
-  // 3. Calcular Payback para cada mes del rango
-  const cacPaybackByMonth: CACPaybackCalculatedProcessed["cacPaybackByMonth"] = []
-  let totalCACPayback = 0
-  let validMonths = 0
-  
-  const denominator = arpu * GROSS_MARGIN
-
-  for (const month of allMonths) {
-    // Si el mes no existe en cacData, asumimos CAC = 0
-    const cac = cacByMonthMap.get(month) || 0
-    
-    // Si el denominador es 0 (sin ARPU) o el CAC es 0, el payback es 0
-    const cacPayback = (denominator > 0 && cac > 0) ? cac / denominator : 0
-    
-    cacPaybackByMonth.push({
-      month,
-      cacPayback,
-      cac,
-      arpu,
-      grossMargin: GROSS_MARGIN,
-    })
-    
-    if (cacPayback > 0) {
-      totalCACPayback += cacPayback
-      validMonths++
+    let cacRatio = 0
+    if (newMRR === 0) {
+      cacRatio = 0
+    } else {
+      const divisor = cac === 0 ? 1 : cac
+      cacRatio = (newMRR * GROSS_MARGIN) / divisor
     }
-  }
-  
-  const currentCACPayback = cacPaybackByMonth[cacPaybackByMonth.length - 1]?.cacPayback || 0
-  const averageCACPayback = validMonths > 0 ? totalCACPayback / validMonths : 0
-  
+
+    return { month, cacRatio, newMRR, cac }
+  })
+
+  const current = cacRatioByMonth[cacRatioByMonth.length - 1]?.cacRatio || 0
+  const previous = cacRatioByMonth[cacRatioByMonth.length - 2]?.cacRatio || 0
+
   return {
-    currentCACPayback,
-    cacPaybackByMonth,
-    averageCACPayback,
+    currentCACRatio: current,
+    previousCACRatio: previous,
+    cacRatioByMonth,
   }
 }
 
-// ============================================
-// NEW ARR - Métrica anualizada con proyección
-// Fórmula: New ARR = New MRR × 12
-// Proyección: el último mes real se usa para los meses restantes del año
-// ============================================
 
-const ALL_MONTHS = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
+// --------------------------------------------
+// NEW ARR
+// Formula: New MRR * 12
+// Nivel: plan y fecha
+// Proyeccion: por cada plan, el ultimo mes real se repite
+//   para los meses restantes del anio (incluso si es 0)
+// --------------------------------------------
 
-export async function getNewARR(year: string = "2026"): Promise<NewARRProcessed> {
-  const mrrNewData = await getMRRNew()
-  
-  // Filtrar solo los meses del año solicitado y ordenar
-  const realMonthsData = mrrNewData.newMRRByMonth
-    .filter(item => item.month.startsWith(year))
-    .sort((a, b) => a.month.localeCompare(b.month))
-  
-  if (realMonthsData.length === 0) {
-    return {
-      totalNewARR: 0,
-      currentNewMRR: 0,
-      annualizedNewARR: 0,
-      newARRByMonth: [],
-      lastRealMonth: "",
+export function calculateNewARR(
+  mrrNewData: MRRNewResponse,
+  year: string = "2026"
+): NewARRResult {
+  // 1. Sumar New MRR por plan y mes (agregar nivel_ids)
+  const plans = new Set<string>()
+  const planMonthMap = new Map<string, number>() // key: "plan|month"
+
+  for (const [plan, planMonths] of Object.entries(mrrNewData)) {
+    plans.add(plan)
+    for (const [month, nivelIds] of Object.entries(planMonths)) {
+      if (!month.startsWith(year)) continue
+      const key = `${plan}|${month}`
+      let total = planMonthMap.get(key) || 0
+      for (const [, data] of Object.entries(nivelIds)) {
+        total += data.new_MRR
+      }
+      planMonthMap.set(key, total)
     }
   }
-  
-  // Obtener el último mes con datos reales
-  const lastRealData = realMonthsData[realMonthsData.length - 1]
-  const lastRealMonth = lastRealData.month
-  const currentNewMRR = lastRealData.newMRR
-  const lastMonthNumber = parseInt(lastRealMonth.split("-")[1])
-  
-  // Crear mapa de meses reales
-  const realDataMap = new Map(realMonthsData.map(item => [item.month, item.newMRR]))
-  
-  // Construir array con datos reales + proyecciones
-  const newARRByMonth: NewARRProcessed["newARRByMonth"] = []
-  let totalNewARR = 0
-  
-  for (const monthNum of ALL_MONTHS) {
-    const monthKey = `${year}-${monthNum}`
-    const monthInt = parseInt(monthNum)
-    
-    let newMRR: number
-    let isProjected: boolean
-    
-    if (realDataMap.has(monthKey)) {
-      // Datos reales
-      newMRR = realDataMap.get(monthKey)!
-      isProjected = false
-    } else if (monthInt > lastMonthNumber) {
-      // Proyección: usar el último mes real
-      newMRR = currentNewMRR
-      isProjected = true
-    } else {
-      // Mes anterior sin datos: 0
-      newMRR = 0
-      isProjected = false
+
+  // 2. Para cada plan: encontrar ultimo mes real y proyectar resto del anio
+  const allPlans = Array.from(plans)
+  const newARRByPlanAndMonth: NewARRDataPoint[] = []
+
+  for (const plan of allPlans) {
+    let lastRealMonthNum = 0
+    let lastRealValue = 0
+    for (const monthNum of ALL_MONTHS) {
+      const key = `${plan}|${year}-${monthNum}`
+      if (planMonthMap.has(key)) {
+        lastRealMonthNum = parseInt(monthNum)
+        lastRealValue = planMonthMap.get(key)!
+      }
     }
-    
-    const newARR = newMRR * 12
-    totalNewARR += newARR
-    
-    newARRByMonth.push({
-      month: monthKey,
-      newMRR,
-      newARR,
-      isProjected,
-    })
+
+    for (const monthNum of ALL_MONTHS) {
+      const month = `${year}-${monthNum}`
+      const monthInt = parseInt(monthNum)
+      const key = `${plan}|${month}`
+
+      let newMRR: number
+      let isProjected: boolean
+
+      if (planMonthMap.has(key)) {
+        newMRR = planMonthMap.get(key)!
+        isProjected = false
+      } else if (monthInt > lastRealMonthNum && lastRealMonthNum > 0) {
+        newMRR = lastRealValue
+        isProjected = true
+      } else {
+        newMRR = 0
+        isProjected = false
+      }
+
+      newARRByPlanAndMonth.push({
+        month, plan, newMRR,
+        newARR: newMRR * 12,
+        isProjected,
+      })
+    }
   }
-  
+
+  // 3. Agregar por mes (global)
+  const monthTotals = new Map<string, { arr: number; projected: boolean }>()
+  for (const item of newARRByPlanAndMonth) {
+    const entry = monthTotals.get(item.month) || { arr: 0, projected: true }
+    entry.arr += item.newARR
+    if (!item.isProjected) entry.projected = false
+    monthTotals.set(item.month, entry)
+  }
+
+  const newARRByMonth = ALL_MONTHS.map(m => {
+    const month = `${year}-${m}`
+    const entry = monthTotals.get(month) || { arr: 0, projected: false }
+    return { month, newARR: entry.arr, isProjected: entry.projected }
+  })
+
+  const lastReal = newARRByMonth.filter(m => !m.isProjected).pop()
+  const annualizedNewARR = lastReal ? lastReal.newARR : 0
+
   return {
-    totalNewARR,
-    currentNewMRR,
-    annualizedNewARR: currentNewMRR * 12,
+    annualizedNewARR,
     newARRByMonth,
-    lastRealMonth,
+    newARRByPlanAndMonth,
+    plans: allPlans,
   }
 }
 
-// ============================================
-// CHURN ARR - Métrica anualizada con proyección
-// Fórmula: Churn ARR = Churn MRR × 12
-// Proyección: el último mes real se usa para los meses restantes del año
-// ============================================
 
-export async function getChurnARR(year: string = "2026"): Promise<ChurnARRProcessed> {
-  const churnMRRData = await getChurnMRR()
-  
-  // Filtrar solo los meses del año solicitado y ordenar
-  const realMonthsData = churnMRRData.churnMRRByMonth
-    .filter(item => item.month.startsWith(year))
-    .sort((a, b) => a.month.localeCompare(b.month))
-  
-  if (realMonthsData.length === 0) {
-    return {
-      totalChurnARR: 0,
-      currentChurnMRR: 0,
-      annualizedChurnARR: 0,
-      churnARRByMonth: [],
-      lastRealMonth: "",
+// --------------------------------------------
+// CHURN ARR
+// Formula: Churn MRR * 12
+// Nivel: plan y fecha
+// Proyeccion: por cada plan, el ultimo mes real se repite
+//   para los meses restantes del anio (incluso si es 0)
+// Key en la respuesta: Chur_MRR
+// --------------------------------------------
+
+export function calculateChurnARR(
+  churnMRRData: ChurnMRRResponse,
+  year: string = "2026"
+): ChurnARRResult {
+  // 1. Sumar Churn MRR por plan y mes (agregar nivel_ids)
+  const plans = new Set<string>()
+  const planMonthMap = new Map<string, number>()
+
+  for (const [plan, planMonths] of Object.entries(churnMRRData)) {
+    plans.add(plan)
+    for (const [month, nivelIds] of Object.entries(planMonths)) {
+      if (!month.startsWith(year)) continue
+      const key = `${plan}|${month}`
+      let total = planMonthMap.get(key) || 0
+      for (const [, data] of Object.entries(nivelIds)) {
+        total += data.Chur_MRR
+      }
+      planMonthMap.set(key, total)
     }
   }
-  
-  // Obtener el último mes con datos reales
-  const lastRealData = realMonthsData[realMonthsData.length - 1]
-  const lastRealMonth = lastRealData.month
-  const currentChurnMRR = lastRealData.churnMRR
-  const lastMonthNumber = parseInt(lastRealMonth.split("-")[1])
-  
-  // Crear mapa de meses reales
-  const realDataMap = new Map(realMonthsData.map(item => [item.month, item.churnMRR]))
-  
-  // Construir array con datos reales + proyecciones
-  const churnARRByMonth: ChurnARRProcessed["churnARRByMonth"] = []
-  let totalChurnARR = 0
-  
-  for (const monthNum of ALL_MONTHS) {
-    const monthKey = `${year}-${monthNum}`
-    const monthInt = parseInt(monthNum)
-    
-    let churnMRR: number
-    let isProjected: boolean
-    
-    if (realDataMap.has(monthKey)) {
-      // Datos reales
-      churnMRR = realDataMap.get(monthKey)!
-      isProjected = false
-    } else if (monthInt > lastMonthNumber) {
-      // Proyección: usar el último mes real
-      churnMRR = currentChurnMRR
-      isProjected = true
-    } else {
-      // Mes anterior sin datos: 0
-      churnMRR = 0
-      isProjected = false
+
+  // 2. Para cada plan: encontrar ultimo mes real y proyectar
+  const allPlans = Array.from(plans)
+  const churnARRByPlanAndMonth: ChurnARRDataPoint[] = []
+
+  for (const plan of allPlans) {
+    let lastRealMonthNum = 0
+    let lastRealValue = 0
+    for (const monthNum of ALL_MONTHS) {
+      const key = `${plan}|${year}-${monthNum}`
+      if (planMonthMap.has(key)) {
+        lastRealMonthNum = parseInt(monthNum)
+        lastRealValue = planMonthMap.get(key)!
+      }
     }
-    
-    const churnARR = churnMRR * 12
-    totalChurnARR += churnARR
-    
-    churnARRByMonth.push({
-      month: monthKey,
-      churnMRR,
-      churnARR,
-      isProjected,
-    })
+
+    for (const monthNum of ALL_MONTHS) {
+      const month = `${year}-${monthNum}`
+      const monthInt = parseInt(monthNum)
+      const key = `${plan}|${month}`
+
+      let churnMRR: number
+      let isProjected: boolean
+
+      if (planMonthMap.has(key)) {
+        churnMRR = planMonthMap.get(key)!
+        isProjected = false
+      } else if (monthInt > lastRealMonthNum && lastRealMonthNum > 0) {
+        churnMRR = lastRealValue
+        isProjected = true
+      } else {
+        churnMRR = 0
+        isProjected = false
+      }
+
+      churnARRByPlanAndMonth.push({
+        month, plan, churnMRR,
+        churnARR: churnMRR * 12,
+        isProjected,
+      })
+    }
   }
-  
+
+  // 3. Agregar por mes (global)
+  const monthTotals = new Map<string, { arr: number; projected: boolean }>()
+  for (const item of churnARRByPlanAndMonth) {
+    const entry = monthTotals.get(item.month) || { arr: 0, projected: true }
+    entry.arr += item.churnARR
+    if (!item.isProjected) entry.projected = false
+    monthTotals.set(item.month, entry)
+  }
+
+  const churnARRByMonth = ALL_MONTHS.map(m => {
+    const month = `${year}-${m}`
+    const entry = monthTotals.get(month) || { arr: 0, projected: false }
+    return { month, churnARR: entry.arr, isProjected: entry.projected }
+  })
+
+  const lastReal = churnARRByMonth.filter(m => !m.isProjected).pop()
+  const annualizedChurnARR = lastReal ? lastReal.churnARR : 0
+
   return {
-    totalChurnARR,
-    currentChurnMRR,
-    annualizedChurnARR: currentChurnMRR * 12,
+    annualizedChurnARR,
     churnARRByMonth,
-    lastRealMonth,
+    churnARRByPlanAndMonth,
+    plans: allPlans,
+  }
+}
+
+
+// --------------------------------------------
+// CAC PAYBACK
+// Formula: CAC / (ARPU mensual promedio global * GROSS_MARGIN)
+// Nivel: solo fecha (sin plan)
+// ARPU: se promedia entre todos los planes por mes
+//   (NO basarse en users, pueden ser los mismos entre meses)
+// Resultado en meses
+// --------------------------------------------
+
+export function calculateCACPayback(
+  cacData: CACResponse,
+  arpuData: ARPUResponse
+): CACPaybackResult {
+  // 1. Calcular ARPU promedio global por mes
+  const arpuByMonth = new Map<string, { totalArpu: number; planCount: number }>()
+
+  for (const [, planMonths] of Object.entries(arpuData)) {
+    for (const [month, data] of Object.entries(planMonths)) {
+      const entry = arpuByMonth.get(month) || { totalArpu: 0, planCount: 0 }
+      entry.totalArpu += data.arpu
+      entry.planCount += 1
+      arpuByMonth.set(month, entry)
+    }
+  }
+
+  // 2. Unir todos los meses
+  const allMonths = new Set<string>([
+    ...arpuByMonth.keys(),
+    ...Object.keys(cacData),
+  ])
+  const sortedMonths = Array.from(allMonths).sort()
+
+  // 3. Calcular CAC Payback por mes
+  const cacPaybackByMonth: CACPaybackDataPoint[] = sortedMonths.map(month => {
+    const cac = cacData[month] || 0
+    const arpuEntry = arpuByMonth.get(month)
+    const avgArpu = arpuEntry && arpuEntry.planCount > 0
+      ? arpuEntry.totalArpu / arpuEntry.planCount
+      : 0
+
+    let cacPayback = 0
+    if (cac > 0 && avgArpu > 0) {
+      cacPayback = cac / (avgArpu * GROSS_MARGIN)
+    }
+
+    return { month, cacPayback, cac, arpu: avgArpu }
+  })
+
+  const current = cacPaybackByMonth[cacPaybackByMonth.length - 1]?.cacPayback || 0
+  const previous = cacPaybackByMonth[cacPaybackByMonth.length - 2]?.cacPayback || 0
+
+  return {
+    currentCACPayback: current,
+    previousCACPayback: previous,
+    cacPaybackByMonth,
   }
 }

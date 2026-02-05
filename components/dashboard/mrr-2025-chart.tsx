@@ -2,7 +2,7 @@
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
 import { useFilters } from "@/lib/contexts/filters-context"
-import { useMRRData } from "@/lib/hooks/use-mrr-data"
+import { useMRRData } from "@/lib/hooks/use-api-data"
 import { Loader2 } from "lucide-react"
 
 export function MRR2025Chart() {
@@ -14,8 +14,7 @@ export function MRR2025Chart() {
   })
 
   // Obtener planes disponibles (sin aplicar filtro de plan)
-  const { data: allData } = useMRRData({ year: filters.year })
-  const availablePlans = allData?.availablePlans || []
+  const { plans: availablePlans } = useMRRData({ year: filters.year })
 
   return (
     <div className="rounded-lg border bg-card p-6">
@@ -34,12 +33,12 @@ export function MRR2025Chart() {
       ) : (
         <ResponsiveContainer width="100%" height={350}>
           <LineChart 
-            data={data?.mrrByMonth || []} 
+            data={data?.chartData || []} 
             margin={{ top: 10, right: 20, left: 10, bottom: 20 }}
           >
             <CartesianGrid strokeDasharray="3 3" className="#e5e7eb" />
             <XAxis 
-              dataKey="mes" 
+              dataKey="monthLabel" 
               stroke="#6b7280" 
               tickMargin={10} 
               interval={0} 

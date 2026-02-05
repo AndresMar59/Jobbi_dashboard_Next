@@ -12,7 +12,7 @@ export async function GET(
   
   // Para endpoints CAC y UE, agregar start_date obligatorio (inicio del año 2026)
   if (endpoint === "cac" || endpoint === "ue") {
-    const startDate = searchParams.get("start_date") || "2026-01-01T00:00:00.000"
+    const startDate = searchParams.get("start_date") || "2025-12-31T23:59:59.999"
     url.searchParams.set("start_date", startDate)
     url.searchParams.set("acumulado", "true")
   }
