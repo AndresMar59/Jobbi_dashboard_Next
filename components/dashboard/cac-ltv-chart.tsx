@@ -24,6 +24,7 @@ const fetcher = async (url: string) => {
   return response.json()
 }
 
+// CAC VS LTV - Barras comparativas con filtro de plan
 export function CACLTVChart() {
   const { filters, setFilters } = useFilters()
   const selectedPlan = filters.plan
