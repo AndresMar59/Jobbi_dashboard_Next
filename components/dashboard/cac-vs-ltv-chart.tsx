@@ -3,6 +3,7 @@
 import { Bar, BarChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import useSWR from "swr"
 import { useFilters } from "@/lib/contexts/filters-context"
+import { MONTH_MAP, MONTH_LABELS } from "@/lib/hooks/use-api-data"
 
 interface CACResponse {
   [month: string]: number
@@ -21,8 +22,9 @@ interface LTVResponse {
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 export function CACVsLTVChart() {
-  const { filters, setFilters } = useFilters()
+  const { filters } = useFilters()
   const year = filters.year
+  const month = filters.month
 
   const { data: cacData } = useSWR<CACResponse>(
     `/api/costs/cac?start_date=2025-12-31T23:59:59.999&acumulado=true`,
@@ -30,65 +32,58 @@ export function CACVsLTVChart() {
   )
   const { data: ltvData } = useSWR<LTVResponse>(`/api/micro/ltv`, fetcher)
 
-  const selectedPlan = filters.plan || "Todos"
-  const availablePlans = ltvData ? Object.keys(ltvData) : []
-
-  // CAC: promedio anual de todos los meses del ano seleccionado
-  let cacAvg = 0
+  // CAC: filtrar por año y mes
+  let cacValue = 0
   if (cacData) {
-    const cacMonths = Object.entries(cacData)
-      .filter(([m]) => m.startsWith(year))
-      .map(([, v]) => v)
-    cacAvg = cacMonths.length > 0 ? cacMonths.reduce((a, b) => a + b, 0) / cacMonths.length : 0
-  }
-
-  // LTV: global (promedio de todos los planes) o por plan
-  let ltvValue = 0
-  if (ltvData) {
-    if (selectedPlan === "Todos") {
-      let totalLtv = 0
-      let count = 0
-      for (const [, planMonths] of Object.entries(ltvData)) {
-        const months = Object.entries(planMonths).filter(([m]) => m.startsWith(year))
-        for (const [, data] of months) {
-          totalLtv += data.ltv
-          count++
-        }
-      }
-      ltvValue = count > 0 ? totalLtv / count : 0
+    if (month !== "Todos") {
+      // Si hay mes específico, usar ese mes
+      const monthNum = MONTH_MAP[month]
+      const key = `${year}-${monthNum}`
+      cacValue = cacData[key] || 0
     } else {
-      const planData = ltvData[selectedPlan]
-      if (planData) {
-        const months = Object.entries(planData).filter(([m]) => m.startsWith(year))
-        const ltvSum = months.reduce((sum, [, d]) => sum + d.ltv, 0)
-        ltvValue = months.length > 0 ? ltvSum / months.length : 0
-      }
+      // Si es "Todos", promediar todos los meses del año
+      const cacMonths = Object.entries(cacData)
+        .filter(([m]) => m.startsWith(year))
+        .map(([, v]) => v)
+      cacValue = cacMonths.length > 0 ? cacMonths.reduce((a, b) => a + b, 0) / cacMonths.length : 0
     }
   }
 
+  // LTV: promedio global (sin segmentación por plan)
+  let ltvValue = 0
+  if (ltvData) {
+    let totalLtv = 0
+    let count = 0
+    
+    for (const [, planMonths] of Object.entries(ltvData)) {
+      for (const [monthKey, data] of Object.entries(planMonths)) {
+        const [dataYear, dataMonth] = monthKey.split("-")
+        
+        // Filtrar por año
+        if (year !== "Todos" && dataYear !== year) continue
+        
+        // Filtrar por mes si se especifica
+        if (month !== "Todos" && dataMonth !== MONTH_MAP[month]) continue
+        
+        totalLtv += data.ltv
+        count++
+      }
+    }
+    
+    ltvValue = count > 0 ? totalLtv / count : 0
+  }
+
   const chartData = [
-    { name: "CAC", value: cacAvg },
+    { name: "CAC", value: cacValue },
     { name: "LTV", value: ltvValue },
   ]
 
-  const handlePlanChange = (val: string) => {
-    setFilters({ plan: val === "Todos" ? null : val })
-  }
+  const monthLabel = month !== "Todos" ? ` - ${month}` : ""
 
   return (
     <div className="bg-card rounded-xl border border-border p-6">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4">
         <h3 className="text-lg font-semibold text-card-foreground">CAC VS LTV</h3>
-        <select
-          value={selectedPlan}
-          onChange={(e) => handlePlanChange(e.target.value)}
-          className="h-8 px-3 text-sm border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-        >
-          <option value="Todos">Todos</option>
-          {availablePlans.map((plan) => (
-            <option key={plan} value={plan}>{plan}</option>
-          ))}
-        </select>
       </div>
 
       <div className="h-[280px]">
@@ -110,7 +105,7 @@ export function CACVsLTVChart() {
       </div>
 
       <p className="text-xs text-muted-foreground mt-3">
-        CAC promedio anual {year} | LTV {selectedPlan === "Todos" ? "global" : `plan ${selectedPlan}`}
+        CAC promedio anual {year}{monthLabel} | LTV global
       </p>
     </div>
   )
