@@ -6,11 +6,18 @@ import { useMRRData } from "@/lib/hooks/use-api-data"
 
 export function MRRKPICard() {
   const { filters } = useFilters()
-  const { data, isLoading, error } = useMRRData({
+  const mrrResult = useMRRData({
     year: filters.year,
     month: filters.month,
     plan: filters.plan,
   })
+  const { data } = { data: mrrResult }
+  const { isLoading, error } = mrrResult
+
+  console.log("[v0] MRR KPI - filters:", filters)
+  console.log("[v0] MRR KPI - currentMRR:", mrrResult.currentMRR, "totalMRR:", mrrResult.totalMRR, "plans:", mrrResult.plans)
+  console.log("[v0] MRR KPI - chartData:", mrrResult.chartData)
+  console.log("[v0] MRR KPI - error:", error)
 
   const formatCurrency = (value: number) => {
     if (value >= 1000000) {

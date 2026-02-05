@@ -9,7 +9,7 @@ import { ARPUKPICard } from "@/components/dashboard/arpu-kpi-card"
 import { CompanyActivosKPICard } from "@/components/dashboard/company-activos-kpi-card"
 import { CACRatioKPICard } from "@/components/dashboard/cac-ratio-kpi-card"
 import { ARRMetricsChart } from "@/components/dashboard/arr-metrics-chart"
-import { CACLTVChart } from "@/components/dashboard/cac-ltv-chart"
+import { CACVsLTVChart } from "@/components/dashboard/cac-vs-ltv-chart"
 import { DollarChurnChart } from "@/components/dashboard/dollar-churn-chart"
 import { CACPaybackChart } from "@/components/dashboard/cac-payback-chart"
 import { NRRGRRChart } from "@/components/dashboard/nrr-grr-chart"
@@ -56,7 +56,7 @@ export default function DashboardMVP() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <NRRGRRChart />
-            <CACLTVChart />
+            <CACVsLTVChart />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
