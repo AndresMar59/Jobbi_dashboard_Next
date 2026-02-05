@@ -42,8 +42,6 @@ export function MRR2025Chart() {
       (newMrrPoint?.newMRR || 0) - (churnMrrPoint?.churnMRR || 0)
     )
 
-    console.log(`[v0] Month ${mrrPoint.month}: MRR=${mrrPoint.mrr}, NewMRR=${newMrrPoint?.newMRR || 0}, ChurnMRR=${churnMrrPoint?.churnMRR || 0}, ExpansionMRR=${expansionMRR}`)
-
     return {
       month: mrrPoint.month,
       monthLabel: mrrPoint.monthLabel,
@@ -53,6 +51,11 @@ export function MRR2025Chart() {
       expansionMRR: expansionMRR,
     }
   })
+
+  console.log("[v0] MRR Data:", mrrData)
+  console.log("[v0] NewMRR Data:", newMrrData)
+  console.log("[v0] ChurnMRR Data:", churnMrrData)
+  console.log("[v0] Combined Chart Data:", chartData)
 
   const isLoading = mrrLoading
 
