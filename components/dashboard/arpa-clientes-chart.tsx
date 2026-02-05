@@ -90,6 +90,8 @@ export function ARPAClientesChart() {
       }
     }
     
+    console.log(`[v0] Month ${monthKey}: ARPU=${arpu}, Clientes Activos=${clientesActivos}`)
+    
     return {
       month: monthKey,
       monthLabel: MONTH_LABELS[index],
@@ -97,6 +99,10 @@ export function ARPAClientesChart() {
       clientesActivos,
     }
   })
+
+  console.log("[v0] ARPU Data:", arpuData)
+  console.log("[v0] Usuarios Data:", usuariosData)
+  console.log("[v0] Chart Data:", chartData)
 
   if (isLoading) {
     return (
