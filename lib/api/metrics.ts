@@ -118,10 +118,14 @@ export function calculateCACRatio(
 
 // --------------------------------------------
 // NEW ARR
-// Formula: New MRR * 12
+// Logica de proyeccion acumulativa:
+//   - Meses con datos reales: se muestra el New MRR real del mes
+//   - Meses proyectados (futuros sin datos): 
+//       ultimo_new_mrr_real * factor (factor = 2, 3, 4...)
+//       donde factor = distancia desde el ultimo mes real + 1
+// Ejemplo con datos reales en Ene($149) y Feb($485):
+//   Ene: $149, Feb: $485, Mar: $485*2, Abr: $485*3, May: $485*4...
 // Nivel: plan y fecha
-// Proyeccion: por cada plan, el ultimo mes real se repite
-//   para los meses restantes del anio (incluso si es 0)
 // --------------------------------------------
 
 export function calculateNewARR(
@@ -145,11 +149,12 @@ export function calculateNewARR(
     }
   }
 
-  // 2. Para cada plan: encontrar ultimo mes real y proyectar resto del anio
+  // 2. Para cada plan: meses reales + proyeccion acumulativa
   const allPlans = Array.from(plans)
   const newARRByPlanAndMonth: NewARRDataPoint[] = []
 
   for (const plan of allPlans) {
+    // Encontrar ultimo mes con datos reales
     let lastRealMonthNum = 0
     let lastRealValue = 0
     for (const monthNum of ALL_MONTHS) {
@@ -165,23 +170,28 @@ export function calculateNewARR(
       const monthInt = parseInt(monthNum)
       const key = `${plan}|${month}`
 
-      let newMRR: number
+      let newARR: number
       let isProjected: boolean
 
       if (planMonthMap.has(key)) {
-        newMRR = planMonthMap.get(key)!
+        // Mes con datos reales: valor tal cual
+        newARR = planMonthMap.get(key)!
         isProjected = false
       } else if (monthInt > lastRealMonthNum && lastRealMonthNum > 0) {
-        newMRR = lastRealValue
+        // Mes futuro sin datos: proyeccion acumulativa
+        // factor = distancia desde ultimo mes real + 1
+        const factor = (monthInt - lastRealMonthNum) + 1
+        newARR = lastRealValue * factor
         isProjected = true
       } else {
-        newMRR = 0
+        newARR = 0
         isProjected = false
       }
 
       newARRByPlanAndMonth.push({
-        month, plan, newMRR,
-        newARR: newMRR * 12,
+        month, plan,
+        newMRR: planMonthMap.get(key) || 0,
+        newARR,
         isProjected,
       })
     }
@@ -216,11 +226,11 @@ export function calculateNewARR(
 
 // --------------------------------------------
 // CHURN ARR
-// Formula: Churn MRR * 12
-// Nivel: plan y fecha
-// Proyeccion: por cada plan, el ultimo mes real se repite
-//   para los meses restantes del anio (incluso si es 0)
+// Misma logica de proyeccion acumulativa que New ARR:
+//   - Meses con datos reales: Churn MRR real del mes
+//   - Meses proyectados: ultimo_churn_mrr_real * factor (2, 3, 4...)
 // Key en la respuesta: Chur_MRR
+// Nivel: plan y fecha
 // --------------------------------------------
 
 export function calculateChurnARR(
@@ -244,7 +254,7 @@ export function calculateChurnARR(
     }
   }
 
-  // 2. Para cada plan: encontrar ultimo mes real y proyectar
+  // 2. Para cada plan: meses reales + proyeccion acumulativa
   const allPlans = Array.from(plans)
   const churnARRByPlanAndMonth: ChurnARRDataPoint[] = []
 
@@ -264,23 +274,27 @@ export function calculateChurnARR(
       const monthInt = parseInt(monthNum)
       const key = `${plan}|${month}`
 
-      let churnMRR: number
+      let churnARR: number
       let isProjected: boolean
 
       if (planMonthMap.has(key)) {
-        churnMRR = planMonthMap.get(key)!
+        // Mes con datos reales: valor tal cual
+        churnARR = planMonthMap.get(key)!
         isProjected = false
       } else if (monthInt > lastRealMonthNum && lastRealMonthNum > 0) {
-        churnMRR = lastRealValue
+        // Mes futuro: proyeccion acumulativa
+        const factor = (monthInt - lastRealMonthNum) + 1
+        churnARR = lastRealValue * factor
         isProjected = true
       } else {
-        churnMRR = 0
+        churnARR = 0
         isProjected = false
       }
 
       churnARRByPlanAndMonth.push({
-        month, plan, churnMRR,
-        churnARR: churnMRR * 12,
+        month, plan,
+        churnMRR: planMonthMap.get(key) || 0,
+        churnARR,
         isProjected,
       })
     }
