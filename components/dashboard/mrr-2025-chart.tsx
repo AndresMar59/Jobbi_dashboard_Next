@@ -2,19 +2,50 @@
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
 import { useFilters } from "@/lib/contexts/filters-context"
-import { useMRRData } from "@/lib/hooks/use-api-data"
+import { useMRRData, useMRRNewData, useChurnMRRData } from "@/lib/hooks/use-api-data"
 import { Loader2 } from "lucide-react"
 
 export function MRR2025Chart() {
   const { filters, setPlan } = useFilters()
-  const { data, isLoading, error } = useMRRData({
+  const { data: mrrData, isLoading: mrrLoading, error: mrrError } = useMRRData({
+    year: filters.year,
+    month: filters.month,
+    plan: filters.plan,
+  })
+  const { data: newMrrData } = useMRRNewData({
+    year: filters.year,
+    month: filters.month,
+    plan: filters.plan,
+  })
+  const { data: churnMrrData } = useChurnMRRData({
     year: filters.year,
     month: filters.month,
     plan: filters.plan,
   })
 
-  // Obtener planes disponibles (sin aplicar filtro de plan)
+  // Obtener planes disponibles
   const { plans: availablePlans } = useMRRData({ year: filters.year })
+
+  // Combinar datos de las tres APIs
+  const chartData = (mrrData?.chartData || []).map((mrrPoint, index) => {
+    const newMrrPoint = newMrrData?.chartData?.[index]
+    const churnMrrPoint = churnMrrData?.chartData?.[index]
+
+    // Expansion MRR = New MRR - (algunos datos estáticos ajustados)
+    // Por ahora lo dejaremos como New MRR - Churn MRR para mostrar el crecimiento neto
+    const expansionMRR = Math.max(0, (newMrrPoint?.newMRR || 0) - (churnMrrPoint?.churnMRR || 0))
+
+    return {
+      month: mrrPoint.month,
+      monthLabel: mrrPoint.monthLabel,
+      mrr: mrrPoint.mrr,
+      newMRR: newMrrPoint?.newMRR || 0,
+      churnMRR: churnMrrPoint?.churnMRR || 0,
+      expansionMRR: expansionMRR,
+    }
+  })
+
+  const isLoading = mrrLoading
 
   return (
     <div className="rounded-lg border bg-card p-6">
@@ -26,7 +57,7 @@ export function MRR2025Chart() {
         <div className="flex items-center justify-center h-[350px]">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
-      ) : error ? (
+      ) : mrrError ? (
         <div className="flex items-center justify-center h-[350px] text-red-500">
           Error al cargar los datos
         </div>
@@ -34,7 +65,7 @@ export function MRR2025Chart() {
         <div className="h-[350px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart 
-              data={data?.chartData || []} 
+              data={chartData} 
               margin={{ top: 10, right: 20, left: 10, bottom: 20 }}
             >
               <CartesianGrid strokeDasharray="3 3" className="#e5e7eb" />
@@ -59,7 +90,7 @@ export function MRR2025Chart() {
                   border: "1px solid #e5e7eb",
                   borderRadius: "6px"
                 }}
-                formatter={(value: number) => [`$${value.toLocaleString("en-US")}`, "MRR"]}
+                formatter={(value: number) => [`$${value.toLocaleString("en-US")}`, ""]}
               />
               <Legend
                 verticalAlign="top"
@@ -73,7 +104,31 @@ export function MRR2025Chart() {
                 stroke="#09124F" 
                 strokeWidth={2} 
                 name="$ MRR"
-                dot={{ fill: "#09124F", r: 3 }}
+                dot={false}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="newMRR" 
+                stroke="#10b981" 
+                strokeWidth={2} 
+                name="$ New MRR"
+                dot={false}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="churnMRR" 
+                stroke="#ef4444" 
+                strokeWidth={2} 
+                name="$ Churn MRR"
+                dot={false}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="expansionMRR" 
+                stroke="#f59e0b" 
+                strokeWidth={2} 
+                name="$ Expansion MRR"
+                dot={false}
               />
             </LineChart>
           </ResponsiveContainer>
