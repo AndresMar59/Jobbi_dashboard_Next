@@ -26,14 +26,23 @@ export function MRR2025Chart() {
   // Obtener planes disponibles
   const { plans: availablePlans } = useMRRData({ year: filters.year })
 
-  // Combinar datos de las tres APIs
-  const chartData = (mrrData?.chartData || []).map((mrrPoint, index) => {
-    const newMrrPoint = newMrrData?.chartData?.[index]
-    const churnMrrPoint = churnMrrData?.chartData?.[index]
+  // Combinar datos de las tres APIs por mes
+  const chartData = (mrrData?.chartData || []).map((mrrPoint) => {
+    // Encontrar los puntos correspondientes en los otros datasets
+    const newMrrPoint = newMrrData?.chartData?.find(
+      (p) => p.month === mrrPoint.month
+    )
+    const churnMrrPoint = churnMrrData?.chartData?.find(
+      (p) => p.month === mrrPoint.month
+    )
 
-    // Expansion MRR = New MRR - (algunos datos estáticos ajustados)
-    // Por ahora lo dejaremos como New MRR - Churn MRR para mostrar el crecimiento neto
-    const expansionMRR = Math.max(0, (newMrrPoint?.newMRR || 0) - (churnMrrPoint?.churnMRR || 0))
+    // Expansion MRR = New MRR - Churn MRR (crecimiento neto)
+    const expansionMRR = Math.max(
+      0,
+      (newMrrPoint?.newMRR || 0) - (churnMrrPoint?.churnMRR || 0)
+    )
+
+    console.log(`[v0] Month ${mrrPoint.month}: MRR=${mrrPoint.mrr}, NewMRR=${newMrrPoint?.newMRR || 0}, ChurnMRR=${churnMrrPoint?.churnMRR || 0}, ExpansionMRR=${expansionMRR}`)
 
     return {
       month: mrrPoint.month,
@@ -68,7 +77,7 @@ export function MRR2025Chart() {
               data={chartData} 
               margin={{ top: 10, right: 20, left: 10, bottom: 20 }}
             >
-              <CartesianGrid strokeDasharray="3 3" className="#e5e7eb" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis 
                 dataKey="monthLabel" 
                 stroke="#6b7280" 
@@ -86,7 +95,7 @@ export function MRR2025Chart() {
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "White",
+                  backgroundColor: "white",
                   border: "1px solid #e5e7eb",
                   borderRadius: "6px"
                 }}
@@ -125,7 +134,7 @@ export function MRR2025Chart() {
               <Line 
                 type="monotone" 
                 dataKey="expansionMRR" 
-                stroke="#f59e0b" 
+                stroke="#7c3aed" 
                 strokeWidth={2} 
                 name="$ Expansion MRR"
                 dot={false}
@@ -135,7 +144,6 @@ export function MRR2025Chart() {
         </div>
       )}
 
-      {/* Solo filtro de plan (tipo de empresa eliminado) */}
       <div className="mt-4">
         <select 
           value={filters.plan}
