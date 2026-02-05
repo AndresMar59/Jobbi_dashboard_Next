@@ -22,39 +22,41 @@ export function KFactorChurnChart() {
     <div className="rounded-lg border bg-card p-6">
       <h3 className="text-lg font-semibold text-card-foreground">K-factor vs Churn</h3>
 
-      <ResponsiveContainer width="100%" height={350}>
-        <LineChart data={data} margin={{ top: 25, right: 20, left: 10, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-          <XAxis
-            dataKey="mes"
-            stroke="#6b7280"
-            fontSize={12}
-            tickMargin={10}
-            interval={0}
-            height={40}
-            padding={{ left: 20, right: 20 }}
-          />
-          <YAxis stroke="#6b7280" fontSize={12} width={30} />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: "white",
-              border: "1px solid #e5e7eb",
-              borderRadius: "6px",
-            }}
-          />
-          <Legend
-            verticalAlign="top"
-            height={30}
-            iconSize={10}
-            wrapperStyle={{
-              fontSize: "12px",
-              paddingBottom: "10px",
-            }}
-          />
-          <Line type="monotone" dataKey="kFactor" stroke="#09124F" strokeWidth={2} name="Usuarios # K-factor" />
-          <Line type="monotone" dataKey="churn" stroke="#ef4444" strokeWidth={2} name="Usuarios # Churn" />
-        </LineChart>
-      </ResponsiveContainer>
+      <div className="h-[350px] w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={data} margin={{ top: 25, right: 20, left: 10, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <XAxis
+              dataKey="mes"
+              stroke="#6b7280"
+              fontSize={12}
+              tickMargin={10}
+              interval={0}
+              height={40}
+              padding={{ left: 20, right: 20 }}
+            />
+            <YAxis stroke="#6b7280" fontSize={12} width={30} />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "white",
+                border: "1px solid #e5e7eb",
+                borderRadius: "6px",
+              }}
+            />
+            <Legend
+              verticalAlign="top"
+              height={30}
+              iconSize={10}
+              wrapperStyle={{
+                fontSize: "12px",
+                paddingBottom: "10px",
+              }}
+            />
+            <Line type="monotone" dataKey="kFactor" stroke="#09124F" strokeWidth={2} name="Usuarios # K-factor" />
+            <Line type="monotone" dataKey="churn" stroke="#ef4444" strokeWidth={2} name="Usuarios # Churn" />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   )
 }

@@ -57,44 +57,46 @@ export function ARRMetricsChart() {
       <div className="mb-4">
         <h3 className="text-lg font-semibold text-card-foreground">ARR per month</h3>
       </div>
-      <ResponsiveContainer width="100%" height={350}>
-        <LineChart data={displayData} margin={{ top: 10, right: 20, left: 10, bottom: 10 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.92 0 0)" />
-          <XAxis
-            dataKey="mes"
-            tick={{ fill: "oklch(0.55 0 0)", fontSize: 12 }}
-            padding={{ left: 20, right: 20 }}
-            height={40}
-          />
-          <YAxis
-            tick={{ fill: "oklch(0.55 0 0)", fontSize: 12 }}
-            width={30}
-            tickFormatter={(v) => {
-              if (Math.abs(v) >= 1_000_000) return `$${Math.round(v / 1_000_000)}M`
-              if (Math.abs(v) >= 1_000) return `$${Math.round(v / 1_000)}k`
-              return `$${v}`
-            }}
-          />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: "oklch(1 0 0)",
-              border: "1px solid oklch(0.92 0 0)",
-              borderRadius: "0.5rem",
-            }}
-            formatter={(value: number) => [`$${value.toLocaleString()}`, undefined]}
-          />
-          <Legend
-            verticalAlign="top"
-            height={40}
-            iconSize={10}
-            wrapperStyle={{ fontSize: "12px", paddingBottom: "10px" }}
-          />
-          <Line type="monotone" dataKey="churnARR" stroke="#2a2dcfff" strokeWidth={2} name="$ Churn ARR" dot={{ r: 3 }} />
-          <Line type="monotone" dataKey="expansionARR" stroke="#10b981" strokeWidth={2} name="$ Expansion ARR" dot={{ r: 3 }} />
-          <Line type="monotone" dataKey="netNewARR" stroke="#09124F" strokeWidth={2} name="$ Net new ARR" dot={{ r: 3 }} />
-          <Line type="monotone" dataKey="newARR" stroke="#6c11c0ff" strokeWidth={2} name="$ New ARR" dot={{ r: 3 }} />
-        </LineChart>
-      </ResponsiveContainer>
+      <div className="h-[350px] w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={displayData} margin={{ top: 10, right: 20, left: 10, bottom: 10 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.92 0 0)" />
+            <XAxis
+              dataKey="mes"
+              tick={{ fill: "oklch(0.55 0 0)", fontSize: 12 }}
+              padding={{ left: 20, right: 20 }}
+              height={40}
+            />
+            <YAxis
+              tick={{ fill: "oklch(0.55 0 0)", fontSize: 12 }}
+              width={30}
+              tickFormatter={(v) => {
+                if (Math.abs(v) >= 1_000_000) return `$${Math.round(v / 1_000_000)}M`
+                if (Math.abs(v) >= 1_000) return `$${Math.round(v / 1_000)}k`
+                return `$${v}`
+              }}
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "oklch(1 0 0)",
+                border: "1px solid oklch(0.92 0 0)",
+                borderRadius: "0.5rem",
+              }}
+              formatter={(value: number) => [`$${value.toLocaleString()}`, undefined]}
+            />
+            <Legend
+              verticalAlign="top"
+              height={40}
+              iconSize={10}
+              wrapperStyle={{ fontSize: "12px", paddingBottom: "10px" }}
+            />
+            <Line type="monotone" dataKey="churnARR" stroke="#2a2dcfff" strokeWidth={2} name="$ Churn ARR" dot={{ r: 3 }} />
+            <Line type="monotone" dataKey="expansionARR" stroke="#10b981" strokeWidth={2} name="$ Expansion ARR" dot={{ r: 3 }} />
+            <Line type="monotone" dataKey="netNewARR" stroke="#09124F" strokeWidth={2} name="$ Net new ARR" dot={{ r: 3 }} />
+            <Line type="monotone" dataKey="newARR" stroke="#6c11c0ff" strokeWidth={2} name="$ New ARR" dot={{ r: 3 }} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   )
 }
