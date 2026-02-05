@@ -9,10 +9,17 @@ interface CACResponse {
 
 interface LTVResponse {
   [plan: string]: {
-    [month: string]: {
-      ltv: number
-      avg_revenue: number
-      avg_lifespan: number
+    total_revenue: number
+    ltv: number
+    companies: number
+  }
+}
+
+interface UsuariosNuevosResponse {
+  [month: string]: {
+    [plan: string]: {
+      companies: string[]
+      new_users: number
     }
   }
 }
@@ -25,28 +32,39 @@ export function CACVsLTVChart() {
     fetcher
   )
   const { data: ltvData } = useSWR<LTVResponse>(`/api/micro/ltv`, fetcher)
+  const { data: usuariosNuevosData } = useSWR<UsuariosNuevosResponse>(`/api/micro/usuarios_nuevos`, fetcher)
 
-  // CAC: promedio global de todas las fechas
+  // CAC: promedio por mes (dividir CAC acumulado entre usuarios nuevos del mes)
   let cacValue = 0
-  if (cacData) {
-    const cacValues = Object.values(cacData)
-    cacValue = cacValues.length > 0 ? cacValues.reduce((a, b) => a + b, 0) / cacValues.length : 0
-  }
+  if (cacData && usuariosNuevosData) {
+    let totalCacPerMonth = 0
+    let monthCount = 0
 
-  // LTV: promedio global de todos los planes
-  let ltvValue = 0
-  if (ltvData) {
-    let totalLtv = 0
-    let count = 0
-    
-    for (const [, planMonths] of Object.entries(ltvData)) {
-      for (const [, data] of Object.entries(planMonths)) {
-        totalLtv += data.ltv
-        count++
+    for (const [month, cacAmount] of Object.entries(cacData)) {
+      const monthData = usuariosNuevosData[month]
+      if (monthData) {
+        let newUsersThisMonth = 0
+        for (const [, planData] of Object.entries(monthData)) {
+          if (typeof planData === 'object' && planData !== null && 'new_users' in planData) {
+            newUsersThisMonth += planData.new_users || 0
+          }
+        }
+
+        if (newUsersThisMonth > 0) {
+          totalCacPerMonth += cacAmount / newUsersThisMonth
+          monthCount++
+        }
       }
     }
-    
-    ltvValue = count > 0 ? totalLtv / count : 0
+
+    cacValue = monthCount > 0 ? totalCacPerMonth / monthCount : 0
+  }
+
+  // LTV: promedio de todos los planes (sin segmentación por fecha)
+  let ltvValue = 0
+  if (ltvData) {
+    const ltvValues = Object.values(ltvData).map((plan) => plan.ltv)
+    ltvValue = ltvValues.length > 0 ? ltvValues.reduce((a, b) => a + b, 0) / ltvValues.length : 0
   }
 
   const chartData = [
@@ -79,7 +97,7 @@ export function CACVsLTVChart() {
       </div>
 
       <p className="text-xs text-muted-foreground mt-3">
-        CAC promedio global | LTV promedio global
+        CAC promedio por cliente | LTV promedio global
       </p>
     </div>
   )
