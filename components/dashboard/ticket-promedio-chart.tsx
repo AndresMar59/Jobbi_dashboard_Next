@@ -145,7 +145,7 @@ export function TicketPromedioChart() {
               stroke="#09124F" 
               strokeWidth={2} 
               name="$ CAC"
-              dot={{ r: 3, fill: "#09124F" }}
+              dot={{ r: 4, fill: "white", stroke: "#09124F", strokeWidth: 2 }}
               isAnimationActive={false}
             />
             <Line
@@ -154,7 +154,7 @@ export function TicketPromedioChart() {
               stroke="#474194ff"
               strokeWidth={2}
               name="$ Ticket Promedio"
-              dot={{ r: 3, fill: "#474194ff" }}
+              dot={{ r: 4, fill: "white", stroke: "#474194ff", strokeWidth: 2 }}
               isAnimationActive={false}
             />
           </LineChart>

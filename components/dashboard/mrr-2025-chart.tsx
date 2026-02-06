@@ -111,7 +111,7 @@ export function MRR2025Chart() {
                 stroke="#09124F" 
                 strokeWidth={2} 
                 name="$ MRR"
-                dot={{ r: 3, fill: "#09124F" }}
+                dot={{ r: 4, fill: "white", stroke: "#09124F", strokeWidth: 2 }}
                 isAnimationActive={false}
               />
               <Line 
@@ -120,7 +120,7 @@ export function MRR2025Chart() {
                 stroke="#10b981" 
                 strokeWidth={2} 
                 name="$ New MRR"
-                dot={{ r: 3, fill: "#10b981" }}
+                dot={{ r: 4, fill: "white", stroke: "#10b981", strokeWidth: 2 }}
                 isAnimationActive={false}
               />
               <Line 
@@ -129,7 +129,7 @@ export function MRR2025Chart() {
                 stroke="#ef4444" 
                 strokeWidth={2} 
                 name="$ Churn MRR"
-                dot={{ r: 3, fill: "#ef4444" }}
+                dot={{ r: 4, fill: "white", stroke: "#ef4444", strokeWidth: 2 }}
                 isAnimationActive={false}
               />
               <Line 
@@ -138,7 +138,7 @@ export function MRR2025Chart() {
                 stroke="#7c3aed" 
                 strokeWidth={2} 
                 name="$ Expansion MRR"
-                dot={{ r: 3, fill: "#7c3aed" }}
+                dot={{ r: 4, fill: "white", stroke: "#7c3aed", strokeWidth: 2 }}
                 isAnimationActive={false}
               />
             </LineChart>

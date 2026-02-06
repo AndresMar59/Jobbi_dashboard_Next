@@ -168,7 +168,7 @@ export function ARPAClientesChart() {
               name="# clientes activos"
               stroke="#1e3a8a"
               strokeWidth={2}
-              dot={{ fill: "#1e3a8a", r: 3 }}
+              dot={{ fill: "white", r: 4, stroke: "#1e3a8a", strokeWidth: 2 }}
               isAnimationActive={false}
             />
             <Line
@@ -178,7 +178,7 @@ export function ARPAClientesChart() {
               name="ARPA $"
               stroke="#dc2626"
               strokeWidth={2}
-              dot={{ fill: "#dc2626", r: 3 }}
+              dot={{ fill: "white", r: 4, stroke: "#dc2626", strokeWidth: 2 }}
               isAnimationActive={false}
             />
           </LineChart>

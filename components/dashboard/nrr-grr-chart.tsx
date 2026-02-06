@@ -49,7 +49,7 @@ export function NRRGRRChart() {
               dataKey="grr"
               stroke="#09124F"
               strokeWidth={2}
-              dot={{ fill: "#09124F", r: 3 }}
+              dot={{ fill: "white", r: 4, stroke: "#09124F", strokeWidth: 2 }}
               name="GRR %"
               isAnimationActive={false}
             />
@@ -58,7 +58,7 @@ export function NRRGRRChart() {
               dataKey="nrr"
               stroke="#10b981"
               strokeWidth={2}
-              dot={{ fill: "#10b981", r: 3 }}
+              dot={{ fill: "white", r: 4, stroke: "#10b981", strokeWidth: 2 }}
               name="NRR %"
               isAnimationActive={false}
             />
@@ -67,7 +67,7 @@ export function NRRGRRChart() {
               dataKey="retencion"
               stroke="#6b018bff"
               strokeWidth={2}
-              dot={{ fill: "#6b018bff", r: 3 }}
+              dot={{ fill: "white", r: 4, stroke: "#6b018bff", strokeWidth: 2 }}
               name="% Retención"
               isAnimationActive={false}
             />

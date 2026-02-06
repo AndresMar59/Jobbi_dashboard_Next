@@ -69,7 +69,7 @@ export function CACPaybackChart() {
               dataKey="cacPayback"
               stroke="#710cacff"
               strokeWidth={2}
-              dot={{ fill: "#710cacff", r: 3 }}
+              dot={{ fill: "white", r: 4, stroke: "#710cacff", strokeWidth: 2 }}
               name="CAC Payback"
               isAnimationActive={false}
             />

@@ -107,7 +107,7 @@ export function DollarChurnChart() {
                 stroke="#09124F"
                 strokeWidth={2}
                 name="$ Revenue churn"
-                dot={{ r: 3, fill: "#09124F" }}
+                dot={{ r: 4, fill: "white", stroke: "#09124F", strokeWidth: 2 }}
                 isAnimationActive={false}
               />
               <Line
@@ -117,7 +117,7 @@ export function DollarChurnChart() {
                 stroke="#10b981"
                 strokeWidth={2}
                 name="$ Revenue Expansion"
-                dot={{ r: 3, fill: "#10b981" }}
+                dot={{ r: 4, fill: "white", stroke: "#10b981", strokeWidth: 2 }}
                 isAnimationActive={false}
               />
               <Line
@@ -127,7 +127,7 @@ export function DollarChurnChart() {
                 stroke="#382af1ff"
                 strokeWidth={2}
                 name="Net Revenue Churn %"
-                dot={{ r: 3, fill: "#382af1ff" }}
+                dot={{ r: 4, fill: "white", stroke: "#382af1ff", strokeWidth: 2 }}
                 isAnimationActive={false}
               />
             </LineChart>
