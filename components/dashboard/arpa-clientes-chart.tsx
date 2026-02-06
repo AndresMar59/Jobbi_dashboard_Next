@@ -90,6 +90,8 @@ export function ARPAClientesChart() {
       }
     }
     
+    console.log(`[v0] Month ${monthKey}: ARPU=${arpu}, Clientes Activos=${clientesActivos}`)
+    
     return {
       month: monthKey,
       monthLabel: MONTH_LABELS[index],
@@ -97,6 +99,10 @@ export function ARPAClientesChart() {
       clientesActivos,
     }
   })
+
+  console.log("[v0] ARPU Data:", arpuData)
+  console.log("[v0] Usuarios Data:", usuariosData)
+  console.log("[v0] Chart Data:", chartData)
 
   if (isLoading) {
     return (
@@ -113,67 +119,71 @@ export function ARPAClientesChart() {
     <div className="rounded-lg border bg-card p-6">
       <h3 className="text-lg font-semibold text-card-foreground mb-4">ARPA vs # clientes activos</h3>
 
-      <ResponsiveContainer width="100%" height={350}>
-        <LineChart data={chartData} margin={{ top: 10, right: 30, left: 10, bottom: 20 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-          <XAxis 
-            dataKey="monthLabel" 
-            stroke="#6b7280" 
-            tickMargin={10} 
-            tick={{ fontSize: 12 }} 
-            height={40} 
-          />
-          <YAxis 
-            yAxisId="left"
-            stroke="#dc2626"
-            tick={{ fontSize: 12 }} 
-            tickFormatter={(v) => `$${v}`}
-            width={50}
-          />
-          <YAxis 
-            yAxisId="right"
-            orientation="right"
-            stroke="#1e3a8a"
-            tick={{ fontSize: 12 }}
-            width={40}
-          />
-          <Legend
-            verticalAlign="top"
-            height={30}
-            iconSize={10}
-            wrapperStyle={{ fontSize: "12px", paddingBottom: "10px" }}
-          />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: "white",
-              border: "1px solid #e5e7eb",
-              borderRadius: "6px",
-            }}
-            formatter={(value: number, name: string) => {
-              if (name === "ARPA $") return [`$${value.toFixed(2)}`, name]
-              return [value, name]
-            }}
-          />
-          <Line
-            yAxisId="right"
-            type="monotone"
-            dataKey="clientesActivos"
-            name="# clientes activos"
-            stroke="#1e3a8a"
-            strokeWidth={2}
-            dot={{ fill: "#1e3a8a", r: 4 }}
-          />
-          <Line
-            yAxisId="left"
-            type="monotone"
-            dataKey="arpu"
-            name="ARPA $"
-            stroke="#dc2626"
-            strokeWidth={2}
-            dot={{ fill: "#dc2626", r: 4 }}
-          />
-        </LineChart>
-      </ResponsiveContainer>
+      <div className="h-[350px] w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={chartData} margin={{ top: 10, right: 30, left: 10, bottom: 20 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <XAxis 
+              dataKey="monthLabel" 
+              stroke="#6b7280" 
+              tickMargin={10} 
+              tick={{ fontSize: 12 }} 
+              height={40} 
+            />
+            <YAxis 
+              yAxisId="left"
+              stroke="#dc2626"
+              tick={{ fontSize: 12 }} 
+              tickFormatter={(v) => `$${v}`}
+              width={50}
+            />
+            <YAxis 
+              yAxisId="right"
+              orientation="right"
+              stroke="#1e3a8a"
+              tick={{ fontSize: 12 }}
+              width={40}
+            />
+            <Legend
+              verticalAlign="top"
+              height={30}
+              iconSize={10}
+              wrapperStyle={{ fontSize: "12px", paddingBottom: "10px" }}
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "white",
+                border: "1px solid #e5e7eb",
+                borderRadius: "6px",
+              }}
+              formatter={(value: number, name: string) => {
+                if (name === "ARPA $") return [`$${value.toFixed(2)}`, name]
+                return [value, name]
+              }}
+            />
+            <Line
+              yAxisId="right"
+              type="monotone"
+              dataKey="clientesActivos"
+              name="# clientes activos"
+              stroke="#1e3a8a"
+              strokeWidth={2}
+              dot={{ fill: "white", r: 4, stroke: "#1e3a8a", strokeWidth: 2 }}
+              isAnimationActive={false}
+            />
+            <Line
+              yAxisId="left"
+              type="monotone"
+              dataKey="arpu"
+              name="ARPA $"
+              stroke="#dc2626"
+              strokeWidth={2}
+              dot={{ fill: "white", r: 4, stroke: "#dc2626", strokeWidth: 2 }}
+              isAnimationActive={false}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
 
       <div className="mt-4">
         <select 

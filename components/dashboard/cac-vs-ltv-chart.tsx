@@ -2,7 +2,6 @@
 
 import { Bar, BarChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import useSWR from "swr"
-import { useFilters } from "@/lib/contexts/filters-context"
 
 interface CACResponse {
   [month: string]: number
@@ -10,10 +9,17 @@ interface CACResponse {
 
 interface LTVResponse {
   [plan: string]: {
-    [month: string]: {
-      ltv: number
-      avg_revenue: number
-      avg_lifespan: number
+    total_revenue: number
+    ltv: number
+    companies: number
+  }
+}
+
+interface UsuariosNuevosResponse {
+  [month: string]: {
+    [plan: string]: {
+      companies: string[]
+      new_users: number
     }
   }
 }
@@ -21,74 +27,67 @@ interface LTVResponse {
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 export function CACVsLTVChart() {
-  const { filters, setFilters } = useFilters()
-  const year = filters.year
-
   const { data: cacData } = useSWR<CACResponse>(
     `/api/costs/cac?start_date=2025-12-31T23:59:59.999&acumulado=true`,
     fetcher
   )
   const { data: ltvData } = useSWR<LTVResponse>(`/api/micro/ltv`, fetcher)
+  const { data: usuariosNuevosData } = useSWR<UsuariosNuevosResponse>(`/api/micro/usuarios_nuevos`, fetcher)
 
-  const selectedPlan = filters.plan || "Todos"
-  const availablePlans = ltvData ? Object.keys(ltvData) : []
+  // CAC: promedio por mes (dividir CAC acumulado entre usuarios nuevos del mes)
+  let cacValue = 0
+  if (cacData && usuariosNuevosData) {
+    console.log("[v0] CAC Data:", cacData)
+    console.log("[v0] Usuarios Nuevos Data:", usuariosNuevosData)
+    
+    let totalCacPerMonth = 0
+    let monthCount = 0
 
-  // CAC: promedio anual de todos los meses del ano seleccionado
-  let cacAvg = 0
-  if (cacData) {
-    const cacMonths = Object.entries(cacData)
-      .filter(([m]) => m.startsWith(year))
-      .map(([, v]) => v)
-    cacAvg = cacMonths.length > 0 ? cacMonths.reduce((a, b) => a + b, 0) / cacMonths.length : 0
-  }
+    for (const [month, cacAmount] of Object.entries(cacData)) {
+      const monthData = usuariosNuevosData[month]
+      console.log("[v0] Processing month:", month, "CAC Amount:", cacAmount, "Month Data:", monthData)
+      
+      if (monthData) {
+        let newUsersThisMonth = 0
+        for (const [, planData] of Object.entries(monthData)) {
+          if (typeof planData === 'object' && planData !== null && 'new_users' in planData) {
+            newUsersThisMonth += planData.new_users || 0
+          }
+        }
 
-  // LTV: global (promedio de todos los planes) o por plan
-  let ltvValue = 0
-  if (ltvData) {
-    if (selectedPlan === "Todos") {
-      let totalLtv = 0
-      let count = 0
-      for (const [, planMonths] of Object.entries(ltvData)) {
-        const months = Object.entries(planMonths).filter(([m]) => m.startsWith(year))
-        for (const [, data] of months) {
-          totalLtv += data.ltv
-          count++
+        console.log("[v0] New users this month:", newUsersThisMonth)
+        
+        if (newUsersThisMonth > 0) {
+          totalCacPerMonth += cacAmount / newUsersThisMonth
+          monthCount++
+        } else {
+          // Si no hay clientes nuevos, usar CAC/1
+          totalCacPerMonth += cacAmount / 1
+          monthCount++
         }
       }
-      ltvValue = count > 0 ? totalLtv / count : 0
-    } else {
-      const planData = ltvData[selectedPlan]
-      if (planData) {
-        const months = Object.entries(planData).filter(([m]) => m.startsWith(year))
-        const ltvSum = months.reduce((sum, [, d]) => sum + d.ltv, 0)
-        ltvValue = months.length > 0 ? ltvSum / months.length : 0
-      }
     }
+
+    cacValue = monthCount > 0 ? totalCacPerMonth / monthCount : 0
+    console.log("[v0] Final CAC Value:", cacValue)
+  }
+
+  // LTV: promedio de todos los planes (sin segmentación por fecha)
+  let ltvValue = 0
+  if (ltvData) {
+    const ltvValues = Object.values(ltvData).map((plan) => plan.ltv)
+    ltvValue = ltvValues.length > 0 ? ltvValues.reduce((a, b) => a + b, 0) / ltvValues.length : 0
   }
 
   const chartData = [
-    { name: "CAC", value: cacAvg },
+    { name: "CAC", value: cacValue },
     { name: "LTV", value: ltvValue },
   ]
 
-  const handlePlanChange = (val: string) => {
-    setFilters({ plan: val === "Todos" ? null : val })
-  }
-
   return (
     <div className="bg-card rounded-xl border border-border p-6">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4">
         <h3 className="text-lg font-semibold text-card-foreground">CAC VS LTV</h3>
-        <select
-          value={selectedPlan}
-          onChange={(e) => handlePlanChange(e.target.value)}
-          className="h-8 px-3 text-sm border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-        >
-          <option value="Todos">Todos</option>
-          {availablePlans.map((plan) => (
-            <option key={plan} value={plan}>{plan}</option>
-          ))}
-        </select>
       </div>
 
       <div className="h-[280px]">
@@ -110,7 +109,7 @@ export function CACVsLTVChart() {
       </div>
 
       <p className="text-xs text-muted-foreground mt-3">
-        CAC promedio anual {year} | LTV {selectedPlan === "Todos" ? "global" : `plan ${selectedPlan}`}
+        CAC promedio por cliente | LTV promedio global
       </p>
     </div>
   )

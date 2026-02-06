@@ -22,56 +22,58 @@ export function NRRGRRChart() {
     <div className="rounded-lg border bg-card p-6">
       <h3 className="text-lg font-semibold text-card-foreground mb-4">NRR vs GRR</h3>
 
-      {/*Para poner las etiquetas*/}
-      {/*  <p className="text-sm text-muted-foreground mb-4">NRR vs GRR</p> */}
-
-      <ResponsiveContainer width="100%" height={350}>
-        <LineChart data={data} margin={{ top: 10, right: 20, left: 5, bottom: 20 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-          <XAxis dataKey="mes" stroke="#6b7280" padding={{ left: 20, right: 20 }} fontSize={12} tickMargin={10} interval={0} height={40}/>
-          <YAxis stroke="#6b7280" fontSize={12} tickFormatter={(value) => `${value}%`} width={40} />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: "white",
-              border: "1px solid #e5e7eb",
-              borderRadius: "6px",
-            }}
-          />
-          <Legend
-            verticalAlign="top"
-            height={30}
-            iconSize={10}
-            wrapperStyle={{
-              fontSize: "12px",
-              paddingBottom: "10px",
-            }}
-          />
-          <Line
-            type="monotone"
-            dataKey="grr"
-            stroke="#09124F"
-            strokeWidth={2}
-          //  dot={{ fill: "#09124F", r: 4 }}
-            name="GRR %"
-          />
-          <Line
-            type="monotone"
-            dataKey="nrr"
-            stroke="#10b981"
-            strokeWidth={2}
-       //     dot={{ fill: "#10b981", r: 4 }}
-            name="NRR %"
-          />
-          <Line
-            type="monotone"
-            dataKey="retencion"
-            stroke="#6b018bff"
-            strokeWidth={2}
-          //  dot={{ fill: "#ef4444", r: 4 }}
-            name="% Retención"
-          />
-        </LineChart>
-      </ResponsiveContainer>
+      <div className="h-[350px] w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={data} margin={{ top: 10, right: 20, left: 5, bottom: 20 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <XAxis dataKey="mes" stroke="#6b7280" padding={{ left: 20, right: 20 }} fontSize={12} tickMargin={10} interval={0} height={40}/>
+            <YAxis stroke="#6b7280" fontSize={12} tickFormatter={(value) => `${value}%`} width={40} />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "white",
+                border: "1px solid #e5e7eb",
+                borderRadius: "6px",
+              }}
+            />
+            <Legend
+              verticalAlign="top"
+              height={30}
+              iconSize={10}
+              wrapperStyle={{
+                fontSize: "12px",
+                paddingBottom: "10px",
+              }}
+            />
+            <Line
+              type="monotone"
+              dataKey="grr"
+              stroke="#09124F"
+              strokeWidth={2}
+              dot={{ fill: "white", r: 4, stroke: "#09124F", strokeWidth: 2 }}
+              name="GRR %"
+              isAnimationActive={false}
+            />
+            <Line
+              type="monotone"
+              dataKey="nrr"
+              stroke="#10b981"
+              strokeWidth={2}
+              dot={{ fill: "white", r: 4, stroke: "#10b981", strokeWidth: 2 }}
+              name="NRR %"
+              isAnimationActive={false}
+            />
+            <Line
+              type="monotone"
+              dataKey="retencion"
+              stroke="#6b018bff"
+              strokeWidth={2}
+              dot={{ fill: "white", r: 4, stroke: "#6b018bff", strokeWidth: 2 }}
+              name="% Retención"
+              isAnimationActive={false}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   )
 }
