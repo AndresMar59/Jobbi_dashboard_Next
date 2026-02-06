@@ -49,24 +49,27 @@ export function NRRGRRChart() {
               dataKey="grr"
               stroke="#09124F"
               strokeWidth={2}
-            //  dot={{ fill: "#09124F", r: 4 }}
+              dot={{ fill: "#09124F", r: 3 }}
               name="GRR %"
+              isAnimationActive={false}
             />
             <Line
               type="monotone"
               dataKey="nrr"
               stroke="#10b981"
               strokeWidth={2}
-         //     dot={{ fill: "#10b981", r: 4 }}
+              dot={{ fill: "#10b981", r: 3 }}
               name="NRR %"
+              isAnimationActive={false}
             />
             <Line
               type="monotone"
               dataKey="retencion"
               stroke="#6b018bff"
               strokeWidth={2}
-            //  dot={{ fill: "#ef4444", r: 4 }}
+              dot={{ fill: "#6b018bff", r: 3 }}
               name="% Retención"
+              isAnimationActive={false}
             />
           </LineChart>
         </ResponsiveContainer>

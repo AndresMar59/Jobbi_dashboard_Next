@@ -107,6 +107,8 @@ export function DollarChurnChart() {
                 stroke="#09124F"
                 strokeWidth={2}
                 name="$ Revenue churn"
+                dot={{ r: 3, fill: "#09124F" }}
+                isAnimationActive={false}
               />
               <Line
                 type="monotone"
@@ -115,6 +117,8 @@ export function DollarChurnChart() {
                 stroke="#10b981"
                 strokeWidth={2}
                 name="$ Revenue Expansion"
+                dot={{ r: 3, fill: "#10b981" }}
+                isAnimationActive={false}
               />
               <Line
                 type="monotone"
@@ -123,6 +127,8 @@ export function DollarChurnChart() {
                 stroke="#382af1ff"
                 strokeWidth={2}
                 name="Net Revenue Churn %"
+                dot={{ r: 3, fill: "#382af1ff" }}
+                isAnimationActive={false}
               />
             </LineChart>
           </ResponsiveContainer>

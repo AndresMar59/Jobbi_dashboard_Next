@@ -69,8 +69,9 @@ export function CACPaybackChart() {
               dataKey="cacPayback"
               stroke="#710cacff"
               strokeWidth={2}
-              dot={{ fill: "#710cacff", r: 4 }}
+              dot={{ fill: "#710cacff", r: 3 }}
               name="CAC Payback"
+              isAnimationActive={false}
             />
           </LineChart>
         </ResponsiveContainer>

@@ -168,7 +168,8 @@ export function ARPAClientesChart() {
               name="# clientes activos"
               stroke="#1e3a8a"
               strokeWidth={2}
-              dot={{ fill: "#1e3a8a", r: 4 }}
+              dot={{ fill: "#1e3a8a", r: 3 }}
+              isAnimationActive={false}
             />
             <Line
               yAxisId="left"
@@ -177,7 +178,8 @@ export function ARPAClientesChart() {
               name="ARPA $"
               stroke="#dc2626"
               strokeWidth={2}
-              dot={{ fill: "#dc2626", r: 4 }}
+              dot={{ fill: "#dc2626", r: 3 }}
+              isAnimationActive={false}
             />
           </LineChart>
         </ResponsiveContainer>

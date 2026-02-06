@@ -90,10 +90,10 @@ export function ARRMetricsChart() {
               iconSize={10}
               wrapperStyle={{ fontSize: "12px", paddingBottom: "10px" }}
             />
-            <Line type="monotone" dataKey="churnARR" stroke="#2a2dcfff" strokeWidth={2} name="$ Churn ARR" dot={{ r: 3 }} />
-            <Line type="monotone" dataKey="expansionARR" stroke="#10b981" strokeWidth={2} name="$ Expansion ARR" dot={{ r: 3 }} />
-            <Line type="monotone" dataKey="netNewARR" stroke="#09124F" strokeWidth={2} name="$ Net new ARR" dot={{ r: 3 }} />
-            <Line type="monotone" dataKey="newARR" stroke="#6c11c0ff" strokeWidth={2} name="$ New ARR" dot={{ r: 3 }} />
+            <Line type="monotone" dataKey="churnARR" stroke="#2a2dcfff" strokeWidth={2} name="$ Churn ARR" dot={{ r: 3, fill: "#2a2dcfff" }} isAnimationActive={false} />
+            <Line type="monotone" dataKey="expansionARR" stroke="#10b981" strokeWidth={2} name="$ Expansion ARR" dot={{ r: 3, fill: "#10b981" }} isAnimationActive={false} />
+            <Line type="monotone" dataKey="netNewARR" stroke="#09124F" strokeWidth={2} name="$ Net new ARR" dot={{ r: 3, fill: "#09124F" }} isAnimationActive={false} />
+            <Line type="monotone" dataKey="newARR" stroke="#6c11c0ff" strokeWidth={2} name="$ New ARR" dot={{ r: 3, fill: "#6c11c0ff" }} isAnimationActive={false} />
           </LineChart>
         </ResponsiveContainer>
       </div>

@@ -52,8 +52,8 @@ export function KFactorChurnChart() {
                 paddingBottom: "10px",
               }}
             />
-            <Line type="monotone" dataKey="kFactor" stroke="#09124F" strokeWidth={2} name="Usuarios # K-factor" />
-            <Line type="monotone" dataKey="churn" stroke="#ef4444" strokeWidth={2} name="Usuarios # Churn" />
+            <Line type="monotone" dataKey="kFactor" stroke="#09124F" strokeWidth={2} name="Usuarios # K-factor" dot={{ r: 3, fill: "#09124F" }} isAnimationActive={false} />
+            <Line type="monotone" dataKey="churn" stroke="#ef4444" strokeWidth={2} name="Usuarios # Churn" dot={{ r: 3, fill: "#ef4444" }} isAnimationActive={false} />
           </LineChart>
         </ResponsiveContainer>
       </div>
