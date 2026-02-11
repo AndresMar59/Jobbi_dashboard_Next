@@ -1,6 +1,6 @@
 "use client"
 
-import { TrendingUp, Loader2, TrendingUpIcon, TrendingDownIcon } from "lucide-react"
+import { DollarSign, Loader2, TrendingUpIcon, TrendingDownIcon } from "lucide-react"
 import { useFilters } from "@/lib/contexts/filters-context"
 import { useExpansionMRRData } from "@/lib/hooks/use-api-data"
 
@@ -13,6 +13,16 @@ export function ExpansionKPICard() {
   })
   const { isLoading, error } = data
 
+  const formatCurrency = (value: number) => {
+    if (value >= 1000000) {
+      return `$${(value / 1000000).toFixed(1)}M`
+    }
+    if (value >= 1000) {
+      return `$${(value / 1000).toFixed(1)}K`
+    }
+    return `$${value.toFixed(0)}`
+  }
+
   // Calcular porcentaje de cambio vs mes anterior
   const percentChange = data.previousExpansionMRR > 0
     ? ((data.currentExpansionMRR - data.previousExpansionMRR) / data.previousExpansionMRR) * 100
@@ -24,8 +34,8 @@ export function ExpansionKPICard() {
   return (
     <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
       <div className="flex items-start justify-between mb-2">
-        <p className="text-sm text-muted-foreground">Expansiones</p>
-        <TrendingUp className="h-4 w-4 text-muted-foreground" />
+        <p className="text-sm text-muted-foreground">$ Expansiones</p>
+        <DollarSign className="h-4 w-4 text-muted-foreground" />
       </div>
       
       {isLoading ? (
@@ -37,7 +47,7 @@ export function ExpansionKPICard() {
       ) : (
         <>
           <p className="text-2xl font-bold text-card-foreground mb-2">
-            {Math.round(data.currentExpansionMRR)}
+            {formatCurrency(data.currentExpansionMRR)}
           </p>
           <div className="flex items-center gap-1 text-sm">
             {trend === "up" ? (
