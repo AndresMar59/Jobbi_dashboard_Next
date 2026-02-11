@@ -18,16 +18,16 @@ export function DCPAMRPAChart() {
     month: filters.month,
   })
 
-  // MRR: suma de todos los planes
+  // MRR: suma de todos los planes, SIN filtro de mes para mantener continuidad
   const { chartData: mrrChart, isLoading: isLoadingMRR } = useMRRData({
     year: filters.year,
-    month: filters.month,
+    month: "Todos", // Sin filtro de mes para obtener datos de todos los meses
   })
 
-  // New MRR: suma de todos los planes
+  // New MRR: suma de todos los planes, SIN filtro de mes para mantener continuidad
   const { chartData: newMRRChart, isLoading: isLoadingNewMRR } = useMRRNewData({
     year: filters.year,
-    month: filters.month,
+    month: "Todos", // Sin filtro de mes para obtener datos de todos los meses
   })
 
   // Obtener datos de usuarios activos del mes (global, sin plan)
