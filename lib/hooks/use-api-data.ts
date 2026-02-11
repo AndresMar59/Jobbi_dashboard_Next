@@ -908,6 +908,8 @@ export function useUsuariosChurnedData(options: FilterOptions = {}) {
   const plansSet = new Set<string>()
   const monthMap = new Map<string, number>()
 
+  console.log("[v0] useUsuariosChurnedData - rawData:", rawData, "filters:", { year, month, plan })
+
   for (const [monthKey, monthData] of Object.entries(rawData)) {
     const [dataYear, dataMonth] = monthKey.split("-")
     if (year !== "Todos" && dataYear !== year) continue
@@ -916,9 +918,14 @@ export function useUsuariosChurnedData(options: FilterOptions = {}) {
     let monthTotal = 0
     for (const [planName, planData] of Object.entries(monthData)) {
       plansSet.add(planName)
+      const planDataObj = planData as any
+      const churnedValue = planDataObj?.churned_users || 0
+      console.log(`[v0] Processing ${monthKey} - ${planName}: churned_users=${churnedValue}`, planDataObj)
+      
       if (plan !== "Todos" && planName !== plan) continue
-      monthTotal += planData.churned_users || 0
+      monthTotal += churnedValue
     }
+    console.log(`[v0] ${monthKey} total churn: ${monthTotal}`)
     monthMap.set(dataMonth, (monthMap.get(dataMonth) || 0) + monthTotal)
   }
 
