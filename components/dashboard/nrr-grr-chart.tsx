@@ -46,12 +46,6 @@ export function NRRGRRChart() {
     plan: filters.plan,
   })
 
-  console.log("[v0] NRRGRRChart - mrrData:", mrrData)
-  console.log("[v0] NRRGRRChart - churnMRRData:", churnMRRData)
-  console.log("[v0] NRRGRRChart - contractionMRRData:", contractionMRRData)
-  console.log("[v0] NRRGRRChart - expansionMRRData:", expansionMRRData)
-  console.log("[v0] NRRGRRChart - tasaRetentionData:", tasaRetentionData)
-
   // Construir data para el gráfico
   const chartData = ALL_MONTHS.map((m) => {
     const label = MONTH_LABELS[m]
@@ -83,29 +77,27 @@ export function NRRGRRChart() {
     const tasaEntry = tasaRetentionData.find(d => d.monthLabel === label)
     const tasaRetencion = tasaEntry?.retentionRate !== null && tasaEntry?.retentionRate !== undefined 
       ? tasaEntry.retentionRate 
-      : null
-
-    console.log(`[v0] ${label}: mrrInitial=${mrrInitial}, churnMRR=${churnMRR}, contractionMRR=${contractionMRR}, expansionMRR=${expansionMRR}, tasaRetencion=${tasaRetencion}`)
+      : 0
 
     // Calcular GRR: (MRR_inicial - (Churn MRR + Contraction MRR)) / MRR_inicial * 100
+    // Si no hay MRR inicial (ej: enero), GRR = 0 (sin datos disponibles)
     const grr = mrrInitial > 0 
       ? ((mrrInitial - (churnMRR + contractionMRR)) / mrrInitial) * 100 
-      : null
+      : 0
 
     // Calcular NRR: (MRR_inicial - Churn MRR - Contraction MRR + Expansion MRR) / MRR_inicial * 100
+    // Si no hay MRR inicial (ej: enero), NRR = 0 (sin datos disponibles)
     const nrr = mrrInitial > 0 
       ? ((mrrInitial - churnMRR - contractionMRR + expansionMRR) / mrrInitial) * 100 
-      : null
+      : 0
 
     return {
       mes: label,
-      grr: grr !== null ? Math.round(grr * 10) / 10 : null,
-      nrr: nrr !== null ? Math.round(nrr * 10) / 10 : null,
-      retencion: tasaRetencion !== null ? Math.round(tasaRetencion * 10) / 10 : null,
+      grr: Math.round(grr * 10) / 10,
+      nrr: Math.round(nrr * 10) / 10,
+      retencion: Math.round(tasaRetencion * 10) / 10,
     }
   }).filter(d => filters.month === "Todos" || d.mes === filters.month)
-
-  console.log("[v0] NRRGRRChart - chartData:", chartData)
 
   return (
     <div className="rounded-lg border bg-card p-6">
