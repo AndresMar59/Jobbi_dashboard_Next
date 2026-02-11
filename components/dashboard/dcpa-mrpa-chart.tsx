@@ -4,37 +4,65 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { useFilters } from "@/lib/contexts/filters-context"
 import { useUnitEconomicsData } from "@/lib/hooks/use-api-data"
 import { useMRRData } from "@/lib/hooks/use-api-data"
+import { useMRRNewData } from "@/lib/hooks/use-api-data"
+import { useUsuariosActivosData } from "@/lib/hooks/use-api-data"
 import { ALL_MONTHS } from "@/lib/api/metrics"
 import { MONTH_LABELS } from "@/lib/hooks/use-api-data"
 
 export function DCPAMRPAChart() {
   const { filters } = useFilters()
 
-  // DCPA: solo segmentado por fecha (no plan)
+  // DCPA: del UE, sin segregación por plan (global)
   const { chartData: dcpaChart, isLoading: isLoadingDCPA } = useUnitEconomicsData({
     year: filters.year,
     month: filters.month,
   })
 
-  // MRPA: MRR solo segmentado por fecha (no plan), para congruencia
+  // MRR: suma de todos los planes
   const { chartData: mrrChart, isLoading: isLoadingMRR } = useMRRData({
     year: filters.year,
     month: filters.month,
-    // No se pasa plan - siempre suma todos los planes
+  })
+
+  // New MRR: suma de todos los planes
+  const { chartData: newMRRChart, isLoading: isLoadingNewMRR } = useMRRNewData({
+    year: filters.year,
+    month: filters.month,
+  })
+
+  // Obtener datos de usuarios activos del mes (global, sin plan)
+  const { chartData: usuariosActivosChart, isLoading: isLoadingActivos } = useUsuariosActivosData({
+    year: filters.year,
+    month: "Todos", // Sin filtro de mes específico para obtener datos completos
   })
 
   // Combinar ambos en un solo dataset por mes
   const chartData = ALL_MONTHS.map(m => {
     const dcpaEntry = dcpaChart.find(d => d.month?.endsWith(`-${m}`))
     const mrrEntry = mrrChart.find(d => d.month?.endsWith(`-${m}`))
+    const newMRREntry = newMRRChart.find(d => d.month?.endsWith(`-${m}`))
+    
+    // Obtener usuarios activos del mes
+    const activosEntry = usuariosActivosChart.find(d => d.month?.endsWith(`-${m}`))
+    const activeUsers = activosEntry?.activeUsers || 1 // Evitar división por 0
+
+    // DCPA = DCPA_UE / usuarios_activos
+    const dcpaUE = dcpaEntry?.dcpa || 0
+    const dcpaCalculated = activeUsers > 0 ? dcpaUE / activeUsers : 0
+
+    // MRPA = MRR + New MRR
+    const mrrValue = mrrEntry?.mrr || 0
+    const newMRRValue = newMRREntry?.newMRR || 0
+    const mrpaValue = mrrValue + newMRRValue
+
     return {
       mes: MONTH_LABELS[m],
-      dcpa: dcpaEntry?.dcpa || 0,
-      mrpa: mrrEntry?.mrr || 0,
+      dcpa: dcpaCalculated,
+      mrpa: mrpaValue,
     }
   })
 
-  const isLoading = isLoadingDCPA || isLoadingMRR
+  const isLoading = isLoadingDCPA || isLoadingMRR || isLoadingNewMRR || isLoadingActivos
 
   return (
     <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
