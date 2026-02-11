@@ -7,14 +7,6 @@ interface CACResponse {
   [month: string]: number
 }
 
-interface LTVResponse {
-  [plan: string]: {
-    total_revenue: number
-    ltv: number
-    companies: number
-  }
-}
-
 interface UsuariosNuevosResponse {
   [month: string]: {
     [plan: string]: {
@@ -31,52 +23,58 @@ export function CACVsLTVChart() {
     `/api/costs/cac?start_date=2025-12-31T23:59:59.999&acumulado=true`,
     fetcher
   )
-  const { data: ltvData } = useSWR<LTVResponse>(`/api/micro/ltv`, fetcher)
   const { data: usuariosNuevosData } = useSWR<UsuariosNuevosResponse>(`/api/micro/usuarios_nuevos`, fetcher)
 
-  // CAC: promedio por mes (dividir CAC acumulado entre usuarios nuevos del mes)
+  // LTV Global usando el hook
+  const { averageLTV } = (() => {
+    // Simulación del hook useLTVData sin usar el hook directamente
+    const ltvData = (() => {
+      // Esta lógica debería venir de useLTVData en use-api-data.ts
+      // Por ahora lo hacemos inline para mayor control
+      return { averageLTV: 0 }
+    })()
+    return ltvData
+  })()
+
+  // CAC Global: gasto_cac_total / nuevas_empresas_totales
   let cacValue = 0
   if (cacData && usuariosNuevosData) {
-    console.log("[v0] CAC Data:", cacData)
-    console.log("[v0] Usuarios Nuevos Data:", usuariosNuevosData)
-    
-    let totalCacPerMonth = 0
-    let monthCount = 0
+    let totalCacSpend = 0
+    let totalNewCompanies = 0
 
-    for (const [month, cacAmount] of Object.entries(cacData)) {
-      const monthData = usuariosNuevosData[month]
-      console.log("[v0] Processing month:", month, "CAC Amount:", cacAmount, "Month Data:", monthData)
-      
-      if (monthData) {
-        let newUsersThisMonth = 0
+    // Sumar todo el gasto CAC de todos los meses
+    for (const [, cacAmount] of Object.entries(cacData)) {
+      totalCacSpend += cacAmount || 0
+    }
+
+    // Sumar todas las nuevas empresas de todos los meses y planes
+    for (const [, monthData] of Object.entries(usuariosNuevosData)) {
+      if (typeof monthData === 'object' && monthData !== null) {
         for (const [, planData] of Object.entries(monthData)) {
           if (typeof planData === 'object' && planData !== null && 'new_users' in planData) {
-            newUsersThisMonth += planData.new_users || 0
+            totalNewCompanies += (planData as any).new_users || 0
           }
-        }
-
-        console.log("[v0] New users this month:", newUsersThisMonth)
-        
-        if (newUsersThisMonth > 0) {
-          totalCacPerMonth += cacAmount / newUsersThisMonth
-          monthCount++
-        } else {
-          // Si no hay clientes nuevos, usar CAC/1
-          totalCacPerMonth += cacAmount / 1
-          monthCount++
         }
       }
     }
 
-    cacValue = monthCount > 0 ? totalCacPerMonth / monthCount : 0
-    console.log("[v0] Final CAC Value:", cacValue)
+    // CAC Global = gasto total / nuevas empresas totales
+    cacValue = totalNewCompanies > 0 ? totalCacSpend / totalNewCompanies : 0
   }
 
-  // LTV: promedio de todos los planes (sin segmentación por fecha)
+  // LTV Global - debe calcularse desde la API
+  // Por ahora obtenemos directamente desde el fetch
+  const { data: ltvRawData } = useSWR(`/api/micro/ltv`, fetcher)
   let ltvValue = 0
-  if (ltvData) {
-    const ltvValues = Object.values(ltvData).map((plan) => plan.ltv)
-    ltvValue = ltvValues.length > 0 ? ltvValues.reduce((a, b) => a + b, 0) / ltvValues.length : 0
+  if (ltvRawData) {
+    const ltvValues = Object.values(ltvRawData).map((plan: any) => ({
+      ltv: plan.ltv || 0,
+      companies: plan.companies || 0,
+    }))
+    // Promedio ponderado por companies
+    const totalWeighted = ltvValues.reduce((s: number, i: any) => s + i.ltv * i.companies, 0)
+    const totalCompanies = ltvValues.reduce((s: number, i: any) => s + i.companies, 0)
+    ltvValue = totalCompanies > 0 ? totalWeighted / totalCompanies : 0
   }
 
   const chartData = [
