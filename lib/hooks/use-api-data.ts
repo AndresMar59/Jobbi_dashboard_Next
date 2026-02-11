@@ -627,7 +627,7 @@ export function useTicketPromedioData(options: FilterOptions = {}) {
 export interface TasaRetentionDataPoint {
   month: string
   monthLabel: string
-  retentionRate: number
+  retentionRate: number | null
 }
 
 export function useTasaRetentionData(options: FilterOptions = {}) {
@@ -641,20 +641,28 @@ export function useTasaRetentionData(options: FilterOptions = {}) {
 
   if (!rawData) return result
 
-  const monthMap = new Map<string, number>()
+  const monthMap = new Map<string, number | null>()
   for (const [monthKey, rate] of Object.entries(rawData)) {
     const [dataYear, dataMonth] = monthKey.split("-")
     if (year !== "Todos" && dataYear !== year) continue
     if (month !== "Todos" && dataMonth !== MONTH_MAP[month]) continue
-    monthMap.set(dataMonth, typeof rate === "number" ? rate : 0)
+    const rateValue = typeof rate === "number" ? rate : 0
+    monthMap.set(dataMonth, rateValue)
   }
 
-  const chartData = ALL_MONTHS.map(m => ({
-    month: `${year}-${m}`, monthLabel: MONTH_LABELS[m], retentionRate: monthMap.get(m) || 0,
-  }))
+  // Crear chartData con todos los meses, pero null para meses sin data
+  const chartData = ALL_MONTHS.map(m => {
+    const monthNum = m.toString().padStart(2, "0")
+    const rate = monthMap.get(monthNum)
+    return {
+      month: `${year}-${m}`, 
+      monthLabel: MONTH_LABELS[m], 
+      retentionRate: rate !== undefined ? rate : null,
+    }
+  })
 
   result.chartData = chartData
-  const withData = chartData.filter(d => d.retentionRate > 0)
+  const withData = chartData.filter(d => d.retentionRate !== null && d.retentionRate > 0)
   result.currentRate = withData[withData.length - 1]?.retentionRate || 0
   result.previousRate = withData[withData.length - 2]?.retentionRate || 0
 

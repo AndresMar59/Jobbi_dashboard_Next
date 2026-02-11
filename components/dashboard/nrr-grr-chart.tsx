@@ -75,23 +75,25 @@ export function NRRGRRChart() {
 
     // Tasa de Retención del mes
     const tasaEntry = tasaRetentionData.find(d => d.monthLabel === label)
-    const tasaRetencion = tasaEntry?.tasaRetention || 0
+    const tasaRetencion = tasaEntry?.retentionRate !== null && tasaEntry?.retentionRate !== undefined 
+      ? tasaEntry.retentionRate 
+      : null
 
     // Calcular GRR: (MRR_inicial - (Churn MRR + Contraction MRR)) / MRR_inicial * 100
     const grr = mrrInitial > 0 
       ? ((mrrInitial - (churnMRR + contractionMRR)) / mrrInitial) * 100 
-      : 0
+      : null
 
     // Calcular NRR: (MRR_inicial - Churn MRR - Contraction MRR + Expansion MRR) / MRR_inicial * 100
     const nrr = mrrInitial > 0 
       ? ((mrrInitial - churnMRR - contractionMRR + expansionMRR) / mrrInitial) * 100 
-      : 0
+      : null
 
     return {
       mes: label,
-      grr: Math.round(grr * 10) / 10,
-      nrr: Math.round(nrr * 10) / 10,
-      retencion: Math.round(tasaRetencion * 10) / 10,
+      grr: grr !== null ? Math.round(grr * 10) / 10 : null,
+      nrr: nrr !== null ? Math.round(nrr * 10) / 10 : null,
+      retencion: tasaRetencion !== null ? Math.round(tasaRetencion * 10) / 10 : null,
     }
   }).filter(d => filters.month === "Todos" || d.mes === filters.month)
 
