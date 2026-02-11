@@ -92,30 +92,31 @@ export function useMRRData(options: FilterOptions = {}) {
 
   if (!rawData) return result
 
-  // Nueva estructura: { "plan-mes": { mrr: value, subscription: value } }
+  // Estructura correcta de la API: { plan: { mes: { mrr, subscriptions } } }
   const monthMap = new Map<string, number>()
   const subscriptionMap = new Map<string, number>()
   const plans = new Set<string>()
 
-  for (const [key, data] of Object.entries(rawData)) {
-    // key es "plan-mes" como "Free-2026-01"
-    const parts = key.split("-")
-    if (parts.length < 3) continue
-
-    const planName = parts.slice(0, -2).join("-") // En caso de plan con guiones
-    const dataYear = parts[parts.length - 2]
-    const dataMonth = parts[parts.length - 1]
-
+  for (const [planName, monthsData] of Object.entries(rawData)) {
     if (plan !== "Todos" && planName !== plan) continue
-    if (year !== "Todos" && dataYear !== year) continue
-    if (month !== "Todos" && dataMonth !== MONTH_MAP[month]) continue
-
+    
     plans.add(planName)
-    const mrrValue = typeof data === 'object' && data !== null ? (data as any).mrr || 0 : 0
-    const subValue = typeof data === 'object' && data !== null ? (data as any).subscription || 0 : 0
-
-    monthMap.set(dataMonth, (monthMap.get(dataMonth) || 0) + mrrValue)
-    subscriptionMap.set(dataMonth, (subscriptionMap.get(dataMonth) || 0) + subValue)
+    
+    // monthsData es { "2026-01": { mrr, subscriptions }, ... }
+    for (const [monthKey, data] of Object.entries(monthsData)) {
+      if (typeof data !== 'object' || data === null) continue
+      
+      const [dataYear, dataMonth] = monthKey.split('-')
+      
+      if (year !== "Todos" && dataYear !== year) continue
+      if (month !== "Todos" && dataMonth !== MONTH_MAP[month]) continue
+      
+      const mrrValue = (data as any).mrr || 0
+      const subValue = (data as any).subscriptions || 0
+      
+      monthMap.set(dataMonth, (monthMap.get(dataMonth) || 0) + mrrValue)
+      subscriptionMap.set(dataMonth, (subscriptionMap.get(dataMonth) || 0) + subValue)
+    }
   }
 
   result.plans = Array.from(plans)
@@ -176,26 +177,27 @@ export function useMRRNewData(options: FilterOptions = {}) {
 
   if (!rawData) return result
 
-  // Nueva estructura: { "plan-mes": { new_MRR: value, subscription: value } }
+  // Estructura correcta de la API: { plan: { mes: { new_MRR, subscriptions } } }
   const monthMap = new Map<string, number>()
   const plans = new Set<string>()
 
-  for (const [key, data] of Object.entries(rawData)) {
-    // key es "plan-mes" como "Free-2026-01"
-    const parts = key.split("-")
-    if (parts.length < 3) continue
-
-    const planName = parts.slice(0, -2).join("-")
-    const dataYear = parts[parts.length - 2]
-    const dataMonth = parts[parts.length - 1]
-
+  for (const [planName, monthsData] of Object.entries(rawData)) {
     if (plan !== "Todos" && planName !== plan) continue
-    if (year !== "Todos" && dataYear !== year) continue
-    if (month !== "Todos" && dataMonth !== MONTH_MAP[month]) continue
-
+    
     plans.add(planName)
-    const newMRRValue = typeof data === 'object' && data !== null ? (data as any).new_MRR || 0 : 0
-    monthMap.set(dataMonth, (monthMap.get(dataMonth) || 0) + newMRRValue)
+    
+    // monthsData es { "2026-01": { new_MRR, subscriptions }, ... }
+    for (const [monthKey, data] of Object.entries(monthsData)) {
+      if (typeof data !== 'object' || data === null) continue
+      
+      const [dataYear, dataMonth] = monthKey.split('-')
+      
+      if (year !== "Todos" && dataYear !== year) continue
+      if (month !== "Todos" && dataMonth !== MONTH_MAP[month]) continue
+      
+      const newMRRValue = (data as any).new_MRR || 0
+      monthMap.set(dataMonth, (monthMap.get(dataMonth) || 0) + newMRRValue)
+    }
   }
 
   result.plans = Array.from(plans)
@@ -249,26 +251,28 @@ export function useChurnMRRData(options: FilterOptions = {}) {
 
   if (!rawData) return result
 
-  // Nueva estructura: { "plan-mes": { mrr: value, subscription: value } }
+  // Estructura correcta de la API: { plan: { mes: { Chur_MRR, subscriptions } } }
   const monthMap = new Map<string, number>()
   const plans = new Set<string>()
 
-  for (const [key, data] of Object.entries(rawData)) {
-    // key es "plan-mes" como "Free-2026-01"
-    const parts = key.split("-")
-    if (parts.length < 3) continue
-
-    const planName = parts.slice(0, -2).join("-")
-    const dataYear = parts[parts.length - 2]
-    const dataMonth = parts[parts.length - 1]
-
+  for (const [planName, monthsData] of Object.entries(rawData)) {
     if (plan !== "Todos" && planName !== plan) continue
-    if (year !== "Todos" && dataYear !== year) continue
-    if (month !== "Todos" && dataMonth !== MONTH_MAP[month]) continue
-
+    
     plans.add(planName)
-    const mrrValue = typeof data === 'object' && data !== null ? (data as any).mrr || 0 : 0
-    monthMap.set(dataMonth, (monthMap.get(dataMonth) || 0) + mrrValue)
+    
+    // monthsData es { "2026-01": { Chur_MRR, subscriptions }, ... }
+    for (const [monthKey, data] of Object.entries(monthsData)) {
+      if (typeof data !== 'object' || data === null) continue
+      
+      const [dataYear, dataMonth] = monthKey.split('-')
+      
+      if (year !== "Todos" && dataYear !== year) continue
+      if (month !== "Todos" && dataMonth !== MONTH_MAP[month]) continue
+      
+      // Nota: API devuelve "Chur_MRR" (no "churnMRR" o "churn_mrr")
+      const mrrValue = (data as any)['Chur_MRR'] || 0
+      monthMap.set(dataMonth, (monthMap.get(dataMonth) || 0) + mrrValue)
+    }
   }
 
   result.plans = Array.from(plans)
@@ -318,24 +322,27 @@ export function useExpansionMRRData(options: FilterOptions = {}) {
 
   if (!rawData) return result
 
+  // Estructura correcta de la API: { plan: { mes: { expansion_mrr, subscriptions } } }
   const monthMap = new Map<string, number>()
   const plans = new Set<string>()
 
-  for (const [key, data] of Object.entries(rawData)) {
-    const parts = key.split("-")
-    if (parts.length < 3) continue
-
-    const planName = parts.slice(0, -2).join("-")
-    const dataYear = parts[parts.length - 2]
-    const dataMonth = parts[parts.length - 1]
-
+  for (const [planName, monthsData] of Object.entries(rawData)) {
     if (plan !== "Todos" && planName !== plan) continue
-    if (year !== "Todos" && dataYear !== year) continue
-    if (month !== "Todos" && dataMonth !== MONTH_MAP[month]) continue
-
+    
     plans.add(planName)
-    const mrrValue = data.mrr || 0
-    monthMap.set(dataMonth, (monthMap.get(dataMonth) || 0) + mrrValue)
+    
+    // monthsData es { "2026-01": { expansion_mrr, subscriptions }, ... }
+    for (const [monthKey, data] of Object.entries(monthsData)) {
+      if (typeof data !== 'object' || data === null) continue
+      
+      const [dataYear, dataMonth] = monthKey.split('-')
+      
+      if (year !== "Todos" && dataYear !== year) continue
+      if (month !== "Todos" && dataMonth !== MONTH_MAP[month]) continue
+      
+      const mrrValue = (data as any).expansion_mrr || 0
+      monthMap.set(dataMonth, (monthMap.get(dataMonth) || 0) + mrrValue)
+    }
   }
 
   result.plans = Array.from(plans)
@@ -385,24 +392,27 @@ export function useContractionMRRData(options: FilterOptions = {}) {
 
   if (!rawData) return result
 
+  // Estructura correcta de la API: { plan: { mes: { contraction_mrr, subscriptions } } }
   const monthMap = new Map<string, number>()
   const plans = new Set<string>()
 
-  for (const [key, data] of Object.entries(rawData)) {
-    const parts = key.split("-")
-    if (parts.length < 3) continue
-
-    const planName = parts.slice(0, -2).join("-")
-    const dataYear = parts[parts.length - 2]
-    const dataMonth = parts[parts.length - 1]
-
+  for (const [planName, monthsData] of Object.entries(rawData)) {
     if (plan !== "Todos" && planName !== plan) continue
-    if (year !== "Todos" && dataYear !== year) continue
-    if (month !== "Todos" && dataMonth !== MONTH_MAP[month]) continue
-
+    
     plans.add(planName)
-    const mrrValue = data.mrr || 0
-    monthMap.set(dataMonth, (monthMap.get(dataMonth) || 0) + mrrValue)
+    
+    // monthsData es { "2026-01": { contraction_mrr, subscriptions }, ... }
+    for (const [monthKey, data] of Object.entries(monthsData)) {
+      if (typeof data !== 'object' || data === null) continue
+      
+      const [dataYear, dataMonth] = monthKey.split('-')
+      
+      if (year !== "Todos" && dataYear !== year) continue
+      if (month !== "Todos" && dataMonth !== MONTH_MAP[month]) continue
+      
+      const mrrValue = (data as any).contraction_mrr || 0
+      monthMap.set(dataMonth, (monthMap.get(dataMonth) || 0) + mrrValue)
+    }
   }
 
   result.plans = Array.from(plans)
