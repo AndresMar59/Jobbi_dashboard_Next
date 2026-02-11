@@ -20,6 +20,9 @@ const fetcher = (url: string) => fetch(url).then(res => res.json())
 
 export function DollarChurnKPICard() {
   const { filters } = useFilters()
+
+  console.log("[v0] DollarChurnKPICard - Filters:", { year: filters.year, plan: filters.plan, month: filters.month })
+  
   const { data: rawData, isLoading } = useSWR<ChurnMRRResponse>(
     "/api/micro/churn_mrr",
     fetcher,

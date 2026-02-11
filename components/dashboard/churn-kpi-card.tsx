@@ -27,6 +27,8 @@ const ALL_MONTHS = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", 
 export function ChurnKPICard() {
   const { filters } = useFilters()
   const { year, plan, month } = filters
+
+  console.log("[v0] ChurnKPICard - Filters:", { year, plan, month })
   
   const { data: rawData, isLoading } = useSWR<ChurnedResponse>(
     "/api/micro/usuarios_churned",

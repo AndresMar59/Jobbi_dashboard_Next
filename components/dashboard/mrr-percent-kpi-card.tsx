@@ -22,6 +22,9 @@ const fetcher = (url: string) => fetch(url).then(res => res.json())
 
 export function MRRPercentKPICard() {
   const { filters } = useFilters()
+
+  console.log("[v0] MRRPercentKPICard - Filters:", { year: filters.year, plan: filters.plan, month: filters.month })
+  
   const { data: rawData, isLoading } = useSWR<MRRResponse>(
     "/api/micro/mrr",
     fetcher,

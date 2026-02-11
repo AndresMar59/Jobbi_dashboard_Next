@@ -17,6 +17,9 @@ const ALL_MONTHS = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", 
 
 export function TasaRetencionKPICard() {
   const { filters } = useFilters()
+
+  console.log("[v0] TasaRetencionKPICard - Filters:", { year: filters.year, plan: filters.plan, month: filters.month })
+  
   const { data: rawData, isLoading } = useSWR<TasaRetentionResponse>(
     "/api/micro/tasa_retention",
     fetcher,
