@@ -56,8 +56,6 @@ export function DCPAMRPAChart() {
     const totalMRR = mrrValue + newMRRValue
     const mrpaCalculated = activeUsers > 0 ? totalMRR / activeUsers : 0
 
-    console.log(`[v0] Mes ${m}: mrrValue=${mrrValue}, newMRRValue=${newMRRValue}, totalMRR=${totalMRR}, activeUsers=${activeUsers}, mrpaCalculated=${mrpaCalculated}`)
-
     return {
       mes: MONTH_LABELS[m],
       dcpa: dcpaCalculated,
@@ -66,10 +64,6 @@ export function DCPAMRPAChart() {
   })
 
   const isLoading = isLoadingDCPA || isLoadingMRR || isLoadingNewMRR || isLoadingActivos
-
-  console.log(`[v0] MRR Chart Data:`, mrrChart)
-  console.log(`[v0] NewMRR Chart Data:`, newMRRChart)
-  console.log(`[v0] Activos Chart Data:`, usuariosActivosChart)
 
   return (
     <div className="rounded-lg border border-border bg-card p-6 shadow-sm">

@@ -176,7 +176,7 @@ export function useMRRNewData(options: FilterOptions = {}) {
 
   if (!rawData) return result
 
-  // Nueva estructura: { "plan-mes": { mrr: value, subscription: value } }
+  // Nueva estructura: { "plan-mes": { new_MRR: value, subscription: value } }
   const monthMap = new Map<string, number>()
   const plans = new Set<string>()
 
@@ -194,8 +194,8 @@ export function useMRRNewData(options: FilterOptions = {}) {
     if (month !== "Todos" && dataMonth !== MONTH_MAP[month]) continue
 
     plans.add(planName)
-    const mrrValue = typeof data === 'object' && data !== null ? (data as any).mrr || 0 : 0
-    monthMap.set(dataMonth, (monthMap.get(dataMonth) || 0) + mrrValue)
+    const newMRRValue = typeof data === 'object' && data !== null ? (data as any).new_MRR || 0 : 0
+    monthMap.set(dataMonth, (monthMap.get(dataMonth) || 0) + newMRRValue)
   }
 
   result.plans = Array.from(plans)
