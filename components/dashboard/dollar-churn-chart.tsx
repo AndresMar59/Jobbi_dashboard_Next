@@ -2,7 +2,6 @@
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
 import { useFilters } from "@/lib/contexts/filters-context"
-import { useRevenueChurnData } from "@/lib/hooks/use-api-data"
 import { useRevenueMetricsData } from "@/lib/hooks/use-api-data"
 import { MONTH_LABELS } from "@/lib/hooks/use-api-data"
 import { ALL_MONTHS } from "@/lib/api/metrics"
@@ -11,40 +10,27 @@ import { Loader2 } from "lucide-react"
 export function DollarChurnChart() {
   const { filters } = useFilters()
 
-  // Revenue churn
-  const { chartData: revenueChurnData, isLoading: loadingChurn } = useRevenueChurnData({
-    year: filters.year,
-    month: filters.month,
-  })
-
-  // Nuevas métricas calculadas: Revenue Expansion %, Gross Churn Rate %, Net Revenue Churn %
+  // Métricas calculadas: Revenue Expansion %, Gross Churn Rate %, Net Revenue Churn %
   const { chartData: metricsData, isLoading: loadingMetrics } = useRevenueMetricsData({
     year: filters.year,
-    month: "Todos", // Siempre obtener todos los meses para combinar con revenue churn
+    month: "Todos",
     plan: filters.plan,
   })
 
-  const isLoading = loadingChurn || loadingMetrics
+  const isLoading = loadingMetrics
 
-  // Combinar datos de revenue churn con las nuevas métricas
-  const combinedData = ALL_MONTHS.map(m => {
+  // Preparar datos para el gráfico
+  const displayData = ALL_MONTHS.map(m => {
     const label = MONTH_LABELS[m]
-    const churnEntry = revenueChurnData.find(d => d.monthLabel === label)
     const metricsEntry = metricsData.find(d => d.monthLabel === label)
 
     return {
       mes: label,
-      revenueChurn: churnEntry?.revenueChurn || 0,
       revenueExpansion: metricsEntry?.revenueExpansion || 0,
       grossChurnRate: metricsEntry?.grossChurnRate || 0,
       netRevenueChurn: metricsEntry?.netRevenueChurn || 0,
     }
-  })
-
-  // Si hay filtro de mes, filtrar; si no, mostrar todos
-  const displayData = filters.month !== "Todos"
-    ? combinedData.filter(d => d.mes === filters.month)
-    : combinedData
+  }).filter(d => filters.month === "Todos" || d.mes === filters.month)
 
   return (
     <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
@@ -69,23 +55,12 @@ export function DollarChurnChart() {
                 interval={0}
               />
               <YAxis
-                yAxisId="left"
-                stroke="#6b7280"
-                tick={{ fontSize: 12 }}
-                width={30}
-                tickFormatter={(v) => {
-                  if (Math.abs(v) >= 1_000_000) return `$${Math.round(v / 1_000_000)}M`
-                  if (Math.abs(v) >= 1_000) return `$${Math.round(v / 1_000)}k`
-                  return `$${v}`
-                }}
-              />
-              <YAxis
                 yAxisId="right"
                 orientation="right"
                 stroke="#959697ff"
                 tick={{ fontSize: 12 }}
                 strokeDasharray="4 4"
-                width={30}
+                width={40}
                 tickFormatter={(v) => `${v.toFixed(1)}%`}
               />
               <Tooltip
@@ -94,12 +69,7 @@ export function DollarChurnChart() {
                   border: "1px solid #e5e7eb",
                   borderRadius: "6px",
                 }}
-                formatter={(value: number, name: string) => {
-                  if (name.includes("Revenue churn") || name.includes("Revenue Expansion")) {
-                    return [`$${value.toFixed(2)}`, name]
-                  }
-                  return [`${value.toFixed(2)}%`, name]
-                }}
+                formatter={(value: number) => [`${value.toFixed(2)}%`, undefined]}
               />
               <Legend
                 verticalAlign="top"
@@ -112,32 +82,12 @@ export function DollarChurnChart() {
               />
               <Line
                 type="monotone"
-                yAxisId="left"
+                yAxisId="right"
                 dataKey="revenueExpansion"
                 stroke="#10b981"
                 strokeWidth={2}
-                name="$ Revenue Expansion"
+                name="% Revenue Expansion"
                 dot={{ r: 4, fill: "white", stroke: "#10b981", strokeWidth: 2 }}
-                isAnimationActive={false}
-              />
-              <Line
-                type="monotone"
-                yAxisId="left"
-                dataKey="revenueChurn"
-                stroke="#09124F"
-                strokeWidth={2}
-                name="$ Revenue churn"
-                dot={{ r: 4, fill: "white", stroke: "#09124F", strokeWidth: 2 }}
-                isAnimationActive={false}
-              />
-              <Line
-                type="monotone"
-                yAxisId="right"
-                dataKey="netRevenueChurn"
-                stroke="#382af1ff"
-                strokeWidth={2}
-                name="Net Revenue Churn %"
-                dot={{ r: 4, fill: "white", stroke: "#382af1ff", strokeWidth: 2 }}
                 isAnimationActive={false}
               />
               <Line
@@ -146,8 +96,18 @@ export function DollarChurnChart() {
                 dataKey="grossChurnRate"
                 stroke="#ef4444"
                 strokeWidth={2}
-                name="Gross Churn Rate %"
+                name="% Gross Churn Rate"
                 dot={{ r: 4, fill: "white", stroke: "#ef4444", strokeWidth: 2 }}
+                isAnimationActive={false}
+              />
+              <Line
+                type="monotone"
+                yAxisId="right"
+                dataKey="netRevenueChurn"
+                stroke="#382af1ff"
+                strokeWidth={2}
+                name="% Net Revenue Churn"
+                dot={{ r: 4, fill: "white", stroke: "#382af1ff", strokeWidth: 2 }}
                 isAnimationActive={false}
               />
             </LineChart>
