@@ -3,11 +3,12 @@
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { Navbar } from "@/components/dashboard/navbar"
 import { DashboardFilters } from "@/components/dashboard/dashboard-filters"
-import { KPICard } from "@/components/dashboard/kpi-card-clean"
 import { MRRKPICard } from "@/components/dashboard/mrr-kpi-card"
 import { ARPUKPICard } from "@/components/dashboard/arpu-kpi-card"
 import { CompanyActivosKPICard } from "@/components/dashboard/company-activos-kpi-card"
 import { CACRatioKPICard } from "@/components/dashboard/cac-ratio-kpi-card"
+import { ExpansionKPICard } from "@/components/dashboard/expansion-kpi-card"
+import { DowngradeKPICard } from "@/components/dashboard/downgrade-kpi-card"
 import { ARRMetricsChart } from "@/components/dashboard/arr-metrics-chart"
 import { CACVsLTVChart } from "@/components/dashboard/cac-vs-ltv-chart"
 import { DollarChurnChart } from "@/components/dashboard/dollar-churn-chart"
@@ -18,7 +19,6 @@ import { MRR2025Chart } from "@/components/dashboard/mrr-2025-chart"
 import { TicketPromedioChart } from "@/components/dashboard/ticket-promedio-chart"
 import { DCPAMRPAChart } from "@/components/dashboard/dcpa-mrpa-chart"
 import { FiltersProvider } from "@/lib/contexts/filters-context"
-import { DollarSign, Users, TrendingUp, TrendingDown } from "lucide-react"
 
 export default function DashboardMVP() {
   return (
@@ -39,8 +39,8 @@ export default function DashboardMVP() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-            <KPICard title="Expanciones" value="23" change="+8.7% vs mes anterior" icon={TrendingUp} trend="up" />
-            <KPICard title="Downgrade" value="5" change="-3.2% vs mes anterior" icon={TrendingDown} trend="down" />
+            <ExpansionKPICard />
+            <DowngradeKPICard />
             <MRRKPICard />
           </div>
 
