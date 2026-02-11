@@ -99,9 +99,11 @@ export function useMRRData(options: FilterOptions = {}) {
   const plans = new Set<string>()
 
   for (const [planName, monthsData] of Object.entries(rawData)) {
-    if (plan !== "Todos" && planName !== plan) continue
-    
+    // Siempre agregar el plan al conjunto de planes disponibles, aunque no lo filtremos
     plans.add(planName)
+    
+    // Solo procesar datos de este plan si coincide con el filtro
+    if (plan !== "Todos" && planName !== plan) continue
     
     // monthsData es { "2026-01": { mrr, subscriptions }, ... }
     for (const [monthKey, data] of Object.entries(monthsData)) {
@@ -183,9 +185,11 @@ export function useMRRNewData(options: FilterOptions = {}) {
   const plans = new Set<string>()
 
   for (const [planName, monthsData] of Object.entries(rawData)) {
-    if (plan !== "Todos" && planName !== plan) continue
-    
+    // Siempre agregar el plan al conjunto de planes disponibles
     plans.add(planName)
+    
+    // Solo procesar datos si coincide con el filtro
+    if (plan !== "Todos" && planName !== plan) continue
     
     // monthsData es { "2026-01": { new_MRR, subscriptions }, ... }
     for (const [monthKey, data] of Object.entries(monthsData)) {
@@ -257,9 +261,11 @@ export function useChurnMRRData(options: FilterOptions = {}) {
   const plans = new Set<string>()
 
   for (const [planName, monthsData] of Object.entries(rawData)) {
-    if (plan !== "Todos" && planName !== plan) continue
-    
+    // Siempre agregar el plan al conjunto de planes disponibles
     plans.add(planName)
+    
+    // Solo procesar datos si coincide con el filtro
+    if (plan !== "Todos" && planName !== plan) continue
     
     // monthsData es { "2026-01": { Chur_MRR, subscriptions }, ... }
     for (const [monthKey, data] of Object.entries(monthsData)) {
@@ -328,9 +334,11 @@ export function useExpansionMRRData(options: FilterOptions = {}) {
   const plans = new Set<string>()
 
   for (const [planName, monthsData] of Object.entries(rawData)) {
-    if (plan !== "Todos" && planName !== plan) continue
-    
+    // Siempre agregar el plan al conjunto de planes disponibles
     plans.add(planName)
+    
+    // Solo procesar datos si coincide con el filtro
+    if (plan !== "Todos" && planName !== plan) continue
     
     // monthsData es { "2026-01": { expansion_mrr, subscriptions }, ... }
     for (const [monthKey, data] of Object.entries(monthsData)) {
@@ -398,9 +406,11 @@ export function useContractionMRRData(options: FilterOptions = {}) {
   const plans = new Set<string>()
 
   for (const [planName, monthsData] of Object.entries(rawData)) {
-    if (plan !== "Todos" && planName !== plan) continue
-    
+    // Siempre agregar el plan al conjunto de planes disponibles
     plans.add(planName)
+    
+    // Solo procesar datos si coincide con el filtro
+    if (plan !== "Todos" && planName !== plan) continue
     
     // monthsData es { "2026-01": { contraction_mrr, subscriptions }, ... }
     for (const [monthKey, data] of Object.entries(monthsData)) {
