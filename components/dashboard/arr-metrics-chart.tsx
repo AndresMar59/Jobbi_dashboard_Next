@@ -57,7 +57,7 @@ export function ARRMetricsChart() {
       <div className="mb-4">
         <h3 className="text-lg font-semibold text-card-foreground">ARR per month</h3>
       </div>
-      <div className="w-full" style={{ height: "350px" }}>
+      <div className="h-[350px] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={displayData} margin={{ top: 10, right: 20, left: 10, bottom: 10 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.92 0 0)" />

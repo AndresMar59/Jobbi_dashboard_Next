@@ -1,97 +1,52 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
 import { useFilters } from "@/lib/contexts/filters-context"
-
-const MONTH_NAMES: Record<string, string> = {
-  "01": "Ene", "02": "Feb", "03": "Mar", "04": "Abr",
-  "05": "May", "06": "Jun", "07": "Jul", "08": "Ago",
-  "09": "Sep", "10": "Oct", "11": "Nov", "12": "Dic",
-}
-
-const ALL_MONTHS = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
-
-interface ChartDataPoint {
-  mes: string
-  month: string
-  cac: number
-  ticketPromedio: number
-}
+import { useCACData, useTicketPromedioData } from "@/lib/hooks/use-api-data"
+import { Loader2 } from "lucide-react"
 
 export function TicketPromedioChart() {
   const { filters } = useFilters()
-  const year = filters.year
-  const [data, setData] = useState<ChartDataPoint[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  
+  const { chartData: cacData, isLoading: cacLoading, error: cacError } = useCACData({
+    year: filters.year,
+  })
+  
+  const { chartData: ticketData, isLoading: ticketLoading, error: ticketError } = useTicketPromedioData({
+    year: filters.year,
+  })
 
-  useEffect(() => {
-    async function fetchData() {
-      setIsLoading(true)
-      try {
-        const [cacRes, ticketRes] = await Promise.all([
-          fetch("/api/costs/cac"),
-          fetch("/api/micro/ticket_promedio"),
-        ])
-
-        const cacData = await cacRes.json()
-        const ticketData = await ticketRes.json()
-
-        // Crear mapas por mes
-        const cacByMonth = new Map<string, number>()
-        const ticketByMonth = new Map<string, number>()
-
-        // Procesar CAC: { [month]: cac_value }
-        for (const [month, value] of Object.entries(cacData)) {
-          if (month.startsWith(year)) {
-            cacByMonth.set(month, typeof value === 'number' ? value : 0)
-          }
-        }
-
-        // Procesar Ticket Promedio: { [month]: { total_revenue, Prom_ticket, ... } }
-        for (const [month, monthData] of Object.entries(ticketData)) {
-          if (month.startsWith(year)) {
-            const data = monthData as { Prom_ticket?: number; prom_ticket?: number }
-            const ticket = data.Prom_ticket ?? data.prom_ticket ?? 0
-            ticketByMonth.set(month, ticket)
-          }
-        }
-
-        // Construir datos para todos los meses del año
-        const chartData: ChartDataPoint[] = ALL_MONTHS.map(monthNum => {
-          const monthKey = `${year}-${monthNum}`
-          return {
-            mes: MONTH_NAMES[monthNum],
-            month: monthKey,
-            cac: cacByMonth.get(monthKey) || 0,
-            ticketPromedio: ticketByMonth.get(monthKey) || 0,
-          }
-        })
-
-        setData(chartData)
-      } catch (error) {
-        console.error("Error fetching data:", error)
-        // Datos vacíos en caso de error
-        setData(ALL_MONTHS.map(monthNum => ({
-          mes: MONTH_NAMES[monthNum],
-          month: `${year}-${monthNum}`,
-          cac: 0,
-          ticketPromedio: 0,
-        })))
-      } finally {
-        setIsLoading(false)
-      }
+  // Combinar datos de CAC y Ticket Promedio
+  const chartData = (cacData || []).map((cacPoint) => {
+    const ticketPoint = ticketData?.find((p) => p.month === cacPoint.month)
+    
+    return {
+      month: cacPoint.month,
+      monthLabel: cacPoint.monthLabel,
+      cac: cacPoint.cac || 0,
+      ticketPromedio: ticketPoint?.ticket || 0,
     }
+  })
 
-    fetchData()
-  }, [year])
+  const isLoading = cacLoading || ticketLoading
 
   if (isLoading) {
     return (
       <div className="bg-card rounded-lg shadow p-6">
         <h3 className="text-lg font-semibold text-card-foreground mb-4">Ticket promedio PA</h3>
-        <div className="h-[350px] flex items-center justify-center text-muted-foreground">
-          Cargando...
+        <div className="h-[350px] flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      </div>
+    )
+  }
+
+  if (cacError || ticketError) {
+    return (
+      <div className="bg-card rounded-lg shadow p-6">
+        <h3 className="text-lg font-semibold text-card-foreground mb-4">Ticket promedio PA</h3>
+        <div className="h-[350px] flex items-center justify-center text-red-500">
+          Error al cargar los datos
         </div>
       </div>
     )
@@ -103,10 +58,10 @@ export function TicketPromedioChart() {
 
       <div className="h-[350px] w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 10, right: 20, left: 10, bottom: 20 }}>
+          <LineChart data={chartData} margin={{ top: 10, right: 20, left: 10, bottom: 20 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
             <XAxis 
-              dataKey="mes" 
+              dataKey="monthLabel" 
               stroke="#6b7280" 
               tickMargin={10} 
               interval={0} 

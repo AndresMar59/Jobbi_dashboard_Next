@@ -62,7 +62,7 @@ export function ChurnKPICard() {
     
     // Si hay filtro de mes específico
     if (month !== "Todos") {
-      const monthNum = ALL_MONTHS.indexOf(month) + 1
+      const monthNum = parseInt(month)
       const monthKey = `${year}-${monthNum.toString().padStart(2, "0")}`
       const currentData = filteredByMonth.find(m => m.month === monthKey)
       const prevMonthNum = monthNum === 1 ? 12 : monthNum - 1

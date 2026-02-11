@@ -415,7 +415,9 @@ export function useTicketPromedioData(options: FilterOptions = {}) {
     const [dataYear, dataMonth] = monthKey.split("-")
     if (year !== "Todos" && dataYear !== year) continue
     if (month !== "Todos" && dataMonth !== MONTH_MAP[month]) continue
-    monthMap.set(dataMonth, { ticket: data.prom_ticket, revenue: data.total_revenue, invoices: data.invoice_id })
+    // Usar prom_ticket como propiedad normalizada 'ticket'
+    const ticketValue = (data as any).prom_ticket || 0
+    monthMap.set(dataMonth, { ticket: ticketValue, revenue: data.total_revenue, invoices: data.invoice_id })
   }
 
   const chartData = ALL_MONTHS.map(m => {

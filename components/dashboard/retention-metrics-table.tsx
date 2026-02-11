@@ -24,7 +24,7 @@ export function RetentionMetricsTable() {
               <div className="flex items-center gap-3">
                 <span className="text-lg font-semibold">{item.value}</span>
                 <span
-                  className={`text-xs font-medium ${item.change.startsWith("+") ? "text-chart-1" : "text-chart-2"}`}
+                  className={`text-xs font-medium ${item.change.startsWith("+") ? "text-green-600" : "text-red-600"}`}
                 >
                   {item.change}
                 </span>

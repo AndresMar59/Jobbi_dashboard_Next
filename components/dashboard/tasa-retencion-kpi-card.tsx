@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { UserCheck, TrendingUp, TrendingDown } from "lucide-react"
 import useSWR from "swr"
 import { useFilters } from "@/lib/contexts/filters-context"
+import { MONTH_MAP } from "@/lib/hooks/use-api-data"
 
 // Estructura simple: { [month]: retention_rate }
 interface TasaRetentionResponse {
@@ -11,6 +12,8 @@ interface TasaRetentionResponse {
 }
 
 const fetcher = (url: string) => fetch(url).then(res => res.json())
+
+const ALL_MONTHS = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
 
 export function TasaRetencionKPICard() {
   const { filters } = useFilters()
@@ -26,26 +29,29 @@ export function TasaRetencionKPICard() {
 
     const retentionByMonth: { month: string; rate: number }[] = []
 
-    // Estructura simple: { [month]: retention_rate }
-    for (const [month, retentionRate] of Object.entries(rawData)) {
-      // Filtrar por año
-      if (!month.startsWith(filters.year)) continue
-
+    // Iterar sobre todos los meses del año
+    for (const monthNum of ALL_MONTHS) {
+      const monthKey = `${filters.year}-${monthNum}`
+      const retentionRate = rawData[monthKey]
+      
       retentionByMonth.push({
-        month,
+        month: monthKey,
         rate: typeof retentionRate === 'number' ? retentionRate : 0,
       })
     }
 
-    // Ordenar por mes
-    retentionByMonth.sort((a, b) => a.month.localeCompare(b.month))
-
-    // Si hay filtro de mes específico, usar ese mes
+    // Si hay filtro de mes específico
     let currentRate = 0
     let previousRate = 0
 
     if (filters.month !== "Todos") {
-      const monthKey = `${filters.year}-${filters.month}`
+      // Convertir nombre de mes a número (Ene -> 01)
+      const monthNum = MONTH_MAP[filters.month]
+      if (!monthNum) {
+        return { currentRate: 0, previousRate: 0, percentChange: 0 }
+      }
+      
+      const monthKey = `${filters.year}-${monthNum}`
       const monthData = retentionByMonth.find(m => m.month === monthKey)
       currentRate = monthData?.rate || 0
       
@@ -55,9 +61,12 @@ export function TasaRetencionKPICard() {
         previousRate = retentionByMonth[monthIndex - 1].rate
       }
     } else {
-      // Usar último mes disponible
-      currentRate = retentionByMonth[retentionByMonth.length - 1]?.rate || 0
-      previousRate = retentionByMonth[retentionByMonth.length - 2]?.rate || 0
+      // Usar último mes disponible con datos
+      const withData = retentionByMonth.filter(m => m.rate > 0)
+      if (withData.length > 0) {
+        currentRate = withData[withData.length - 1].rate
+        previousRate = withData[withData.length - 2]?.rate || 0
+      }
     }
 
     const percentChange = previousRate > 0 
