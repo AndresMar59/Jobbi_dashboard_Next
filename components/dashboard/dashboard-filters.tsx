@@ -5,15 +5,19 @@ import { useMRRData } from "@/lib/hooks/use-api-data"
 
 export function DashboardFilters() {
   const { filters, setYear, setMonth, setPlan } = useFilters()
-  const { plans: availablePlans } = useMRRData({ year: filters.year })
+  const { plans: availablePlans } = useMRRData({ 
+    year: filters.year, 
+    month: "Todos", 
+    plan: "Todos" 
+  })
 
   const months = ["Todos", "Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
   const years = ["2025", "2026"]
   
-  // Obtener planes disponibles del microservicio
-  const plans = ["Todos", ...availablePlans]
-
-  console.log("[v0] Available plans:", availablePlans, "Current filter plan:", filters.plan)
+  // Obtener planes disponibles del microservicio, asegurando que "Todos" siempre esté primero
+  const plans = availablePlans.length > 0 
+    ? ["Todos", ...availablePlans.filter(p => p !== "Todos")] 
+    : ["Todos"]
 
   return (
     <div className="mb-6 flex flex-wrap gap-3">
@@ -31,21 +35,14 @@ export function DashboardFilters() {
 
       <select
         value={filters.plan}
-        onChange={(e) => {
-          console.log("[v0] Changing plan to:", e.target.value)
-          setPlan(e.target.value)
-        }}
+        onChange={(e) => setPlan(e.target.value)}
         className="h-10 rounded-md border border-input bg-muted/50 px-4 py-2 text-sm font-medium transition-colors text-muted-foreground"
       >
-        {plans.length > 0 ? (
-          plans.map((plan) => (
-            <option key={plan} value={plan}>
-              {plan === "Todos" ? "Todos los planes" : plan}
-            </option>
-          ))
-        ) : (
-          <option value="Todos">Cargando planes...</option>
-        )}
+        {plans.map((plan) => (
+          <option key={plan} value={plan}>
+            {plan === "Todos" ? "Todos los planes" : plan}
+          </option>
+        ))}
       </select>
 
       {/* Selector de mes */}
