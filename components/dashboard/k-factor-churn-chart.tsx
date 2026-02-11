@@ -9,12 +9,16 @@ import { Loader2 } from "lucide-react"
 export function KFactorChurnChart() {
   const { filters } = useFilters()
 
+  console.log("[v0] KFactorChurnChart - Filters:", { year: filters.year, plan: filters.plan, month: filters.month })
+
   // Obtener datos de usuarios churned
   const { chartData: churnedUsersData, isLoading: loadingChurn } = useUsuariosChurnedData({
     year: filters.year,
     month: "Todos",
     plan: filters.plan,
   })
+
+  console.log("[v0] KFactorChurnChart - churnedUsersData:", churnedUsersData)
 
   const isLoading = loadingChurn
 
@@ -23,7 +27,9 @@ export function KFactorChurnChart() {
   const combinedData = ALL_MONTHS.map((m, index) => {
     const label = MONTH_LABELS[m]
     const churnEntry = churnedUsersData.find(d => d.monthLabel === label)
-    const churnValue = churnEntry?.churned || 0
+    const churnValue = churnEntry?.churnedUsers || 0
+
+    console.log(`[v0] ${label}: churnValue=${churnValue}`, churnEntry)
 
     // K-factor: ratio de crecimiento vs mes anterior
     // Simplificado: base creciente con ajuste por churn
