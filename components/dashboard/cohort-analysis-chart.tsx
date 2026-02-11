@@ -1,17 +1,10 @@
 "use client"
 
+import { useFilters } from "@/lib/contexts/filters-context"
+import { useUsuariosActivosData, MONTH_LABELS } from "@/lib/hooks/use-api-data"
+import { ALL_MONTHS } from "@/lib/api/metrics"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-
-// Datos de ejemplo para análisis de cohortes
-const cohortData = [
-  { cohort: "Ene 2024", m0: 100, m1: 85, m2: 78, m3: 72, m4: 68, m5: 65, m6: 63 },
-  { cohort: "Feb 2024", m0: 100, m1: 88, m2: 82, m3: 76, m4: 72, m5: 69, m6: null },
-  { cohort: "Mar 2024", m0: 100, m1: 90, m2: 84, m3: 79, m4: 75, m5: null, m6: null },
-  { cohort: "Abr 2024", m0: 100, m1: 87, m2: 81, m3: 77, m4: null, m5: null, m6: null },
-  { cohort: "May 2024", m0: 100, m1: 89, m2: 83, m3: null, m4: null, m5: null, m6: null },
-  { cohort: "Jun 2024", m0: 100, m1: 91, m2: null, m3: null, m4: null, m5: null, m6: null },
-  { cohort: "Jul 2024", m0: 100, m1: null, m2: null, m3: null, m4: null, m5: null, m6: null },
-]
+import { Loader2 } from "lucide-react"
 
 // Función para obtener el color basado en el porcentaje de retención
 function getRetentionColor(value: number | null): string {
@@ -25,83 +18,138 @@ function getRetentionColor(value: number | null): string {
 }
 
 export function CohortAnalysisChart() {
+  const { filters } = useFilters()
+
+  // Obtener datos de usuarios activos para construir cohortes
+  const { chartData: activosData, isLoading } = useUsuariosActivosData({
+    year: "Todos", // Obtener todos los años para análisis histórico
+    month: "Todos",
+    plan: filters.plan,
+  })
+
+  console.log("[v0] CohortAnalysisChart - activosData:", activosData, "filters:", filters)
+
+  // Construir análisis de cohortes
+  // Cada cohorte es un mes de inicio, y rastreamos la retención en meses posteriores
+  const cohortData: Array<{
+    cohort: string
+    values: (number | null)[]
+  }> = []
+
+  // Crear cohortes basadas en el mes inicial
+  const cohortMap = new Map<number, number[]>()
+
+  // Organizar datos por mes para calcular cohortes
+  activosData.forEach(entry => {
+    const monthNum = parseInt(entry.month.split("-")[1])
+    if (!cohortMap.has(monthNum)) {
+      cohortMap.set(monthNum, [])
+    }
+    cohortMap.get(monthNum)?.push(entry.currentActive)
+  })
+
+  // Construir filas de cohortes
+  let cohortIndex = 0
+  for (const [startMonth, monthlyValues] of cohortMap) {
+    if (cohortIndex >= 12) break // Máximo 12 cohortes
+
+    const cohortLabel = `${MONTH_LABELS[ALL_MONTHS[startMonth - 1]]} 2026`
+    const retention: (number | null)[] = []
+
+    // Mes 0 es siempre 100%
+    retention.push(100)
+
+    // Calcular retención para meses posteriores
+    // Retención Mes N = (Usuarios Mes N / Usuarios Mes 0) * 100
+    if (monthlyValues.length > 0) {
+      const baseValue = monthlyValues[0]
+      for (let i = 1; i < 7; i++) {
+        if (monthlyValues[i] !== undefined) {
+          const retentionRate = (monthlyValues[i] / baseValue) * 100
+          retention.push(Math.round(retentionRate))
+        } else {
+          retention.push(null)
+        }
+      }
+    }
+
+    cohortData.push({
+      cohort: cohortLabel,
+      values: retention,
+    })
+
+    cohortIndex++
+  }
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Análisis de Cohortes - Retención de Usuarios (%)</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left p-3 font-semibold text-sm">Cohorte</th>
-                <th className="text-center p-3 font-semibold text-sm">Mes 0</th>
-                <th className="text-center p-3 font-semibold text-sm">Mes 1</th>
-                <th className="text-center p-3 font-semibold text-sm">Mes 2</th>
-                <th className="text-center p-3 font-semibold text-sm">Mes 3</th>
-                <th className="text-center p-3 font-semibold text-sm">Mes 4</th>
-                <th className="text-center p-3 font-semibold text-sm">Mes 5</th>
-                <th className="text-center p-3 font-semibold text-sm">Mes 6</th>
-              </tr>
-            </thead>
-            <tbody>
-              {cohortData.map((row) => (
-                <tr key={row.cohort} className="border-b hover:bg-muted/50">
-                  <td className="p-3 font-medium text-sm">{row.cohort}</td>
-                  <td className={`p-3 text-center text-sm ${getRetentionColor(row.m0)}`}>
-                    {row.m0 !== null ? `${row.m0}%` : "-"}
-                  </td>
-                  <td className={`p-3 text-center text-sm ${getRetentionColor(row.m1)}`}>
-                    {row.m1 !== null ? `${row.m1}%` : "-"}
-                  </td>
-                  <td className={`p-3 text-center text-sm ${getRetentionColor(row.m2)}`}>
-                    {row.m2 !== null ? `${row.m2}%` : "-"}
-                  </td>
-                  <td className={`p-3 text-center text-sm ${getRetentionColor(row.m3)}`}>
-                    {row.m3 !== null ? `${row.m3}%` : "-"}
-                  </td>
-                  <td className={`p-3 text-center text-sm ${getRetentionColor(row.m4)}`}>
-                    {row.m4 !== null ? `${row.m4}%` : "-"}
-                  </td>
-                  <td className={`p-3 text-center text-sm ${getRetentionColor(row.m5)}`}>
-                    {row.m5 !== null ? `${row.m5}%` : "-"}
-                  </td>
-                  <td className={`p-3 text-center text-sm ${getRetentionColor(row.m6)}`}>
-                    {row.m6 !== null ? `${row.m6}%` : "-"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        {isLoading ? (
+          <div className="flex items-center justify-center h-64">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left p-3 font-semibold text-sm">Cohorte</th>
+                    <th className="text-center p-3 font-semibold text-sm">Mes 0</th>
+                    <th className="text-center p-3 font-semibold text-sm">Mes 1</th>
+                    <th className="text-center p-3 font-semibold text-sm">Mes 2</th>
+                    <th className="text-center p-3 font-semibold text-sm">Mes 3</th>
+                    <th className="text-center p-3 font-semibold text-sm">Mes 4</th>
+                    <th className="text-center p-3 font-semibold text-sm">Mes 5</th>
+                    <th className="text-center p-3 font-semibold text-sm">Mes 6</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cohortData.map((row) => (
+                    <tr key={row.cohort} className="border-b hover:bg-muted/50">
+                      <td className="p-3 font-medium text-sm">{row.cohort}</td>
+                      {row.values.map((value, idx) => (
+                        <td key={idx} className={`p-3 text-center text-sm ${getRetentionColor(value)}`}>
+                          {value !== null ? `${value}%` : "-"}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-        <div className="mt-4 flex flex-wrap gap-4 text-xs">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-green-600 rounded"></div>
-            <span>≥90% Excelente</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-green-500 rounded"></div>
-            <span>80-89% Muy bueno</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-green-400 rounded"></div>
-            <span>70-79% Bueno</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-yellow-500 rounded"></div>
-            <span>60-69% Regular</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-orange-500 rounded"></div>
-            <span>50-59% Bajo</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-red-500 rounded"></div>
-            <span>&lt;50% Muy bajo</span>
-          </div>
-        </div>
+            <div className="mt-4 flex flex-wrap gap-4 text-xs">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-green-600 rounded"></div>
+                <span>≥90% Excelente</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-green-500 rounded"></div>
+                <span>80-89% Muy bueno</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-green-400 rounded"></div>
+                <span>70-79% Bueno</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-yellow-500 rounded"></div>
+                <span>60-69% Regular</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-orange-500 rounded"></div>
+                <span>50-59% Bajo</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-red-500 rounded"></div>
+                <span>&lt;50% Muy bajo</span>
+              </div>
+            </div>
+          </>
+        )}
       </CardContent>
     </Card>
   )
