@@ -338,7 +338,8 @@ export function calculateChurnARR(
 
 export function calculateCACPayback(
   cacData: CACResponse,
-  arpuData: ARPUResponse
+  arpuData: ARPUResponse,
+  newUsersData?: any  // /api/micro/usuarios_nuevos
 ): CACPaybackResult {
   // 1. Calcular ARPU promedio global por mes
   const arpuByMonth = new Map<string, { totalArpu: number; planCount: number }>()
@@ -352,24 +353,48 @@ export function calculateCACPayback(
     }
   }
 
-  // 2. Unir todos los meses
+  // 2. Contar nuevas empresas por mes (si tenemos el dato)
+  const newCompaniesByMonth = new Map<string, number>()
+  if (newUsersData) {
+    for (const [month, planData] of Object.entries(newUsersData)) {
+      let totalNewUsers = 0
+      for (const [, data] of Object.entries(planData)) {
+        if (typeof data === 'object' && data !== null && 'new_users' in data) {
+          totalNewUsers += (data as any).new_users
+        }
+      }
+      newCompaniesByMonth.set(month, totalNewUsers)
+    }
+  }
+
+  // 3. Unir todos los meses
   const allMonths = new Set<string>([
     ...arpuByMonth.keys(),
     ...Object.keys(cacData),
+    ...newCompaniesByMonth.keys(),
   ])
   const sortedMonths = Array.from(allMonths).sort()
 
-  // 3. Calcular CAC Payback por mes
+  // 4. Calcular CAC Payback por mes
+  // CAC Payback (meses) = CAC / ARPU
+  // Donde CAC = gasto_cac_mes / nuevas_empresas_mes
   const cacPaybackByMonth: CACPaybackDataPoint[] = sortedMonths.map(month => {
-    const cac = cacData[month] || 0
+    const cacSpend = cacData[month] || 0
+    const newCompanies = newCompaniesByMonth.get(month) || 0
+    
+    // CAC = gasto del mes / nuevas empresas del mes
+    const cac = newCompanies > 0 ? cacSpend / newCompanies : 0
+    
+    // ARPU promedio del mes
     const arpuEntry = arpuByMonth.get(month)
     const avgArpu = arpuEntry && arpuEntry.planCount > 0
       ? arpuEntry.totalArpu / arpuEntry.planCount
       : 0
 
+    // CAC Payback = CAC / ARPU
     let cacPayback = 0
     if (cac > 0 && avgArpu > 0) {
-      cacPayback = cac / (avgArpu * GROSS_MARGIN)
+      cacPayback = cac / avgArpu
     }
 
     return { month, cacPayback, cac, arpu: avgArpu }

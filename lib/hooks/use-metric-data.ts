@@ -267,14 +267,17 @@ export function useCACPaybackData(options: { year?: string; month?: string } = {
   const { data: arpuData, error: err2, isLoading: loading2 } = useSWR<ARPUResponse>(
     "/api/micro/arpu", fetcher, SWR_CONFIG
   )
+  const { data: newUsersData, error: err3, isLoading: loading3 } = useSWR(
+    "/api/micro/usuarios_nuevos", fetcher, SWR_CONFIG
+  )
 
-  const isLoading = loading1 || loading2
-  const error = err1 || err2
+  const isLoading = loading1 || loading2 || loading3
+  const error = err1 || err2 || err3
 
   const result = useMemo(() => {
     if (!cacData || !arpuData) return null
 
-    const calculated = calculateCACPayback(cacData, arpuData)
+    const calculated = calculateCACPayback(cacData, arpuData, newUsersData || {})
 
     let filtered = calculated.cacPaybackByMonth.filter(d => d.month.startsWith(year))
     if (month !== "Todos") {
@@ -297,7 +300,7 @@ export function useCACPaybackData(options: { year?: string; month?: string } = {
     const previousPayback = withData[withData.length - 2]?.cacPayback || 0
 
     return { chartData, currentCACPayback: currentPayback, previousCACPayback: previousPayback }
-  }, [cacData, arpuData, year, month])
+  }, [cacData, arpuData, newUsersData, year, month])
 
   return {
     chartData: result?.chartData || [],
