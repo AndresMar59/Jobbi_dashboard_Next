@@ -13,6 +13,8 @@ import { ALL_MONTHS } from "@/lib/api/metrics"
 export function ARRMetricsChart() {
   const { filters } = useFilters()
 
+  console.log("[v0] ARRMetricsChart - Current filters:", { year: filters.year, month: filters.month, plan: filters.plan })
+
   // Obtener todas las métricas de MRR (se convertirán a ARR multiplicando por 12)
   const { chartData: mrrData, isLoading: loadingMRR } = useMRRData({
     year: filters.year,
@@ -45,6 +47,8 @@ export function ARRMetricsChart() {
   })
 
   const isLoading = loadingMRR || loadingChurn || loadingNewMRR || loadingExpansion || loadingContraction
+
+  console.log("[v0] ARRMetricsChart - Data loaded:", { mrrData: mrrData.length, churnMRRData: churnMRRData.length, newMRRData: newMRRData.length })
 
   // Combinar todas las series en un solo dataset para el gráfico, convertidas a ARR (MRR * 12)
   const combinedData = ALL_MONTHS.map((m) => {

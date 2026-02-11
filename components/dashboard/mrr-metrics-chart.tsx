@@ -13,6 +13,8 @@ import { ALL_MONTHS } from "@/lib/api/metrics"
 export function MRRMetricsChart() {
   const { filters } = useFilters()
 
+  console.log("[v0] MRRMetricsChart - Current filters:", { year: filters.year, month: filters.month, plan: filters.plan })
+
   // Obtener todas las métricas de MRR
   const { chartData: mrrData, isLoading: loadingMRR } = useMRRData({
     year: filters.year,
@@ -45,6 +47,8 @@ export function MRRMetricsChart() {
   })
 
   const isLoading = loadingMRR || loadingChurn || loadingNewMRR || loadingExpansion || loadingContraction
+
+  console.log("[v0] MRRMetricsChart - Data loaded:", { mrrData: mrrData.length, churnMRRData: churnMRRData.length, newMRRData: newMRRData.length })
 
   // Combinar todas las series en un solo dataset para el gráfico
   const combinedData = ALL_MONTHS.map((m) => {

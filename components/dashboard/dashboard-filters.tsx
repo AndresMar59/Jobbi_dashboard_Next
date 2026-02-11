@@ -13,6 +13,8 @@ export function DashboardFilters() {
   // Obtener planes disponibles del microservicio
   const plans = ["Todos", ...availablePlans]
 
+  console.log("[v0] Available plans:", availablePlans, "Current filter plan:", filters.plan)
+
   return (
     <div className="mb-6 flex flex-wrap gap-3">
       <select
@@ -29,14 +31,21 @@ export function DashboardFilters() {
 
       <select
         value={filters.plan}
-        onChange={(e) => setPlan(e.target.value)}
+        onChange={(e) => {
+          console.log("[v0] Changing plan to:", e.target.value)
+          setPlan(e.target.value)
+        }}
         className="h-10 rounded-md border border-input bg-muted/50 px-4 py-2 text-sm font-medium transition-colors text-muted-foreground"
       >
-        {plans.map((plan) => (
-          <option key={plan} value={plan}>
-            {plan === "Todos" ? "Tipo de plan" : plan}
-          </option>
-        ))}
+        {plans.length > 0 ? (
+          plans.map((plan) => (
+            <option key={plan} value={plan}>
+              {plan === "Todos" ? "Todos los planes" : plan}
+            </option>
+          ))
+        ) : (
+          <option value="Todos">Cargando planes...</option>
+        )}
       </select>
 
       {/* Selector de mes */}
