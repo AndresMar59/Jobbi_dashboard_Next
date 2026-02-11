@@ -92,30 +92,34 @@ export function useMRRData(options: FilterOptions = {}) {
 
   if (!rawData) return result
 
-  const plans = Object.keys(rawData)
-  result.plans = plans
-
-  // Acumular por mes, filtrando plan
+  // Nueva estructura: { "plan-mes": { mrr: value, subscription: value } }
   const monthMap = new Map<string, number>()
-  let totalSubs = 0
+  const subscriptionMap = new Map<string, number>()
+  const plans = new Set<string>()
 
-  for (const [planName, planData] of Object.entries(rawData)) {
+  for (const [key, data] of Object.entries(rawData)) {
+    // key es "plan-mes" como "Free-2026-01"
+    const parts = key.split("-")
+    if (parts.length < 3) continue
+
+    const planName = parts.slice(0, -2).join("-") // En caso de plan con guiones
+    const dataYear = parts[parts.length - 2]
+    const dataMonth = parts[parts.length - 1]
+
     if (plan !== "Todos" && planName !== plan) continue
+    if (year !== "Todos" && dataYear !== year) continue
+    if (month !== "Todos" && dataMonth !== MONTH_MAP[month]) continue
 
-    for (const [monthKey, nivelIds] of Object.entries(planData)) {
-      const [dataYear, dataMonth] = monthKey.split("-")
-      if (year !== "Todos" && dataYear !== year) continue
-      if (month !== "Todos" && dataMonth !== MONTH_MAP[month]) continue
+    plans.add(planName)
+    const mrrValue = typeof data === 'object' && data !== null ? (data as any).mrr || 0 : 0
+    const subValue = typeof data === 'object' && data !== null ? (data as any).subscription || 0 : 0
 
-      for (const [, companyData] of Object.entries(nivelIds)) {
-        const current = monthMap.get(dataMonth) || 0
-        monthMap.set(dataMonth, current + companyData.mrr)
-        totalSubs += companyData.subscriptions
-      }
-    }
+    monthMap.set(dataMonth, (monthMap.get(dataMonth) || 0) + mrrValue)
+    subscriptionMap.set(dataMonth, (subscriptionMap.get(dataMonth) || 0) + subValue)
   }
 
-  result.totalSubscriptions = totalSubs
+  result.plans = Array.from(plans)
+  result.totalSubscriptions = Array.from(subscriptionMap.values()).reduce((a, b) => a + b, 0)
 
   // Crear chart data con continuidad (meses sin datos = 0)
   const chartData: MRRDataPoint[] = ALL_MONTHS.map(m => ({
@@ -172,20 +176,29 @@ export function useMRRNewData(options: FilterOptions = {}) {
 
   if (!rawData) return result
 
-  result.plans = Object.keys(rawData)
+  // Nueva estructura: { "plan-mes": { mrr: value, subscription: value } }
   const monthMap = new Map<string, number>()
+  const plans = new Set<string>()
 
-  for (const [planName, planData] of Object.entries(rawData)) {
+  for (const [key, data] of Object.entries(rawData)) {
+    // key es "plan-mes" como "Free-2026-01"
+    const parts = key.split("-")
+    if (parts.length < 3) continue
+
+    const planName = parts.slice(0, -2).join("-")
+    const dataYear = parts[parts.length - 2]
+    const dataMonth = parts[parts.length - 1]
+
     if (plan !== "Todos" && planName !== plan) continue
-    for (const [monthKey, nivelIds] of Object.entries(planData)) {
-      const [dataYear, dataMonth] = monthKey.split("-")
-      if (year !== "Todos" && dataYear !== year) continue
-      if (month !== "Todos" && dataMonth !== MONTH_MAP[month]) continue
-      for (const [, data] of Object.entries(nivelIds)) {
-        monthMap.set(dataMonth, (monthMap.get(dataMonth) || 0) + data.new_MRR)
-      }
-    }
+    if (year !== "Todos" && dataYear !== year) continue
+    if (month !== "Todos" && dataMonth !== MONTH_MAP[month]) continue
+
+    plans.add(planName)
+    const mrrValue = typeof data === 'object' && data !== null ? (data as any).mrr || 0 : 0
+    monthMap.set(dataMonth, (monthMap.get(dataMonth) || 0) + mrrValue)
   }
+
+  result.plans = Array.from(plans)
 
   const chartData = ALL_MONTHS.map(m => ({
     month: `${year}-${m}`, monthLabel: MONTH_LABELS[m], newMRR: monthMap.get(m) || 0,
@@ -236,20 +249,29 @@ export function useChurnMRRData(options: FilterOptions = {}) {
 
   if (!rawData) return result
 
-  result.plans = Object.keys(rawData)
+  // Nueva estructura: { "plan-mes": { mrr: value, subscription: value } }
   const monthMap = new Map<string, number>()
+  const plans = new Set<string>()
 
-  for (const [planName, planData] of Object.entries(rawData)) {
+  for (const [key, data] of Object.entries(rawData)) {
+    // key es "plan-mes" como "Free-2026-01"
+    const parts = key.split("-")
+    if (parts.length < 3) continue
+
+    const planName = parts.slice(0, -2).join("-")
+    const dataYear = parts[parts.length - 2]
+    const dataMonth = parts[parts.length - 1]
+
     if (plan !== "Todos" && planName !== plan) continue
-    for (const [monthKey, nivelIds] of Object.entries(planData)) {
-      const [dataYear, dataMonth] = monthKey.split("-")
-      if (year !== "Todos" && dataYear !== year) continue
-      if (month !== "Todos" && dataMonth !== MONTH_MAP[month]) continue
-      for (const [, data] of Object.entries(nivelIds)) {
-        monthMap.set(dataMonth, (monthMap.get(dataMonth) || 0) + data.Chur_MRR)
-      }
-    }
+    if (year !== "Todos" && dataYear !== year) continue
+    if (month !== "Todos" && dataMonth !== MONTH_MAP[month]) continue
+
+    plans.add(planName)
+    const mrrValue = typeof data === 'object' && data !== null ? (data as any).mrr || 0 : 0
+    monthMap.set(dataMonth, (monthMap.get(dataMonth) || 0) + mrrValue)
   }
+
+  result.plans = Array.from(plans)
 
   const chartData = ALL_MONTHS.map(m => ({
     month: `${year}-${m}`, monthLabel: MONTH_LABELS[m], churnMRR: monthMap.get(m) || 0,
@@ -274,13 +296,139 @@ export function useChurnMRRData(options: FilterOptions = {}) {
 
 
 // ============================================
-// useARPUData - /micro/arpu
-// Niveles: plan > mes
-// Para global mensual: promediar arpu de planes (NO basarse en users)
+// useExpansionMRRData - /micro/expansion_mrr
+// Nueva estructura: plan-mes
 // Filtros: año, mes, plan
 // ============================================
 
-export interface ARPUDataPoint {
+export interface ExpansionMRRDataPoint {
+  month: string
+  monthLabel: string
+  expansionMRR: number
+}
+
+export function useExpansionMRRData(options: FilterOptions = {}) {
+  const { year = "2026", month = "Todos", plan = "Todos" } = options
+
+  const { data: rawData, error, isLoading } = useSWR<Record<string, { mrr: number; subscription: number }>>(
+    "/api/micro/expansion_mrr", fetcher, SWR_CONFIG
+  )
+
+  const result = { chartData: [] as ExpansionMRRDataPoint[], totalExpansionMRR: 0, currentExpansionMRR: 0, previousExpansionMRR: 0, plans: [] as string[], isLoading, error }
+
+  if (!rawData) return result
+
+  const monthMap = new Map<string, number>()
+  const plans = new Set<string>()
+
+  for (const [key, data] of Object.entries(rawData)) {
+    const parts = key.split("-")
+    if (parts.length < 3) continue
+
+    const planName = parts.slice(0, -2).join("-")
+    const dataYear = parts[parts.length - 2]
+    const dataMonth = parts[parts.length - 1]
+
+    if (plan !== "Todos" && planName !== plan) continue
+    if (year !== "Todos" && dataYear !== year) continue
+    if (month !== "Todos" && dataMonth !== MONTH_MAP[month]) continue
+
+    plans.add(planName)
+    const mrrValue = data.mrr || 0
+    monthMap.set(dataMonth, (monthMap.get(dataMonth) || 0) + mrrValue)
+  }
+
+  result.plans = Array.from(plans)
+
+  const chartData = ALL_MONTHS.map(m => ({
+    month: `${year}-${m}`, monthLabel: MONTH_LABELS[m], expansionMRR: monthMap.get(m) || 0,
+  }))
+
+  if (month !== "Todos") {
+    const filtered = chartData.filter(d => d.month === `${year}-${MONTH_MAP[month]}`)
+    result.chartData = filtered
+    result.totalExpansionMRR = filtered[0]?.expansionMRR || 0
+    result.currentExpansionMRR = filtered[0]?.expansionMRR || 0
+    return result
+  }
+
+  result.chartData = chartData
+  const withData = chartData.filter(d => d.expansionMRR > 0)
+  result.totalExpansionMRR = withData.reduce((s, d) => s + d.expansionMRR, 0)
+  result.currentExpansionMRR = withData[withData.length - 1]?.expansionMRR || 0
+  result.previousExpansionMRR = withData[withData.length - 2]?.expansionMRR || 0
+
+  return result
+}
+
+
+// ============================================
+// useContractionMRRData - /micro/contraction_mrr
+// Nueva estructura: plan-mes
+// Filtros: año, mes, plan
+// ============================================
+
+export interface ContractionMRRDataPoint {
+  month: string
+  monthLabel: string
+  contractionMRR: number
+}
+
+export function useContractionMRRData(options: FilterOptions = {}) {
+  const { year = "2026", month = "Todos", plan = "Todos" } = options
+
+  const { data: rawData, error, isLoading } = useSWR<Record<string, { mrr: number; subscription: number }>>(
+    "/api/micro/contraction_mrr", fetcher, SWR_CONFIG
+  )
+
+  const result = { chartData: [] as ContractionMRRDataPoint[], totalContractionMRR: 0, currentContractionMRR: 0, previousContractionMRR: 0, plans: [] as string[], isLoading, error }
+
+  if (!rawData) return result
+
+  const monthMap = new Map<string, number>()
+  const plans = new Set<string>()
+
+  for (const [key, data] of Object.entries(rawData)) {
+    const parts = key.split("-")
+    if (parts.length < 3) continue
+
+    const planName = parts.slice(0, -2).join("-")
+    const dataYear = parts[parts.length - 2]
+    const dataMonth = parts[parts.length - 1]
+
+    if (plan !== "Todos" && planName !== plan) continue
+    if (year !== "Todos" && dataYear !== year) continue
+    if (month !== "Todos" && dataMonth !== MONTH_MAP[month]) continue
+
+    plans.add(planName)
+    const mrrValue = data.mrr || 0
+    monthMap.set(dataMonth, (monthMap.get(dataMonth) || 0) + mrrValue)
+  }
+
+  result.plans = Array.from(plans)
+
+  const chartData = ALL_MONTHS.map(m => ({
+    month: `${year}-${m}`, monthLabel: MONTH_LABELS[m], contractionMRR: monthMap.get(m) || 0,
+  }))
+
+  if (month !== "Todos") {
+    const filtered = chartData.filter(d => d.month === `${year}-${MONTH_MAP[month]}`)
+    result.chartData = filtered
+    result.totalContractionMRR = filtered[0]?.contractionMRR || 0
+    result.currentContractionMRR = filtered[0]?.contractionMRR || 0
+    return result
+  }
+
+  result.chartData = chartData
+  const withData = chartData.filter(d => d.contractionMRR > 0)
+  result.totalContractionMRR = withData.reduce((s, d) => s + d.contractionMRR, 0)
+  result.currentContractionMRR = withData[withData.length - 1]?.contractionMRR || 0
+  result.previousContractionMRR = withData[withData.length - 2]?.contractionMRR || 0
+
+  return result
+}
+
+
   month: string
   monthLabel: string
   arpu: number
