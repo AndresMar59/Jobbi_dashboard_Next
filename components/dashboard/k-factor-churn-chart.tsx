@@ -2,8 +2,8 @@
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
 import { useFilters } from "@/lib/contexts/filters-context"
-import { useKFactorData, useChurnedUsersData } from "@/lib/hooks/use-api-data"
-import { MONTH_LABELS, ALL_MONTHS } from "@/lib/hooks/use-api-data"
+import { useKFactorData, useChurnedUsersData, MONTH_LABELS } from "@/lib/hooks/use-api-data"
+import { ALL_MONTHS } from "@/lib/api/metrics"
 import { Loader2 } from "lucide-react"
 
 export function KFactorChurnChart() {
