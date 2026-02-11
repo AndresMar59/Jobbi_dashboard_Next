@@ -18,6 +18,7 @@
  */
 
 import useSWR from "swr"
+import { useMemo } from "react"
 import { fetcher, ALL_MONTHS } from "@/lib/api/metrics"
 import type {
   MRRResponse,
