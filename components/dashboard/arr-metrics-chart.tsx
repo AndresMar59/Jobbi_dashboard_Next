@@ -13,7 +13,7 @@ import { ALL_MONTHS } from "@/lib/api/metrics"
 export function ARRMetricsChart() {
   const { filters } = useFilters()
 
-  // Obtener todas las métricas de MRR
+  // Obtener todas las métricas de MRR (se convertirán a ARR multiplicando por 12)
   const { chartData: mrrData, isLoading: loadingMRR } = useMRRData({
     year: filters.year,
     month: filters.month,
@@ -46,7 +46,7 @@ export function ARRMetricsChart() {
 
   const isLoading = loadingMRR || loadingChurn || loadingNewMRR || loadingExpansion || loadingContraction
 
-  // Combinar todas las series en un solo dataset para el gráfico
+  // Combinar todas las series en un solo dataset para el gráfico, convertidas a ARR (MRR * 12)
   const combinedData = ALL_MONTHS.map((m) => {
     const label = MONTH_LABELS[m]
     
@@ -58,11 +58,11 @@ export function ARRMetricsChart() {
 
     return {
       mes: label,
-      mrr: mrrPoint?.mrr || 0,
-      churnMRR: churnPoint?.churnMRR || 0,
-      newMRR: newMRRPoint?.newMRR || 0,
-      expansionMRR: expansionPoint?.expansionMRR || 0,
-      contractionMRR: contractionPoint?.contractionMRR || 0,
+      arr: (mrrPoint?.mrr || 0) * 12,
+      churnARR: (churnPoint?.churnMRR || 0) * 12,
+      newARR: (newMRRPoint?.newMRR || 0) * 12,
+      expansionARR: (expansionPoint?.expansionMRR || 0) * 12,
+      contractionARR: (contractionPoint?.contractionMRR || 0) * 12,
     }
   })
 
@@ -74,7 +74,7 @@ export function ARRMetricsChart() {
   return (
     <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
       <div className="mb-4">
-        <h3 className="text-lg font-semibold text-card-foreground">MRR 2026</h3>
+        <h3 className="text-lg font-semibold text-card-foreground">ARR 2026</h3>
       </div>
       {isLoading ? (
         <div className="h-[350px] w-full flex items-center justify-center">
@@ -114,10 +114,10 @@ export function ARRMetricsChart() {
                 iconSize={10}
                 wrapperStyle={{ fontSize: "12px", paddingBottom: "10px" }}
               />
-              <Line type="monotone" dataKey="churnMRR" stroke="#ef4444" strokeWidth={2} name="$ Churn MRR" dot={{ r: 4, fill: "white", stroke: "#ef4444", strokeWidth: 2 }} isAnimationActive={false} />
-              <Line type="monotone" dataKey="expansionMRR" stroke="#a855f7" strokeWidth={2} name="$ Expansion MRR" dot={{ r: 4, fill: "white", stroke: "#a855f7", strokeWidth: 2 }} isAnimationActive={false} />
-              <Line type="monotone" dataKey="mrr" stroke="#3b82f6" strokeWidth={2} name="$ MRR" dot={{ r: 4, fill: "white", stroke: "#3b82f6", strokeWidth: 2 }} isAnimationActive={false} />
-              <Line type="monotone" dataKey="newMRR" stroke="#10b981" strokeWidth={2} name="$ New MRR" dot={{ r: 4, fill: "white", stroke: "#10b981", strokeWidth: 2 }} isAnimationActive={false} />
+              <Line type="monotone" dataKey="churnARR" stroke="#ef4444" strokeWidth={2} name="$ Churn ARR" dot={{ r: 4, fill: "white", stroke: "#ef4444", strokeWidth: 2 }} isAnimationActive={false} />
+              <Line type="monotone" dataKey="expansionARR" stroke="#a855f7" strokeWidth={2} name="$ Expansion ARR" dot={{ r: 4, fill: "white", stroke: "#a855f7", strokeWidth: 2 }} isAnimationActive={false} />
+              <Line type="monotone" dataKey="arr" stroke="#3b82f6" strokeWidth={2} name="$ ARR" dot={{ r: 4, fill: "white", stroke: "#3b82f6", strokeWidth: 2 }} isAnimationActive={false} />
+              <Line type="monotone" dataKey="newARR" stroke="#10b981" strokeWidth={2} name="$ New ARR" dot={{ r: 4, fill: "white", stroke: "#10b981", strokeWidth: 2 }} isAnimationActive={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>

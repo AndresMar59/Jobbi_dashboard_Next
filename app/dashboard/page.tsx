@@ -9,6 +9,7 @@ import { CompanyActivosKPICard } from "@/components/dashboard/company-activos-kp
 import { CACRatioKPICard } from "@/components/dashboard/cac-ratio-kpi-card"
 import { ExpansionKPICard } from "@/components/dashboard/expansion-kpi-card"
 import { DowngradeKPICard } from "@/components/dashboard/downgrade-kpi-card"
+import { MRRMetricsChart } from "@/components/dashboard/mrr-metrics-chart"
 import { ARRMetricsChart } from "@/components/dashboard/arr-metrics-chart"
 import { CACVsLTVChart } from "@/components/dashboard/cac-vs-ltv-chart"
 import { DollarChurnChart } from "@/components/dashboard/dollar-churn-chart"
@@ -45,26 +46,27 @@ export default function DashboardMVP() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <MRRMetricsChart />
             <ARRMetricsChart />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <DCPAMRPAChart />
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <DollarChurnChart />
-            <CACPaybackChart />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <CACPaybackChart />
             <NRRGRRChart />
-            <CACVsLTVChart />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <ARPAClientesChart />
-            <MRR2025Chart />
+            <CACVsLTVChart />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <MRR2025Chart />
             <TicketPromedioChart />
           </div>
         </main>
