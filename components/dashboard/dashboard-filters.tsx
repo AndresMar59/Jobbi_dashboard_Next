@@ -27,19 +27,17 @@ export function DashboardFilters() {
         ))}
       </select>
 
-      <div className="flex items-center gap-2">
-        <select
-          value={filters.plan}
-          onChange={(e) => setPlan(e.target.value)}
-          className="h-10 rounded-md border border-input bg-muted/50 px-4 py-2 text-sm font-medium transition-colors text-muted-foreground"
-        >
-          {plans.map((plan) => (
-            <option key={plan} value={plan}>
-              {plan === "Todos" ? "Tipo de plan" : plan}
-            </option>
-          ))}
-        </select>
-      </div>
+      <select
+        value={filters.plan}
+        onChange={(e) => setPlan(e.target.value)}
+        className="h-10 rounded-md border border-input bg-muted/50 px-4 py-2 text-sm font-medium transition-colors text-muted-foreground"
+      >
+        {plans.map((plan) => (
+          <option key={plan} value={plan}>
+            {plan === "Todos" ? "Tipo de plan" : plan}
+          </option>
+        ))}
+      </select>
 
       {/* Selector de mes */}
       <div className="flex items-center gap-1 rounded-md border border-input bg-muted/50 p-1">
