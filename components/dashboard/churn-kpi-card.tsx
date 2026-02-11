@@ -23,6 +23,21 @@ const fetcher = async (url: string) => {
 }
 
 const ALL_MONTHS = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
+const MONTH_MAP: { [key: string]: string } = {
+  "Todos": "Todos",
+  "Ene": "01",
+  "Feb": "02",
+  "Mar": "03",
+  "Abr": "04",
+  "May": "05",
+  "Jun": "06",
+  "Jul": "07",
+  "Ago": "08",
+  "Sep": "09",
+  "Oct": "10",
+  "Nov": "11",
+  "Dic": "12"
+}
 
 export function ChurnKPICard() {
   const { filters } = useFilters()
@@ -64,17 +79,21 @@ export function ChurnKPICard() {
     
     // Si hay filtro de mes específico
     if (month !== "Todos") {
-      const monthNum = parseInt(month)
-      const monthKey = `${year}-${monthNum.toString().padStart(2, "0")}`
+      const monthNum = MONTH_MAP[month]
+      const monthKey = `${year}-${monthNum}`
       const currentData = filteredByMonth.find(m => m.month === monthKey)
-      const prevMonthNum = monthNum === 1 ? 12 : monthNum - 1
-      const prevYear = monthNum === 1 ? String(Number(year) - 1) : year
+      
+      // Mes anterior
+      const prevMonthNum = parseInt(monthNum) === 1 ? 12 : parseInt(monthNum) - 1
+      const prevYear = parseInt(monthNum) === 1 ? String(Number(year) - 1) : year
       const prevMonthKey = `${prevYear}-${prevMonthNum.toString().padStart(2, "0")}`
       const prevData = filteredByMonth.find(m => m.month === prevMonthKey)
       
       const current = currentData?.churned || 0
       const previous = prevData?.churned || 0
       const change = previous > 0 ? ((current - previous) / previous) * 100 : 0
+      
+      console.log("[v0] ChurnKPICard - Month filter:", { month, monthNum, monthKey, current, previous, change })
       
       return { current, previous, change }
     }
