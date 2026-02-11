@@ -46,6 +46,12 @@ export function NRRGRRChart() {
     plan: filters.plan,
   })
 
+  console.log("[v0] NRRGRRChart - mrrData:", mrrData)
+  console.log("[v0] NRRGRRChart - churnMRRData:", churnMRRData)
+  console.log("[v0] NRRGRRChart - contractionMRRData:", contractionMRRData)
+  console.log("[v0] NRRGRRChart - expansionMRRData:", expansionMRRData)
+  console.log("[v0] NRRGRRChart - tasaRetentionData:", tasaRetentionData)
+
   // Construir data para el gráfico
   const chartData = ALL_MONTHS.map((m) => {
     const label = MONTH_LABELS[m]
@@ -79,6 +85,8 @@ export function NRRGRRChart() {
       ? tasaEntry.retentionRate 
       : null
 
+    console.log(`[v0] ${label}: mrrInitial=${mrrInitial}, churnMRR=${churnMRR}, contractionMRR=${contractionMRR}, expansionMRR=${expansionMRR}, tasaRetencion=${tasaRetencion}`)
+
     // Calcular GRR: (MRR_inicial - (Churn MRR + Contraction MRR)) / MRR_inicial * 100
     const grr = mrrInitial > 0 
       ? ((mrrInitial - (churnMRR + contractionMRR)) / mrrInitial) * 100 
@@ -96,6 +104,8 @@ export function NRRGRRChart() {
       retencion: tasaRetencion !== null ? Math.round(tasaRetencion * 10) / 10 : null,
     }
   }).filter(d => filters.month === "Todos" || d.mes === filters.month)
+
+  console.log("[v0] NRRGRRChart - chartData:", chartData)
 
   return (
     <div className="rounded-lg border bg-card p-6">
