@@ -429,6 +429,14 @@ export function useContractionMRRData(options: FilterOptions = {}) {
 }
 
 
+// ============================================
+// useARPUData - /micro/arpu
+// Niveles: plan > mes
+// Para global mensual: promediar arpu de planes (NO basarse en users)
+// Filtros: año, mes, plan
+// ============================================
+
+export interface ARPUDataPoint {
   month: string
   monthLabel: string
   arpu: number
