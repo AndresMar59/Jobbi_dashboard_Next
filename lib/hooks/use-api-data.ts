@@ -1013,3 +1013,87 @@ export function useUnitEconomicsData(options: FilterOptions = {}) {
 
   return result
 }
+
+// ============================================
+// REVENUE METRICS: Revenue Expansion, Gross Churn Rate, Net Revenue Churn
+// Calculadas en front usando datos mes actual vs mes anterior
+// ============================================
+
+export interface RevenueMetricsDataPoint {
+  month: string
+  monthLabel: string
+  revenueExpansion: number // (expansion_mrr / mrr_anterior) * 100
+  grossChurnRate: number // ((churn_mrr + contraction_mrr) / mrr_anterior) * 100
+  netRevenueChurn: number // ((churn_mrr + contraction_mrr - expansion_mrr) / mrr_anterior) * 100
+}
+
+export function useRevenueMetricsData(options: FilterOptions = {}) {
+  const { year = "2026", month = "Todos", plan = "Todos" } = options
+
+  // Obtener todos los datos necesarios
+  const { chartData: mrrData, isLoading: loadingMRR } = useMRRData({ year, month: "Todos", plan })
+  const { chartData: churnMRRData, isLoading: loadingChurn } = useChurnMRRData({ year, month: "Todos", plan })
+  const { chartData: expansionMRRData, isLoading: loadingExpansion } = useExpansionMRRData({ year, month: "Todos", plan })
+  const { chartData: contractionMRRData, isLoading: loadingContraction } = useContractionMRRData({ year, month: "Todos", plan })
+
+  const isLoading = loadingMRR || loadingChurn || loadingExpansion || loadingContraction
+
+  const result = useMemo(() => {
+    if (!mrrData.length) return { chartData: [] as RevenueMetricsDataPoint[], isLoading }
+
+    // Crear un mapa de datos por mes para acceso rápido
+    const mrrByMonth = new Map(mrrData.map(d => [d.monthLabel, d.mrr]))
+    const churnByMonth = new Map(churnMRRData.map(d => [d.monthLabel, d.churnMRR]))
+    const expansionByMonth = new Map(expansionMRRData.map(d => [d.monthLabel, d.expansionMRR]))
+    const contractionByMonth = new Map(contractionMRRData.map(d => [d.monthLabel, d.contractionMRR]))
+
+    // Calcular métricas para cada mes
+    const metricsData: RevenueMetricsDataPoint[] = []
+
+    for (let i = 0; i < ALL_MONTHS.length; i++) {
+      const currentMonth = ALL_MONTHS[i]
+      const currentLabel = MONTH_LABELS[currentMonth]
+      const previousMonth = i > 0 ? ALL_MONTHS[i - 1] : null
+      const previousLabel = previousMonth ? MONTH_LABELS[previousMonth] : null
+
+      const currentMRR = mrrByMonth.get(currentLabel) || 0
+      const previousMRR = previousLabel ? (mrrByMonth.get(previousLabel) || 0) : 0
+
+      const currentChurn = churnByMonth.get(currentLabel) || 0
+      const currentExpansion = expansionByMonth.get(currentLabel) || 0
+      const currentContraction = contractionByMonth.get(currentLabel) || 0
+
+      // Revenue Expansion (%) = (expansion_mrr / mrr_anterior) * 100
+      const revenueExpansion = previousMRR > 0 ? (currentExpansion / previousMRR) * 100 : 0
+
+      // Gross Churn Rate (%) = ((churn_mrr + contraction_mrr) / mrr_anterior) * 100
+      const totalChurn = currentChurn + currentContraction
+      const grossChurnRate = previousMRR > 0 ? (totalChurn / previousMRR) * 100 : 0
+
+      // Net Revenue Churn (%) = ((churn_mrr + contraction_mrr - expansion_mrr) / mrr_anterior) * 100
+      const netChurn = totalChurn - currentExpansion
+      const netRevenueChurn = previousMRR > 0 ? (netChurn / previousMRR) * 100 : 0
+
+      metricsData.push({
+        month: `${year}-${currentMonth}`,
+        monthLabel: currentLabel,
+        revenueExpansion,
+        grossChurnRate,
+        netRevenueChurn,
+      })
+    }
+
+    // Filtrar por mes si es necesario
+    let filtered = metricsData
+    if (month !== "Todos") {
+      filtered = filtered.filter(d => d.monthLabel === month)
+    }
+
+    return { chartData: filtered, isLoading: false }
+  }, [mrrData, churnMRRData, expansionMRRData, contractionMRRData, year, month])
+
+  return {
+    chartData: result.chartData,
+    isLoading,
+  }
+}
