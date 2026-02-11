@@ -9,7 +9,6 @@ import { DollarChurnKPICard } from "@/components/dashboard/dollar-churn-kpi-card
 import { TasaRetencionKPICard } from "@/components/dashboard/tasa-retencion-kpi-card"
 import { KFactorChurnChart } from "@/components/dashboard/k-factor-churn-chart"
 import { CohortAnalysisChart } from "@/components/dashboard/cohort-analysis-chart"
-import { RetentionMetricsTable } from "@/components/dashboard/retention-metrics-table"
 import { FiltersProvider } from "@/lib/contexts/filters-context"
 
 export default function RetentionPage() {
@@ -33,7 +32,6 @@ export default function RetentionPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
               <KFactorChurnChart />
-              <RetentionMetricsTable />
             </div>
 
             <div className="w-full">
