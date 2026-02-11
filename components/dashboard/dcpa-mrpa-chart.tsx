@@ -44,21 +44,22 @@ export function DCPAMRPAChart() {
     
     // Obtener usuarios activos del mes
     const activosEntry = usuariosActivosChart.find(d => d.month?.endsWith(`-${m}`))
-    const activeUsers = activosEntry?.activeUsers || 1 // Evitar división por 0
+    const activeUsers = activosEntry?.activeUsers || 0
 
     // DCPA = DCPA_UE / usuarios_activos
     const dcpaUE = dcpaEntry?.dcpa || 0
     const dcpaCalculated = activeUsers > 0 ? dcpaUE / activeUsers : 0
 
-    // MRPA = MRR + New MRR
+    // MRPA = (MRR + New MRR) / usuarios_activos
     const mrrValue = mrrEntry?.mrr || 0
     const newMRRValue = newMRREntry?.newMRR || 0
-    const mrpaValue = mrrValue + newMRRValue
+    const totalMRR = mrrValue + newMRRValue
+    const mrpaCalculated = activeUsers > 0 ? totalMRR / activeUsers : 0
 
     return {
       mes: MONTH_LABELS[m],
       dcpa: dcpaCalculated,
-      mrpa: mrpaValue,
+      mrpa: mrpaCalculated,
     }
   })
 
