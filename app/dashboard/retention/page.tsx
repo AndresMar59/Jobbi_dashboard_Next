@@ -7,8 +7,6 @@ import { ChurnKPICard } from "@/components/dashboard/churn-kpi-card"
 import { MRRPercentKPICard } from "@/components/dashboard/mrr-percent-kpi-card"
 import { DollarChurnKPICard } from "@/components/dashboard/dollar-churn-kpi-card"
 import { TasaRetencionKPICard } from "@/components/dashboard/tasa-retencion-kpi-card"
-import { GRRKPICard } from "@/components/dashboard/grr-kpi-card"
-import { NRRKPICard } from "@/components/dashboard/nrr-kpi-card"
 import { KFactorChurnChart } from "@/components/dashboard/k-factor-churn-chart"
 import { CohortAnalysisChart } from "@/components/dashboard/cohort-analysis-chart"
 import { FiltersProvider } from "@/lib/contexts/filters-context"
@@ -25,13 +23,11 @@ export default function RetentionPage() {
           <main className="flex-1 p-6 lg:p-8">
             <DashboardFilters />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               <ChurnKPICard />
               <MRRPercentKPICard />
               <DollarChurnKPICard />
               <TasaRetencionKPICard />
-              <GRRKPICard />
-              <NRRKPICard />
             </div>
 
             <div className="grid grid-cols-1 gap-6 mb-6">
