@@ -127,20 +127,20 @@ export function ChurnKPICard() {
   }
   
   return (
-    <Card className="bg-card">
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <p className="text-sm font-medium text-muted-foreground"># Churn</p>
+    <Card className="bg-card border border-border shadow-sm">
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-muted-foreground"># Churn</span>
           <Users className="h-4 w-4 text-muted-foreground" />
         </div>
-        <div className="mt-2">
-          <p className="text-2xl font-bold">{current}</p>
-          <div className="flex items-center mt-1">
-            <TrendIcon className={`h-4 w-4 mr-1 ${trend === "down" ? "text-green-500" : "text-red-500"}`} />
-            <span className={`text-sm ${trend === "down" ? "text-green-500" : "text-red-500"}`}>
-              {change >= 0 ? "+" : ""}{change.toFixed(1)}% vs mes anterior
-            </span>
-          </div>
+        <div className="text-2xl font-bold text-foreground mb-1">
+          {current}
+        </div>
+        <div className={`flex items-center text-xs ${trend === "down" ? "text-emerald-600" : "text-red-500"} hidden`}>
+          <TrendIcon className="h-3 w-3 mr-1" />
+          <span>
+            {change >= 0 ? "+" : ""}{change.toFixed(1)}% vs mes anterior
+          </span>
         </div>
       </CardContent>
     </Card>

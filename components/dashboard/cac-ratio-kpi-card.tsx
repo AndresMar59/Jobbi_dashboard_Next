@@ -1,5 +1,6 @@
 "use client"
 
+import { Card, CardContent } from "@/components/ui/card"
 import { TrendingUp, TrendingDown } from "lucide-react"
 import { useFilters } from "@/lib/contexts/filters-context"
 import { useCACRatioData } from "@/lib/hooks/use-metric-data"
@@ -29,28 +30,31 @@ export function CACRatioKPICard() {
 
   if (isLoading) {
     return (
-      <div className="bg-card rounded-xl p-5 border border-border animate-pulse">
-        <div className="flex items-center justify-between mb-3">
-          <div className="h-4 w-24 bg-muted rounded" />
-          <div className="h-5 w-5 bg-muted rounded" />
-        </div>
-        <div className="h-8 w-20 bg-muted rounded mb-2" />
-        <div className="h-3 w-36 bg-muted rounded" />
-      </div>
+      <Card className="bg-card border border-border shadow-sm">
+        <CardContent className="p-4">
+          <div className="animate-pulse">
+            <div className="h-4 bg-muted rounded w-3/4 mb-2" />
+            <div className="h-8 bg-muted rounded w-1/2 mb-2" />
+            <div className="h-3 bg-muted rounded w-2/3" />
+          </div>
+        </CardContent>
+      </Card>
     )
   }
 
   return (
-    <div className="bg-card rounded-xl p-5 border border-border">
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-sm text-muted-foreground font-medium">CAC RATIO</span>
-        <TrendingUp className="h-5 w-5 text-muted-foreground" />
-      </div>
-      <p className="text-3xl font-bold text-foreground mb-1">{formattedValue}</p>
-      <div className={`flex items-center gap-1 text-sm ${trendColor}`}>
-        <TrendIcon className="h-4 w-4" />
-        <span>{formattedChange}</span>
-      </div>
-    </div>
+    <Card className="bg-card border border-border shadow-sm">
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm text-muted-foreground font-medium">CAC RATIO</span>
+          <TrendingUp className="h-4 w-4 text-muted-foreground" />
+        </div>
+        <div className="text-2xl font-bold text-foreground mb-1">{formattedValue}</div>
+        <div className={`flex items-center gap-1 text-xs ${trendColor} hidden`}>
+          <TrendIcon className="h-3 w-3" />
+          <span>{formattedChange}</span>
+        </div>
+      </CardContent>
+    </Card>
   )
 }

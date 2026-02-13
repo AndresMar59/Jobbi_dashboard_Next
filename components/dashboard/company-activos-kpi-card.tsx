@@ -47,7 +47,7 @@ export function CompanyActivosKPICard() {
         <div className="text-2xl font-bold text-foreground mb-1">
           {currentActive.toLocaleString()}
         </div>
-        <div className={`flex items-center text-xs ${trend === "up" ? "text-emerald-600" : "text-red-500"}`}>
+        <div className={`flex items-center text-xs ${trend === "up" ? "text-emerald-600" : "text-red-500"} hidden`}>
           <span className="mr-1">{trend === "up" ? "\u2197" : "\u2198"}</span>
           <span>
             {change >= 0 ? "+" : ""}{change.toFixed(1)}% vs mes anterior

@@ -49,7 +49,7 @@ export function DowngradeKPICard() {
           <p className="text-2xl font-bold text-card-foreground mb-2">
             {formatCurrency(data.currentContractionMRR)}
           </p>
-          <div className="flex items-center gap-1 text-sm">
+          <div className="flex items-center gap-1 text-sm hidden">
             {trend === "up" ? (
               <TrendingUpIcon className="h-4 w-4 text-sidebar" />
             ) : (
