@@ -44,7 +44,7 @@ export function CohortAnalysisChart() {
     if (!cohortMap.has(monthNum)) {
       cohortMap.set(monthNum, [])
     }
-    cohortMap.get(monthNum)?.push(entry.currentActive)
+    cohortMap.get(monthNum)?.push(entry.activeUsers)
   })
 
   // Construir filas de cohortes
