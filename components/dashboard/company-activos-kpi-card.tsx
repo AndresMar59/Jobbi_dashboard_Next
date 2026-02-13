@@ -8,14 +8,24 @@ import { useUsuariosActivosData } from "@/lib/hooks/use-api-data"
 export function CompanyActivosKPICard() {
   const { filters } = useFilters()
 
-  // Usa filtros de fecha y plan
-  // Si plan="Todos" usa active_users global del mes
-  // Si plan="Starter" cuenta companies[] del plan especifico
-  const { currentActive, previousActive, isLoading } = useUsuariosActivosData({
+  const { chartData, isLoading } = useUsuariosActivosData({
     year: filters.year,
     month: filters.month,
     plan: filters.plan,
   })
+
+  // Obtener mes actual y anterior del chartData (últimos dos meses sin filtrar)
+  let currentActive = 0
+  let previousActive = 0
+
+  if (chartData && chartData.length > 0) {
+    // Última entrada del mes (sin filtrar por > 0)
+    currentActive = chartData[chartData.length - 1]?.activeUsers || 0
+    // Penúltima entrada
+    if (chartData.length > 1) {
+      previousActive = chartData[chartData.length - 2]?.activeUsers || 0
+    }
+  }
 
   // Calcular cambio porcentual vs mes anterior
   const change = previousActive > 0
