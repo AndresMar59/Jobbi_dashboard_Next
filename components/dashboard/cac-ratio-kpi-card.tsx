@@ -41,14 +41,14 @@ export function CACRatioKPICard() {
   }
 
   return (
-    <div className="bg-card rounded-xl p-5 border border-border">
-      <div className="flex items-center justify-between mb-1">
+    <div className="bg-card rounded-xl p-4 border border-border">
+      <div className="flex items-center justify-between mb-2">
         <span className="text-sm text-muted-foreground font-medium">CAC RATIO</span>
-        <TrendingUp className="h-5 w-5 text-muted-foreground" />
+        <TrendingUp className="h-4 w-4 text-muted-foreground" />
       </div>
-      <p className="text-3xl font-bold text-foreground mb-1">{formattedValue}</p>
-      <div className={`flex items-center gap-1 text-sm ${trendColor} hidden`}>
-        <TrendIcon className="h-4 w-4" />
+      <p className="text-2xl font-bold text-foreground mb-1">{formattedValue}</p>
+      <div className={`flex items-center gap-1 text-xs ${trendColor} hidden`}>
+        <TrendIcon className="h-3 w-3" />
         <span>{formattedChange}</span>
       </div>
     </div>
