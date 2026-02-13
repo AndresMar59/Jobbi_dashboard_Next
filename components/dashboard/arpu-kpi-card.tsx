@@ -38,7 +38,7 @@ export function ARPUKPICard() {
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm text-muted-foreground font-medium">
-            ARPU (Revenue per clientes)
+            ARPA (Revenue per Account)
           </span>
           <DollarSign className="h-4 w-4 text-muted-foreground" />
         </div>
