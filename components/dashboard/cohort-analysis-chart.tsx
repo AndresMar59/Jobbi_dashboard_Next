@@ -27,12 +27,11 @@ export function CohortAnalysisChart() {
     plan: filters.plan,
   })
 
-  console.log("[v0] CohortAnalysisChart - activosData:", activosData, "filters:", filters)
-
   // Construir análisis de cohortes
   // Cada cohorte es un mes de inicio, y rastreamos la retención en meses posteriores
   const cohortData: Array<{
     cohort: string
+    activeUsers: number
     values: (number | null)[]
   }> = []
 
@@ -75,6 +74,7 @@ export function CohortAnalysisChart() {
 
     cohortData.push({
       cohort: cohortLabel,
+      activeUsers: monthlyValues[0] || 0,
       values: retention,
     })
 
@@ -98,6 +98,7 @@ export function CohortAnalysisChart() {
                 <thead>
                   <tr className="border-b">
                     <th className="text-left p-3 font-semibold text-sm">Cohorte</th>
+                    <th className="text-center p-3 font-semibold text-sm"># Users</th>
                     <th className="text-center p-3 font-semibold text-sm">Mes 0</th>
                     <th className="text-center p-3 font-semibold text-sm">Mes 1</th>
                     <th className="text-center p-3 font-semibold text-sm">Mes 2</th>
@@ -111,6 +112,7 @@ export function CohortAnalysisChart() {
                   {cohortData.map((row) => (
                     <tr key={row.cohort} className="border-b hover:bg-muted/50">
                       <td className="p-3 font-medium text-sm">{row.cohort}</td>
+                      <td className="p-3 text-center text-sm font-medium text-muted-foreground">{row.activeUsers}</td>
                       {row.values.map((value, idx) => (
                         <td key={idx} className={`p-3 text-center text-sm ${getRetentionColor(value)}`}>
                           {value !== null ? `${value}%` : "-"}
