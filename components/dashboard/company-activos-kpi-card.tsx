@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardContent } from "@/components/ui/card"
-import { Users } from "lucide-react"
+import { Users, TrendingUp, TrendingDown } from "lucide-react"
 import { useFilters } from "@/lib/contexts/filters-context"
 import { useUsuariosActivosData } from "@/lib/hooks/use-api-data"
 
@@ -21,7 +21,7 @@ export function CompanyActivosKPICard() {
   const change = previousActive > 0
     ? ((currentActive - previousActive) / previousActive) * 100
     : 0
-  const trend = change >= 0 ? "up" : "down"
+  const isPositive = change >= 0
 
   if (isLoading) {
     return (
@@ -47,10 +47,14 @@ export function CompanyActivosKPICard() {
         <div className="text-2xl font-bold text-foreground mb-1">
           {currentActive.toLocaleString()}
         </div>
-        <div className={`flex items-center text-xs ${trend === "up" ? "text-emerald-600" : "text-red-500"}`}>
-          <span className="mr-1">{trend === "up" ? "\u2197" : "\u2198"}</span>
+        <div className={`flex items-center text-xs ${isPositive ? "text-emerald-600" : "text-red-500"}`}>
+          {isPositive ? (
+            <TrendingUp className="h-3 w-3 mr-1" />
+          ) : (
+            <TrendingDown className="h-3 w-3 mr-1" />
+          )}
           <span>
-            {change >= 0 ? "+" : ""}{change.toFixed(1)}% vs mes anterior
+            {isPositive ? "+" : ""}{change.toFixed(1)}% vs mes anterior
           </span>
         </div>
       </CardContent>
