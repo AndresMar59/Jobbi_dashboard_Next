@@ -131,7 +131,7 @@ export function ChurnKPICard() {
         </div>
         <div>
           <p className="text-2xl font-bold text-foreground mb-1">{current}</p>
-          <div className={`flex items-center text-xs ${isPositive ? "text-emerald-600" : "text-red-500"}`}>
+          <div className={`flex items-center text-xs ${isPositive ? "text-emerald-600" : "text-red-500"} hidden`}>
             {isPositive ? (
               <TrendingDown className="h-3 w-3 mr-1" />
             ) : (

@@ -47,7 +47,7 @@ export function CACRatioKPICard() {
         <TrendingUp className="h-5 w-5 text-muted-foreground" />
       </div>
       <p className="text-3xl font-bold text-foreground mb-1">{formattedValue}</p>
-      <div className={`flex items-center gap-1 text-sm ${trendColor}`}>
+      <div className={`flex items-center gap-1 text-sm ${trendColor} hidden`}>
         <TrendIcon className="h-4 w-4" />
         <span>{formattedChange}</span>
       </div>

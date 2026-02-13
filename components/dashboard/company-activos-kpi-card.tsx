@@ -57,7 +57,7 @@ export function CompanyActivosKPICard() {
         <div className="text-2xl font-bold text-foreground mb-1">
           {currentActive.toLocaleString()}
         </div>
-        <div className={`flex items-center text-xs ${isPositive ? "text-emerald-600" : "text-red-500"}`}>
+        <div className={`flex items-center text-xs ${isPositive ? "text-emerald-600" : "text-red-500"} hidden`}>
           {isPositive ? (
             <TrendingUp className="h-3 w-3 mr-1" />
           ) : (
