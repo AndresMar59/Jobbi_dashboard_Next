@@ -3,34 +3,108 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Users, TrendingUp, TrendingDown } from "lucide-react"
 import { useFilters } from "@/lib/contexts/filters-context"
-import { useUsuariosActivosData } from "@/lib/hooks/use-api-data"
+import useSWR from "swr"
+
+interface UsuariosActivosResponse {
+  [month: string]: {
+    [plan: string]: {
+      active_users: number
+    }
+  }
+}
+
+const fetcher = async (url: string) => {
+  const response = await fetch(url)
+  if (!response.ok) throw new Error("Error fetching data")
+  return response.json()
+}
+
+const ALL_MONTHS = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
+const MONTH_MAP: { [key: string]: string } = {
+  "Todos": "Todos",
+  "Ene": "01",
+  "Feb": "02",
+  "Mar": "03",
+  "Abr": "04",
+  "May": "05",
+  "Jun": "06",
+  "Jul": "07",
+  "Ago": "08",
+  "Sep": "09",
+  "Oct": "10",
+  "Nov": "11",
+  "Dic": "12"
+}
 
 export function CompanyActivosKPICard() {
   const { filters } = useFilters()
+  const { year, plan, month } = filters
 
-  const { chartData, isLoading } = useUsuariosActivosData({
-    year: filters.year,
-    month: filters.month,
-    plan: filters.plan,
-  })
+  const { data: rawData, isLoading } = useSWR<UsuariosActivosResponse>(
+    "/api/micro/usuarios_activos",
+    fetcher,
+    { revalidateOnFocus: false }
+  )
 
-  // Obtener mes actual y anterior del chartData (últimos dos meses sin filtrar)
-  let currentActive = 0
-  let previousActive = 0
+  // Procesar datos con filtros
+  const processData = () => {
+    if (!rawData) return { current: 0, previous: 0, change: 0 }
 
-  if (chartData && chartData.length > 0) {
-    // Última entrada del mes (sin filtrar por > 0)
-    currentActive = chartData[chartData.length - 1]?.activeUsers || 0
-    // Penúltima entrada
-    if (chartData.length > 1) {
-      previousActive = chartData[chartData.length - 2]?.activeUsers || 0
+    // Filtrar por año y plan
+    const filteredByMonth: { month: string; active: number }[] = []
+
+    for (const monthNum of ALL_MONTHS) {
+      const monthKey = `${year}-${monthNum}`
+      const monthData = rawData[monthKey]
+
+      let active = 0
+      if (monthData) {
+        if (plan === "Todos") {
+          // Sumar todos los planes
+          for (const planData of Object.values(monthData)) {
+            active += planData.active_users || 0
+          }
+        } else if (monthData[plan]) {
+          active = monthData[plan].active_users || 0
+        }
+      }
+
+      filteredByMonth.push({ month: monthKey, active })
     }
+
+    console.log("[v0] CompanyActivosKPICard - filteredByMonth:", filteredByMonth)
+
+    // Si hay filtro de mes específico
+    if (month !== "Todos") {
+      const monthNum = MONTH_MAP[month]
+      const monthKey = `${year}-${monthNum}`
+      const currentData = filteredByMonth.find(m => m.month === monthKey)
+
+      // Mes anterior
+      const prevMonthNum = parseInt(monthNum) === 1 ? 12 : parseInt(monthNum) - 1
+      const prevYear = parseInt(monthNum) === 1 ? String(Number(year) - 1) : year
+      const prevMonthKey = `${prevYear}-${prevMonthNum.toString().padStart(2, "0")}`
+      const prevData = filteredByMonth.find(m => m.month === prevMonthKey)
+
+      const current = currentData?.active || 0
+      const previous = prevData?.active || 0
+      const change = previous > 0 ? ((current - previous) / previous) * 100 : 0
+
+      return { current, previous, change }
+    }
+
+    // Sin filtro de mes: usar el último mes con datos
+    const withData = filteredByMonth.filter(m => m.active > 0)
+    if (withData.length === 0) return { current: 0, previous: 0, change: 0 }
+
+    const current = withData[withData.length - 1]?.active || 0
+    const previous = withData[withData.length - 2]?.active || 0
+    const change = previous > 0 ? ((current - previous) / previous) * 100 : 0
+
+    return { current, previous, change }
   }
 
-  // Calcular cambio porcentual vs mes anterior
-  const change = previousActive > 0
-    ? ((currentActive - previousActive) / previousActive) * 100
-    : 0
+  const { current, change } = processData()
   const isPositive = change >= 0
 
   if (isLoading) {
@@ -55,7 +129,7 @@ export function CompanyActivosKPICard() {
           <Users className="h-4 w-4 text-muted-foreground" />
         </div>
         <div className="text-2xl font-bold text-foreground mb-1">
-          {currentActive.toLocaleString()}
+          {current.toLocaleString()}
         </div>
         <div className={`flex items-center text-xs ${isPositive ? "text-emerald-600" : "text-red-500"} hidden`}>
           {isPositive ? (
