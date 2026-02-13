@@ -321,7 +321,7 @@ export interface ExpansionMRRDataPoint {
 export function useExpansionMRRData(options: FilterOptions = {}) {
   const { year = "2026", month = "Todos", plan = "Todos" } = options
 
-  const { data: rawData, error, isLoading } = useSWR<Record<string, { mrr: number; subscription: number }>>(
+  const { data: rawData, error, isLoading } = useSWR<Record<string, Record<string, { expansion_mrr: number; subscriptions: number }>>>(
     "/api/micro/expansion_mrr", fetcher, SWR_CONFIG
   )
 
@@ -393,7 +393,7 @@ export interface ContractionMRRDataPoint {
 export function useContractionMRRData(options: FilterOptions = {}) {
   const { year = "2026", month = "Todos", plan = "Todos" } = options
 
-  const { data: rawData, error, isLoading } = useSWR<Record<string, { mrr: number; subscription: number }>>(
+  const { data: rawData, error, isLoading } = useSWR<Record<string, Record<string, { contraction_mrr: number; subscriptions: number }>>>(
     "/api/micro/contraction_mrr", fetcher, SWR_CONFIG
   )
 

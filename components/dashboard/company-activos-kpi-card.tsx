@@ -72,8 +72,6 @@ export function CompanyActivosKPICard() {
       filteredByMonth.push({ month: monthKey, active })
     }
 
-    console.log("[v0] CompanyActivosKPICard - filteredByMonth:", filteredByMonth)
-
     // Si hay filtro de mes específico
     if (month !== "Todos") {
       const monthNum = MONTH_MAP[month]
