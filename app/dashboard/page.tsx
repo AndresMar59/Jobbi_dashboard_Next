@@ -20,6 +20,8 @@ import { NRRGRRChart } from "@/components/dashboard/nrr-grr-chart"
 import { ARPAClientesChart } from "@/components/dashboard/arpa-clientes-chart"
 import { TicketPromedioChart } from "@/components/dashboard/ticket-promedio-chart"
 import { DCPAMRPAChart } from "@/components/dashboard/dcpa-mrpa-chart"
+import { KFactorChurnChart } from "@/components/dashboard/k-factor-churn-chart"
+import { CohortAnalysisChart } from "@/components/dashboard/cohort-analysis-chart"
 import { FiltersProvider } from "@/lib/contexts/filters-context"
 
 export default function DashboardMVP() {
@@ -70,6 +72,11 @@ export default function DashboardMVP() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <TicketPromedioChart />
+            <KFactorChurnChart />
+          </div>
+
+          <div className="w-full mb-6">
+            <CohortAnalysisChart />
           </div>
         </main>
         </div>
