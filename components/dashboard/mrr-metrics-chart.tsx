@@ -11,9 +11,7 @@ import { MONTH_LABELS } from "@/lib/hooks/use-api-data"
 import { ALL_MONTHS } from "@/lib/api/metrics"
 
 export function MRRMetricsChart() {
-  const { filters, setPlan } = useFilters()
-
-  console.log("[v0] MRRMetricsChart - Current filters:", { year: filters.year, month: filters.month, plan: filters.plan })
+  const { filters } = useFilters()
 
   // Obtener todas las métricas de MRR
   const { chartData: mrrData, isLoading: loadingMRR, plans: availablePlans } = useMRRData({
@@ -47,8 +45,6 @@ export function MRRMetricsChart() {
   })
 
   const isLoading = loadingMRR || loadingChurn || loadingNewMRR || loadingExpansion || loadingContraction
-
-  console.log("[v0] MRRMetricsChart - Data loaded:", { mrrData: mrrData.length, churnMRRData: churnMRRData.length, newMRRData: newMRRData.length })
 
   // Combinar todas las series en un solo dataset para el gráfico
   const combinedData = ALL_MONTHS.map((m) => {
@@ -126,19 +122,6 @@ export function MRRMetricsChart() {
           </ResponsiveContainer>
         </div>
       )}
-
-      <div className="mt-4">
-        <select 
-          className="w-full h-10 rounded-md border border-input bg-muted/30 px-3 py-2 text-sm font-medium transition-colors text-muted-foreground"
-          value={filters.plan}
-          onChange={(e) => setPlan(e.target.value)}
-        >
-          <option value="Todos">Todos los planes</option>
-          {(availablePlans || []).map((plan) => (
-            <option key={plan} value={plan}>{plan}</option>
-          ))}
-        </select>
-      </div>
     </div>
   )
 }
