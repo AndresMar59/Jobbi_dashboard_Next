@@ -1,6 +1,7 @@
 "use client"
 
-import { DollarSign, Loader2, TrendingUpIcon, TrendingDownIcon } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
+import { DollarSign, TrendingUp, TrendingDown } from "lucide-react"
 import { useFilters } from "@/lib/contexts/filters-context"
 import { useExpansionMRRData } from "@/lib/hooks/use-api-data"
 
@@ -28,39 +29,53 @@ export function ExpansionKPICard() {
     ? ((data.currentExpansionMRR - data.previousExpansionMRR) / data.previousExpansionMRR) * 100
     : 0
 
-  const trend = percentChange >= 0 ? "up" : "down"
-  const changeText = `${trend === "up" ? "+" : ""}${percentChange.toFixed(1)}% vs mes anterior`
+  const isPositive = percentChange >= 0
+
+  if (isLoading) {
+    return (
+      <Card className="bg-card border border-border shadow-sm">
+        <CardContent className="p-4">
+          <div className="animate-pulse">
+            <div className="h-4 bg-muted rounded w-24 mb-2" />
+            <div className="h-8 bg-muted rounded w-20 mb-2" />
+            <div className="h-3 bg-muted rounded w-32" />
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (error) {
+    return (
+      <Card className="bg-card border border-border shadow-sm">
+        <CardContent className="p-4">
+          <p className="text-red-500">Error</p>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
-    <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
-      <div className="flex items-start justify-between mb-2">
-        <p className="text-sm text-muted-foreground">$ Expansiones</p>
-        <DollarSign className="h-4 w-4 text-muted-foreground" />
-      </div>
-      
-      {isLoading ? (
-        <div className="flex items-center justify-center h-12">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+    <Card className="bg-card border border-border shadow-sm">
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-muted-foreground">$ Expansiones</span>
+          <DollarSign className="h-4 w-4 text-muted-foreground" />
         </div>
-      ) : error ? (
-        <p className="text-2xl font-bold text-red-500">Error</p>
-      ) : (
-        <>
-          <p className="text-2xl font-bold text-card-foreground mb-2">
-            {formatCurrency(data.currentExpansionMRR)}
-          </p>
-          <div className="flex items-center gap-1 text-sm hidden">
-            {trend === "up" ? (
-              <TrendingUpIcon className="h-4 w-4 text-sidebar" />
-            ) : (
-              <TrendingDownIcon className="h-4 w-4 text-red-500" />
-            )}
-            <span className={trend === "up" ? "text-sidebar" : "text-red-500"}>
-              {changeText}
-            </span>
-          </div>
-        </>
-      )}
-    </div>
+        <div className="text-2xl font-bold text-foreground mb-1">
+          {formatCurrency(data.currentExpansionMRR)}
+        </div>
+        <div className={`flex items-center text-xs ${isPositive ? "text-emerald-600" : "text-red-500"} hidden`}>
+          {isPositive ? (
+            <TrendingUp className="h-3 w-3 mr-1" />
+          ) : (
+            <TrendingDown className="h-3 w-3 mr-1" />
+          )}
+          <span>
+            {isPositive ? "+" : ""}{percentChange.toFixed(1)}% vs mes anterior
+          </span>
+        </div>
+      </CardContent>
+    </Card>
   )
 }

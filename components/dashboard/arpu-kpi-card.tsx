@@ -52,7 +52,9 @@ export function ARPUKPICard() {
           ) : (
             <TrendingDown className="h-3 w-3 mr-1" />
           )}
-          {isPositive ? "+" : ""}{change.toFixed(1)}% vs mes anterior
+          <span>
+            {isPositive ? "+" : ""}{change.toFixed(1)}% vs mes anterior
+          </span>
         </div>
       </CardContent>
     </Card>
