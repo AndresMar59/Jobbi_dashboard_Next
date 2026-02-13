@@ -9,6 +9,8 @@ import { CompanyActivosKPICard } from "@/components/dashboard/company-activos-kp
 import { CACRatioKPICard } from "@/components/dashboard/cac-ratio-kpi-card"
 import { ExpansionKPICard } from "@/components/dashboard/expansion-kpi-card"
 import { DowngradeKPICard } from "@/components/dashboard/downgrade-kpi-card"
+import { ChurnKPICard } from "@/components/dashboard/churn-kpi-card"
+import { TasaRetencionKPICard } from "@/components/dashboard/tasa-retencion-kpi-card"
 import { MRRMetricsChart } from "@/components/dashboard/mrr-metrics-chart"
 import { ARRMetricsChart } from "@/components/dashboard/arr-metrics-chart"
 import { CACVsLTVChart } from "@/components/dashboard/cac-vs-ltv-chart"
@@ -32,10 +34,12 @@ export default function DashboardMVP() {
         <main className="flex-1 p-6 lg:p-8">
           <DashboardFilters />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
             <ARPUKPICard />
             <CACRatioKPICard />
             <CompanyActivosKPICard />
+            <ChurnKPICard />
+            <TasaRetencionKPICard />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
