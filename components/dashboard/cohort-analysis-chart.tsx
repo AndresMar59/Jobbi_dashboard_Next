@@ -84,7 +84,7 @@ export function CohortAnalysisChart() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Análisis de Cohortes - Retención de Usuarios (%)</CardTitle>
+        <CardTitle>Análisis de Cohortes - Retención de Companies (%)</CardTitle>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -98,7 +98,7 @@ export function CohortAnalysisChart() {
                 <thead>
                   <tr className="border-b">
                     <th className="text-left p-3 font-semibold text-sm">Cohorte</th>
-                    <th className="text-center p-3 font-semibold text-sm"># Users</th>
+                    <th className="text-center p-3 font-semibold text-sm"># Companies</th>
                     <th className="text-center p-3 font-semibold text-sm">Mes 0</th>
                     <th className="text-center p-3 font-semibold text-sm">Mes 1</th>
                     <th className="text-center p-3 font-semibold text-sm">Mes 2</th>
