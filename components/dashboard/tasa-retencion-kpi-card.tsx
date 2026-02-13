@@ -17,6 +17,8 @@ const ALL_MONTHS = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", 
 
 export function TasaRetencionKPICard() {
   const { filters } = useFilters()
+
+  console.log("[v0] TasaRetencionKPICard - Filters:", { year: filters.year, plan: filters.plan, month: filters.month })
   
   const { data: rawData, isLoading } = useSWR<TasaRetentionResponse>(
     "/api/micro/tasa_retention",
@@ -107,7 +109,7 @@ export function TasaRetencionKPICard() {
         <div className="text-2xl font-bold text-foreground mb-1">
           {currentRate.toFixed(1)}%
         </div>
-        <div className={`flex items-center text-xs ${isPositive ? "text-emerald-600" : "text-red-600"} hidden`}>
+        <div className={`flex items-center text-xs ${isPositive ? "text-emerald-600" : "text-red-600"}`}>
           {isPositive ? (
             <TrendingUp className="h-3 w-3 mr-1" />
           ) : (

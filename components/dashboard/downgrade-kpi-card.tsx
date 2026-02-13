@@ -1,7 +1,6 @@
 "use client"
 
-import { Card, CardContent } from "@/components/ui/card"
-import { DollarSign, TrendingUp, TrendingDown } from "lucide-react"
+import { DollarSign, Loader2, TrendingUpIcon, TrendingDownIcon } from "lucide-react"
 import { useFilters } from "@/lib/contexts/filters-context"
 import { useContractionMRRData } from "@/lib/hooks/use-api-data"
 
@@ -29,53 +28,39 @@ export function DowngradeKPICard() {
     ? ((data.currentContractionMRR - data.previousContractionMRR) / data.previousContractionMRR) * 100
     : 0
 
-  const isPositive = percentChange >= 0
-
-  if (isLoading) {
-    return (
-      <Card className="bg-card border border-border shadow-sm">
-        <CardContent className="p-4">
-          <div className="animate-pulse">
-            <div className="h-4 bg-muted rounded w-24 mb-2" />
-            <div className="h-8 bg-muted rounded w-20 mb-2" />
-            <div className="h-3 bg-muted rounded w-32" />
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  if (error) {
-    return (
-      <Card className="bg-card border border-border shadow-sm">
-        <CardContent className="p-4">
-          <p className="text-red-500">Error</p>
-        </CardContent>
-      </Card>
-    )
-  }
+  const trend = percentChange >= 0 ? "up" : "down"
+  const changeText = `${trend === "up" ? "+" : ""}${percentChange.toFixed(1)}% vs mes anterior`
 
   return (
-    <Card className="bg-card border border-border shadow-sm">
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-muted-foreground">$ Downgrade</span>
-          <DollarSign className="h-4 w-4 text-muted-foreground" />
+    <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
+      <div className="flex items-start justify-between mb-2">
+        <p className="text-sm text-muted-foreground">$ Downgrade</p>
+        <DollarSign className="h-4 w-4 text-muted-foreground" />
+      </div>
+      
+      {isLoading ? (
+        <div className="flex items-center justify-center h-12">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
-        <div className="text-2xl font-bold text-foreground mb-1">
-          {formatCurrency(data.currentContractionMRR)}
-        </div>
-        <div className={`flex items-center text-xs ${isPositive ? "text-emerald-600" : "text-red-500"} hidden`}>
-          {isPositive ? (
-            <TrendingUp className="h-3 w-3 mr-1" />
-          ) : (
-            <TrendingDown className="h-3 w-3 mr-1" />
-          )}
-          <span>
-            {isPositive ? "+" : ""}{percentChange.toFixed(1)}% vs mes anterior
-          </span>
-        </div>
-      </CardContent>
-    </Card>
+      ) : error ? (
+        <p className="text-2xl font-bold text-red-500">Error</p>
+      ) : (
+        <>
+          <p className="text-2xl font-bold text-card-foreground mb-2">
+            {formatCurrency(data.currentContractionMRR)}
+          </p>
+          <div className="flex items-center gap-1 text-sm">
+            {trend === "up" ? (
+              <TrendingUpIcon className="h-4 w-4 text-sidebar" />
+            ) : (
+              <TrendingDownIcon className="h-4 w-4 text-red-500" />
+            )}
+            <span className={trend === "up" ? "text-sidebar" : "text-red-500"}>
+              {changeText}
+            </span>
+          </div>
+        </>
+      )}
+    </div>
   )
 }

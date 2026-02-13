@@ -38,7 +38,7 @@ export function ARPUKPICard() {
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm text-muted-foreground font-medium">
-            ARPA (Revenue per clientes)
+            ARPU (Revenue per clientes)
           </span>
           <DollarSign className="h-4 w-4 text-muted-foreground" />
         </div>
@@ -46,15 +46,13 @@ export function ARPUKPICard() {
         <div className="text-2xl font-bold text-foreground mb-1">
           ${currentARPU.toFixed(2)}
         </div>
-        <div className={`flex items-center text-xs ${isPositive ? "text-emerald-600" : "text-red-500"} hidden`}>
+        <div className={`flex items-center text-xs ${isPositive ? "text-emerald-600" : "text-red-500"}`}>
           {isPositive ? (
             <TrendingUp className="h-3 w-3 mr-1" />
           ) : (
             <TrendingDown className="h-3 w-3 mr-1" />
           )}
-          <span>
-            {isPositive ? "+" : ""}{change.toFixed(1)}% vs mes anterior
-          </span>
+          {isPositive ? "+" : ""}{change.toFixed(1)}% vs mes anterior
         </div>
       </CardContent>
     </Card>

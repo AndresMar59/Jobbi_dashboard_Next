@@ -42,6 +42,8 @@ const MONTH_MAP: { [key: string]: string } = {
 export function ChurnKPICard() {
   const { filters } = useFilters()
   const { year, plan, month } = filters
+
+  console.log("[v0] ChurnKPICard - Filters:", { year, plan, month })
   
   const { data: rawData, isLoading } = useSWR<ChurnedResponse>(
     "/api/micro/usuarios_churned",
@@ -91,6 +93,8 @@ export function ChurnKPICard() {
       const previous = prevData?.churned || 0
       const change = previous > 0 ? ((current - previous) / previous) * 100 : 0
       
+      console.log("[v0] ChurnKPICard - Month filter:", { month, monthNum, monthKey, current, previous, change })
+      
       return { current, previous, change }
     }
     
@@ -106,13 +110,13 @@ export function ChurnKPICard() {
   }
   
   const { current, change } = processData()
-  // Para churn, un cambio negativo es positivo (menos churn es mejor)
-  const isPositive = change <= 0
+  const trend = change <= 0 ? "down" : "up" // Para churn, bajar es bueno
+  const TrendIcon = change <= 0 ? TrendingDown : TrendingUp
   
   if (isLoading) {
     return (
       <Card className="bg-card">
-        <CardContent className="p-4">
+        <CardContent className="p-6">
           <div className="animate-pulse">
             <div className="h-4 bg-muted rounded w-20 mb-2"></div>
             <div className="h-8 bg-muted rounded w-16"></div>
@@ -124,20 +128,16 @@ export function ChurnKPICard() {
   
   return (
     <Card className="bg-card">
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-2">
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between">
           <p className="text-sm font-medium text-muted-foreground"># Churn</p>
           <Users className="h-4 w-4 text-muted-foreground" />
         </div>
-        <div>
-          <p className="text-2xl font-bold text-foreground mb-1">{current}</p>
-          <div className={`flex items-center text-xs ${isPositive ? "text-emerald-600" : "text-red-500"} hidden`}>
-            {isPositive ? (
-              <TrendingDown className="h-3 w-3 mr-1" />
-            ) : (
-              <TrendingUp className="h-3 w-3 mr-1" />
-            )}
-            <span>
+        <div className="mt-2">
+          <p className="text-2xl font-bold">{current}</p>
+          <div className="flex items-center mt-1">
+            <TrendIcon className={`h-4 w-4 mr-1 ${trend === "down" ? "text-green-500" : "text-red-500"}`} />
+            <span className={`text-sm ${trend === "down" ? "text-green-500" : "text-red-500"}`}>
               {change >= 0 ? "+" : ""}{change.toFixed(1)}% vs mes anterior
             </span>
           </div>
