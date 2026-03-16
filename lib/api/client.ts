@@ -15,11 +15,12 @@ interface FetchOptions extends RequestInit {
 export async function apiClient<T>(
   endpoint: string,
   options: FetchOptions = {}
-): Promise<T> {
+):
+ Promise<T> {
   const { params, ...fetchOptions } = options
 
   // Construir URL con query params si existen
-  let url = `${API_BASE_URL}${endpoint}`
+  let url = `${API_BASE_URL}${endpoint}` 
   if (params) {
     const searchParams = new URLSearchParams()
     Object.entries(params).forEach(([key, value]) => {
@@ -42,6 +43,7 @@ export async function apiClient<T>(
 
   return response.json()
 }
+
 
 /**
  * Métodos de conveniencia para diferentes tipos de peticiones

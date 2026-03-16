@@ -1,16 +1,17 @@
 "use client"
 
-import { Percent, Loader2, TrendingUpIcon, TrendingDownIcon } from "lucide-react"
+import { DollarSign, Loader2, TrendingUpIcon, TrendingDownIcon } from "lucide-react"
 import { useFilters } from "@/lib/contexts/filters-context"
-import { useMRRData } from "@/lib/hooks/use-mrr-data"
+import { useMRRData } from "@/lib/hooks/use-api-data"
 
 export function MRRKPICard() {
   const { filters } = useFilters()
-  const { data, isLoading, error } = useMRRData({
+  const data = useMRRData({
     year: filters.year,
     month: filters.month,
     plan: filters.plan,
   })
+  const { isLoading, error } = data
 
   const formatCurrency = (value: number) => {
     if (value >= 1000000) {
@@ -28,8 +29,8 @@ export function MRRKPICard() {
   return (
     <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
       <div className="flex items-start justify-between mb-2">
-        <p className="text-sm text-muted-foreground">% MRR</p>
-        <Percent className="h-4 w-4 text-muted-foreground" />
+        <p className="text-sm text-muted-foreground">$ MRR</p>
+        <DollarSign className="h-4 w-4 text-muted-foreground" />
       </div>
       
       {isLoading ? (
@@ -41,9 +42,9 @@ export function MRRKPICard() {
       ) : (
         <>
           <p className="text-2xl font-bold text-card-foreground mb-2">
-            {formatCurrency(data?.totalMRR || 0)}
+            {formatCurrency(data?.currentMRR || 0)}
           </p>
-          <div className="flex items-center gap-1 text-sm">
+          <div className="flex items-center gap-1 text-sm hidden">
             {trend === "up" ? (
               <TrendingUpIcon className="h-4 w-4 text-sidebar" />
             ) : (

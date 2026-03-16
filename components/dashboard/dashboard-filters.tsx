@@ -1,17 +1,23 @@
 "use client"
 
 import { useFilters } from "@/lib/contexts/filters-context"
-import { useMRRData } from "@/lib/hooks/use-mrr-data"
+import { useMRRData } from "@/lib/hooks/use-api-data"
 
 export function DashboardFilters() {
   const { filters, setYear, setMonth, setPlan } = useFilters()
-  const { data } = useMRRData({ year: filters.year })
+  const { plans: availablePlans } = useMRRData({ 
+    year: filters.year, 
+    month: "Todos", 
+    plan: "Todos" 
+  })
 
   const months = ["Todos", "Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
   const years = ["2025", "2026"]
   
-  // Obtener planes disponibles del microservicio
-  const plans = ["Todos", ...(data?.availablePlans || [])]
+  // Obtener planes disponibles del microservicio, asegurando que "Todos" siempre esté primero
+  const plans = availablePlans.length > 0 
+    ? ["Todos", ...availablePlans.filter(p => p !== "Todos")] 
+    : ["Todos"]
 
   return (
     <div className="mb-6 flex flex-wrap gap-3">
@@ -27,19 +33,17 @@ export function DashboardFilters() {
         ))}
       </select>
 
-      <div className="flex items-center gap-2">
-        <select
-          value={filters.plan}
-          onChange={(e) => setPlan(e.target.value)}
-          className="h-10 rounded-md border border-input bg-muted/50 px-4 py-2 text-sm font-medium transition-colors text-muted-foreground"
-        >
-          {plans.map((plan) => (
-            <option key={plan} value={plan}>
-              {plan === "Todos" ? "Tipo de plan" : plan}
-            </option>
-          ))}
-        </select>
-      </div>
+      <select
+        value={filters.plan}
+        onChange={(e) => setPlan(e.target.value)}
+        className="h-10 rounded-md border border-input bg-muted/50 px-4 py-2 text-sm font-medium transition-colors text-muted-foreground"
+      >
+        {plans.map((plan) => (
+          <option key={plan} value={plan}>
+            {plan === "Todos" ? "Todos los planes" : plan}
+          </option>
+        ))}
+      </select>
 
       {/* Selector de mes */}
       <div className="flex items-center gap-1 rounded-md border border-input bg-muted/50 p-1">
