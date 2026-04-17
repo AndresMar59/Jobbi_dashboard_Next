@@ -6,6 +6,9 @@ import './globals.css'
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
+
+// Creas una variable fontFamily que contenga las fuentes de Geist y Geist Mono
+// la razon es porq en el futuro si quieres cambiar las fuentes, solo tienes que cambiar esta variable y no todas las partes del codigo donde se usan las fuentes
 export const metadata: Metadata = {
   title: 'Dashboard SaaS',
   description: 'Created with v0',
@@ -29,6 +32,7 @@ export const metadata: Metadata = {
   },
 }
 
+// Creas una funcio RootLayout que reciba un children como prop y retorne un html con el body que contenga el children y el Analytics de Vercel
 export default function RootLayout({
   children,
 }: Readonly<{

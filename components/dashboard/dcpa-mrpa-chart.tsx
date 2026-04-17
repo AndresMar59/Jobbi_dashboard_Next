@@ -1,118 +1,105 @@
 "use client"
 
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
+import { LineChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Line } from "recharts"
 import { useFilters } from "@/lib/contexts/filters-context"
-import { useUnitEconomicsData } from "@/lib/hooks/use-api-data"
-import { useMRRData } from "@/lib/hooks/use-api-data"
-import { useMRRNewData } from "@/lib/hooks/use-api-data"
-import { useUsuariosActivosData } from "@/lib/hooks/use-api-data"
-import { ALL_MONTHS } from "@/lib/api/metrics"
-import { MONTH_LABELS } from "@/lib/hooks/use-api-data"
+import useSWR from "swr"
+import { Loader2 } from "lucide-react"
+
+
+interface ChartDataPoint {
+  month: string;
+  dcpa: number;
+  mrr: number;
+}
+
+// Usamos el mismo fetcher que ya te funcionó
+const fetcher = (url: string) => fetch(url).then(res => {
+  if (!res.ok) throw new Error("Error en el proxy");
+  return res.json();
+});
+
+const MONTH_LABELS = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
 
 export function DCPAMRPAChart() {
   const { filters } = useFilters()
 
-  // DCPA: del UE, sin segregación por plan (global)
-  const { chartData: dcpaChart, isLoading: isLoadingDCPA } = useUnitEconomicsData({
-    year: filters.year,
-    month: filters.month,
-  })
+  // Traemos el historial completo del año para tener MRR y DCPA (Unit Economics)
+  const { data: response, isLoading } = useSWR(
+    `/api/proxy?year=${filters.year}&date_to=${filters.year}-12-31&include_payroll=${filters.IncludePayroll}`,
+    fetcher
+  );
 
-  // MRR: suma de todos los planes, SIN filtro de mes para mantener continuidad
-  const { chartData: mrrChart, isLoading: isLoadingMRR } = useMRRData({
-    year: filters.year,
-    month: "Todos", // Sin filtro de mes para obtener datos de todos los meses
-  })
-
-  // New MRR: suma de todos los planes, SIN filtro de mes para mantener continuidad
-  const { chartData: newMRRChart, isLoading: isLoadingNewMRR } = useMRRNewData({
-    year: filters.year,
-    month: "Todos", // Sin filtro de mes para obtener datos de todos los meses
-  })
-
-  // Obtener datos de usuarios activos del mes (global, sin plan)
-  const { chartData: usuariosActivosChart, isLoading: isLoadingActivos } = useUsuariosActivosData({
-    year: filters.year,
-    month: "Todos", // Sin filtro de mes específico para obtener datos completos
-  })
-
-  // Combinar ambos en un solo dataset por mes
-  const chartData = ALL_MONTHS.map(m => {
-    const dcpaEntry = dcpaChart.find(d => d.month?.endsWith(`-${m}`))
-    const mrrEntry = mrrChart.find(d => d.month?.endsWith(`-${m}`))
-    const newMRREntry = newMRRChart.find(d => d.month?.endsWith(`-${m}`))
+  // Procesamos los datos: MRPA será simplemente el MRR Total
+  const chartData = response?.data?.map((item: any) => {
+    const monthPart = item.period?.date_from?.split('-')[1];
+    const monthIndex = monthPart ? parseInt(monthPart) - 1 : 0;
     
-    // Obtener usuarios activos del mes
-    const activosEntry = usuariosActivosChart.find(d => d.month?.endsWith(`-${m}`))
-    const activeUsers = activosEntry?.activeUsers || 0
-
-    // DCPA = DCPA_UE / usuarios_activos
-    const dcpaUE = dcpaEntry?.dcpa || 0
-    const dcpaCalculated = activeUsers > 0 ? dcpaUE / activeUsers : 0
-
-    // MRPA = (MRR + New MRR) / usuarios_activos
-    const mrrValue = mrrEntry?.mrr || 0
-    const newMRRValue = newMRREntry?.newMRR || 0
-    const totalMRR = mrrValue + newMRRValue
-    const mrpaCalculated = activeUsers > 0 ? totalMRR / activeUsers : 0
-
     return {
-      mes: MONTH_LABELS[m],
-      dcpa: dcpaCalculated,
-      mrpa: mrpaCalculated,
+      mes: MONTH_LABELS[monthIndex],
+      // DCPA: Lo tomamos de unit_economics o cac si está disponible, 
+      // si no, usamos un fallback de los datos de la API
+      dcpa: item.unit_economics?.customer_acquisition_cost || 0, 
+      // MRPA lo tomamos como el MRR Total directamente
+      mrr: item.mrr?.total || 0,
     }
-  })
-
-  const isLoading = isLoadingDCPA || isLoadingMRR || isLoadingNewMRR || isLoadingActivos
+  }) || []
 
   return (
-    <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
-      <h3 className="text-lg font-semibold text-card-foreground mb-4">DCPA vs MRPA</h3>
+  /* 1. CAMBIO: Eliminamos 'border' y añadimos una sombra difuminada (shadow-xl o personalizada) */
+  <div className="rounded-2xl bg-card p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all">
+    <h3 className="text-lg font-semibold text-card-foreground mb-4">DCPA vs MRR ({filters.year})</h3>
 
-      {isLoading ? (
-        <div className="h-[350px] flex items-center justify-center">
-          <div className="animate-pulse text-muted-foreground">Cargando datos...</div>
-        </div>
-      ) : (
-        <div className="h-[350px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 10, right: 20, left: 10, bottom: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.92 0 0)" />
-              <XAxis
-                dataKey="mes"
-                tick={{ fill: "oklch(0.55 0 0)", fontSize: 12 }}
-                padding={{ left: 20, right: 20 }}
-                height={40}
-              />
-              <YAxis
-                tick={{ fill: "oklch(0.55 0 0)", fontSize: 12 }}
-                width={50}
-                tickFormatter={(v) => {
-                  if (Math.abs(v) >= 1_000_000) return `$${Math.round(v / 1_000_000)}M`
-                  if (Math.abs(v) >= 1_000) return `$${Math.round(v / 1_000)}k`
-                  return `$${v}`
-                }}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "oklch(1 0 0)",
-                  border: "1px solid oklch(0.92 0 0)",
-                  borderRadius: "0.5rem",
-                }}
-                formatter={(value: number) => [`$${value.toLocaleString()}`, ""]}
-              />
-              <Legend
-                verticalAlign="top"
-                height={30}
-                iconSize={10}
-                wrapperStyle={{ fontSize: "12px", paddingBottom: "10px" }}
-              />
-              <Bar dataKey="dcpa" fill="#09124F" name="$ DCPA" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="mrpa" fill="#851485ff" name="$ MRPA" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-    </div>
-  )
+    {isLoading ? (
+      <div className="h-[350px] flex flex-col items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-500 mb-2" />
+        <div className="text-sm text-muted-foreground">Cargando métricas...</div>
+      </div>
+    ) : (
+      <div className="h-[350px] w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={chartData} margin={{ top: 5, right: 25, left: 0, bottom: 0 }}>
+           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="oklch(0.92 0 0)" />
+           <XAxis
+             dataKey="mes"
+             tick={{ fill: "oklch(0.55 0 0)", fontSize: 12 }}
+             axisLine={false}
+             tickLine={false}
+             dy={10}
+            />
+
+            <YAxis
+             tick={{ fill: "oklch(0.55 0 0)", fontSize: 12 }}
+             axisLine={true}
+             tickFormatter={(v) => {
+             if (Math.abs(v) >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`
+             if (Math.abs(v) >= 1_000) return `$${Math.round(v / 1_000)}k`
+             return `$${v}` }}
+            />
+
+            <Tooltip
+              contentStyle={{
+              backgroundColor: "oklch(1 0 0)",
+              border: "1px solid oklch(0.92 0 0)",
+              borderRadius: "0.5rem",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.05)"}}
+              formatter={(value: number) => [`$${value.toLocaleString()}`, undefined]}
+            />
+
+            <Legend 
+             verticalAlign="top" 
+             align="left" 
+             height={40} 
+             iconType="circle"
+             wrapperStyle={{ paddingBottom: '10px', fontSize: '12px' }}
+            />
+  
+            <Line type="monotone" dataKey="mrr" stroke="#16035c" strokeWidth={2} name="Total MRR" r={3}/>
+
+           <Line type="monotone" dataKey="dcpa" stroke="#9205ca" strokeWidth={2} name="Total DCPA" r={3}/>
+         </LineChart>
+        </ResponsiveContainer>
+      </div>
+    )}
+  </div>
+)
 }

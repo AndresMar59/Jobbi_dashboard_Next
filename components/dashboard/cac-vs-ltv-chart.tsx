@@ -1,113 +1,89 @@
 "use client"
 
-import { Bar, BarChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
+import { Bar, BarChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from "recharts"
+import { useFilters } from "@/lib/contexts/filters-context"
 import useSWR from "swr"
-
-interface CACResponse {
-  [month: string]: number
-}
-
-interface UsuariosNuevosResponse {
-  [month: string]: {
-    [plan: string]: {
-      companies: string[]
-      new_users: number
-    }
-  }
-}
+import { Loader2, AlertCircle } from "lucide-react"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 export function CACVsLTVChart() {
-  const { data: cacData } = useSWR<CACResponse>(
-    `/api/costs/cac?start_date=2025-12-31T23:59:59.999&acumulado=true`,
+  const { filters } = useFilters()
+
+  const { data: response, error, isLoading } = useSWR(
+    `/api/proxy?year=${filters.year}&include_payroll=${filters.IncludePayroll}`,
     fetcher
   )
-  const { data: usuariosNuevosData } = useSWR<UsuariosNuevosResponse>(`/api/micro/usuarios_nuevos`, fetcher)
 
-  // LTV Global usando el hook
-  const { averageLTV } = (() => {
-    // Simulación del hook useLTVData sin usar el hook directamente
-    const ltvData = (() => {
-      // Esta lógica debería venir de useLTVData en use-api-data.ts
-      // Por ahora lo hacemos inline para mayor control
-      return { averageLTV: 0 }
-    })()
-    return ltvData
-  })()
+  // Obtenemos los datos según el filtro de mes
+  const getMetrics = () => {
+    const data = response?.data || []
+    
+    // Si el usuario elige un mes, buscamos ese objeto, si no, tomamos el último del año (acumulado)
+    const targetEntry = filters.month === "Todos" 
+      ? data[data.length - 1] // El cierre del año
+      : data.find((item: any) => {
+          const m = new Date(item.period.date_from).getUTCMonth()
+          const monthName = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"][m]
+          return monthName === filters.month
+        })
 
-  // CAC Global: gasto_cac_total / nuevas_empresas_totales
-  let cacValue = 0
-  if (cacData && usuariosNuevosData) {
-    let totalCacSpend = 0
-    let totalNewCompanies = 0
-
-    // Sumar todo el gasto CAC de todos los meses
-    for (const [, cacAmount] of Object.entries(cacData)) {
-      totalCacSpend += cacAmount || 0
+    return {
+      cac: targetEntry?.external_metrics?.cac || 0,
+      ltv: targetEntry?.external_metrics?.ltv || 0
     }
-
-    // Sumar todas las nuevas empresas de todos los meses y planes
-    for (const [, monthData] of Object.entries(usuariosNuevosData)) {
-      if (typeof monthData === 'object' && monthData !== null) {
-        for (const [, planData] of Object.entries(monthData)) {
-          if (typeof planData === 'object' && planData !== null && 'new_users' in planData) {
-            totalNewCompanies += (planData as any).new_users || 0
-          }
-        }
-      }
-    }
-
-    // CAC Global = gasto total / nuevas empresas totales
-    cacValue = totalNewCompanies > 0 ? totalCacSpend / totalNewCompanies : 0
   }
 
-  // LTV Global - debe calcularse desde la API
-  // Por ahora obtenemos directamente desde el fetch
-  const { data: ltvRawData } = useSWR(`/api/micro/ltv`, fetcher)
-  let ltvValue = 0
-  if (ltvRawData) {
-    const ltvValues = Object.values(ltvRawData).map((plan: any) => ({
-      ltv: plan.ltv || 0,
-      companies: plan.companies || 0,
-    }))
-    // Promedio ponderado por companies
-    const totalWeighted = ltvValues.reduce((s: number, i: any) => s + i.ltv * i.companies, 0)
-    const totalCompanies = ltvValues.reduce((s: number, i: any) => s + i.companies, 0)
-    ltvValue = totalCompanies > 0 ? totalWeighted / totalCompanies : 0
-  }
+  const { cac, ltv } = getMetrics()
+  const ratio = cac > 0 ? ltv / cac : 0
 
   const chartData = [
-    { name: "CAC", value: cacValue },
-    { name: "LTV", value: ltvValue },
+    { name: "CAC", value: cac, color: "#ef4444" },
+    { name: "LTV", value: ltv, color: "#10b981" },
   ]
 
+  if (isLoading) return <div className="h-[350px] flex items-center justify-center"><Loader2 className="animate-spin text-indigo-500" /></div>
+
   return (
-    <div className="bg-card rounded-xl border border-border p-6">
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold text-card-foreground">CAC VS LTV</h3>
+    <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
+      <div className="flex justify-between items-start mb-6">
+        <div>
+          <h3 className="text-lg font-semibold text-card-foreground">Unit Economics</h3>
+          <p className="text-xs text-muted-foreground">CAC vs Lifetime Value</p>
+        </div>
+        <div className={`px-3 py-1 rounded-full text-xs font-bold ${ratio >= 3 ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+          Ratio: {ratio.toFixed(2)}x
+        </div>
       </div>
 
-      <div className="h-[280px]">
+      <div className="h-[250px]">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-            <XAxis dataKey="name" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
-            <YAxis
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
-              tickFormatter={(v) => `$${v}`}
+          <BarChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+            <XAxis dataKey="name" axisLine={false} tickLine={false} />
+            <YAxis tickFormatter={(v) => `$${v}`} axisLine={false} tickLine={false} fontSize={12} />
+            <Tooltip 
+              cursor={{ fill: '#f9fafb' }}
+              formatter={(v: number) => [`$${v.toLocaleString()}`, ""]}
+              contentStyle={{ borderRadius: '8px' }}
             />
-            <Tooltip
-              formatter={(value: number) => [`$${value.toFixed(2)}`, ""]}
-              contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}
-            />
-            <Bar dataKey="value" fill="#1e1b4b" radius={[4, 4, 0, 0]} barSize={60} />
+            
+            {/* Línea que marca donde el LTV sería 3 veces el CAC actual */}
+            <ReferenceLine y={cac * 3} stroke="#94a3b8" strokeDasharray="5 5" label={{ position: 'right', value: 'Goal (3x)', fill: '#94a3b8', fontSize: 10 }} />
+            
+            <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={65}>
+              {chartData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>
 
-      <p className="text-xs text-muted-foreground mt-3">
-        CAC promedio por cliente | LTV promedio global
+      <p className="text-[11px] text-center text-muted-foreground mt-4 italic">
+        {ratio < 3 
+          ? "⚠️ El LTV debería ser al menos 3 veces el CAC para asegurar rentabilidad a largo plazo." 
+          : "✅ Excelente relación de rentabilidad por cliente."}
       </p>
     </div>
   )

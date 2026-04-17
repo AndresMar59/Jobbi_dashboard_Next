@@ -3,199 +3,100 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
 import useSWR from "swr"
 import { useFilters } from "@/lib/contexts/filters-context"
+import { Loader2, AlertTriangle } from "lucide-react"
 
-// Tipos
-interface ARPUResponse {
-  [plan: string]: {
-    [month: string]: {
-      arpu: number
-      users: number
-    }
-  }
+interface SaasMetricsHistoryResponse {
+  success: boolean;
+  data: Array<{
+    period: { date_from: string };
+    accounts: { active: number };
+    rates: { arpa: number };
+  }>;
 }
 
-interface UsuariosActivosResponse {
-  [month: string]: {
-    active_users?: number
-    [plan: string]: { companies: string[] } | number | undefined
-  }
+interface ChartDataPoint {
+  monthLabel: string;
+  arpa: number;
+  clientesActivos: number;
 }
 
-const fetcher = (url: string) => fetch(url).then(res => res.json())
 
-const ALL_MONTHS = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
+// El fetcher para el proxy local no necesita el API Key aquí, 
+// ya que el proxy la inyectará en el servidor.
+const fetcher = (url: string) => fetch(url).then(async res => {
+  if (!res.ok) {
+    const txt = await res.text();
+    // Si recibes un HTML (error 404), esto atrapará el error de JSON
+    throw new Error(res.status === 404 ? "Ruta /api/proxy no encontrada (404)" : "Error en el servidor");
+  }
+  return res.json();
+})
+
 const MONTH_LABELS = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
 
 export function ARPAClientesChart() {
-  const { filters, setPlan } = useFilters()
+  const { filters } = useFilters()
   
-  const { data: arpuData, isLoading: loadingArpu } = useSWR<ARPUResponse>(
-    "/api/micro/arpu",
-    fetcher,
-    { revalidateOnFocus: false }
-  )
-  
-  const { data: usuariosData, isLoading: loadingUsuarios } = useSWR<UsuariosActivosResponse>(
-    "/api/micro/usuarios_activos",
-    fetcher,
-    { revalidateOnFocus: false }
-  )
-  
-  const isLoading = loadingArpu || loadingUsuarios
+  // CORRECCIÓN: Agregamos isLoading de nuevo
+  const { data: response, error, isLoading } = useSWR<SaasMetricsHistoryResponse>(
+    `/api/proxy?&date_to=${filters.year}-12-31&include_payroll=${filters.IncludePayroll}&date_from=${filters.year}-01-01`,
+    fetcher
+  );        
 
-  // Obtener planes disponibles
-  const plans = arpuData ? Object.keys(arpuData) : []
-
-  // Procesar datos combinando ARPU y Clientes Activos
-  const chartData = ALL_MONTHS.map((monthNum, index) => {
-    const monthKey = `${filters.year}-${monthNum}`
-    
-    let arpu = 0
-    let clientesActivos = 0
-    
-    if (arpuData) {
-      if (filters.plan === "Todos") {
-        // Promedio de ARPU de todos los planes
-        let totalArpu = 0
-        let count = 0
-        for (const planData of Object.values(arpuData)) {
-          if (planData[monthKey]) {
-            totalArpu += planData[monthKey].arpu
-            count++
-          }
-        }
-        arpu = count > 0 ? totalArpu / count : 0
-      } else {
-        // ARPU del plan específico
-        arpu = arpuData[filters.plan]?.[monthKey]?.arpu || 0
-      }
-    }
-    
-    if (usuariosData && usuariosData[monthKey]) {
-      const monthData = usuariosData[monthKey]
-      
-      if (filters.plan === "Todos") {
-        // Sumar companies de todos los planes
-        for (const [key, value] of Object.entries(monthData)) {
-          if (key !== 'active_users' && typeof value === 'object' && value !== null && 'companies' in value) {
-            clientesActivos += (value as { companies: string[] }).companies.length
-          }
-        }
-      } else {
-        // Companies del plan específico
-        const planData = monthData[filters.plan]
-        if (planData && typeof planData === 'object' && 'companies' in planData) {
-          clientesActivos = (planData as { companies: string[] }).companies.length
-        }
-      }
-    }
-    
-    console.log(`[v0] Month ${monthKey}: ARPU=${arpu}, Clientes Activos=${clientesActivos}`)
-    
+  const chartData = response?.data?.map((item) => {
+    const monthPart = item.period?.date_from?.split('-')[1]; 
+    const monthIndex = monthPart ? parseInt(monthPart) - 1 : 0;
     return {
-      month: monthKey,
-      monthLabel: MONTH_LABELS[index],
-      arpu,
-      clientesActivos,
+      monthLabel: MONTH_LABELS[monthIndex] || "S/N",
+      arpa: item.rates?.arpa ?? 0,
+      clientesActivos: item.accounts?.active ?? 0,
     }
-  })
+  }) || []
 
-  console.log("[v0] ARPU Data:", arpuData)
-  console.log("[v0] Usuarios Data:", usuariosData)
-  console.log("[v0] Chart Data:", chartData)
 
-  if (isLoading) {
-    return (
-      <div className="rounded-lg border bg-card p-6">
-        <h3 className="text-lg font-semibold text-card-foreground mb-4">ARPA vs # clientes activos</h3>
-        <div className="h-[350px] flex items-center justify-center text-muted-foreground">
-          Cargando datos...
-        </div>
-      </div>
-    )
-  }
+    const displayData = filters.month === "Todos" 
+    ? chartData 
+    : chartData.filter((d: ChartDataPoint) => d.monthLabel.startsWith(filters.month.substring(0, 4)))
+
+  if (isLoading) return (
+    <div className="h-[350px] flex items-center justify-center border rounded-lg bg-card">
+      <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+    </div>
+  )
+
+  if (error) return (
+    <div className="h-[350px] flex flex-col items-center justify-center border border-red-200 bg-red-50 rounded-lg p-4 text-center">
+      <AlertTriangle className="h-8 w-8 text-red-500 mb-2" />
+      <h4 className="font-bold text-red-800">Error en el Gráfico:</h4>
+      <code className="text-[10px] bg-white p-2 border rounded mt-2 text-red-600 block max-w-full overflow-auto">
+        {error.message}
+      </code>
+      <p className="text-[10px] mt-4 text-red-400">Si ves "404", revisa que exista /app/api/proxy/route.ts</p>
+    </div>
+  )
+
+  if (!isLoading && chartData.length === 0) return (
+    <div className="h-[350px] flex items-center justify-center border border-dashed rounded-lg text-muted-foreground">
+      No hay datos históricos para {filters.year}.
+    </div>
+  )
 
   return (
-    <div className="rounded-lg border bg-card p-6">
-      <h3 className="text-lg font-semibold text-card-foreground mb-4">ARPA vs # clientes activos</h3>
-
-      <div className="h-[350px] w-full">
+    <div className="rounded-lg border bg-card p-6 shadow-sm">
+      <h3 className="text-lg font-semibold mb-4">ARPA vs Clientes ({filters.year})</h3>
+      <div className="h-[300px] w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData} margin={{ top: 10, right: 30, left: 10, bottom: 20 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-            <XAxis 
-              dataKey="monthLabel" 
-              stroke="#6b7280" 
-              tickMargin={10} 
-              tick={{ fontSize: 12 }} 
-              height={40} 
-            />
-            <YAxis 
-              yAxisId="left"
-              stroke="#dc2626"
-              tick={{ fontSize: 12 }} 
-              tickFormatter={(v) => `$${v}`}
-              width={50}
-            />
-            <YAxis 
-              yAxisId="right"
-              orientation="right"
-              stroke="#1e3a8a"
-              tick={{ fontSize: 12 }}
-              width={40}
-            />
-            <Legend
-              verticalAlign="top"
-              height={30}
-              iconSize={10}
-              wrapperStyle={{ fontSize: "12px", paddingBottom: "10px" }}
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "white",
-                border: "1px solid #e5e7eb",
-                borderRadius: "6px",
-              }}
-              formatter={(value: number, name: string) => {
-                if (name === "ARPA $") return [`$${value.toFixed(2)}`, name]
-                return [value, name]
-              }}
-            />
-            <Line
-              yAxisId="right"
-              type="monotone"
-              dataKey="clientesActivos"
-              name="# clientes activos"
-              stroke="#1e3a8a"
-              strokeWidth={2}
-              dot={{ fill: "white", r: 4, stroke: "#1e3a8a", strokeWidth: 2 }}
-              isAnimationActive={false}
-            />
-            <Line
-              yAxisId="left"
-              type="monotone"
-              dataKey="arpu"
-              name="ARPA $"
-              stroke="#dc2626"
-              strokeWidth={2}
-              dot={{ fill: "white", r: 4, stroke: "#dc2626", strokeWidth: 2 }}
-              isAnimationActive={false}
-            />
+          <LineChart data={displayData}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+            <XAxis dataKey="monthLabel" fontSize={12} />
+            <YAxis yAxisId="left" fontSize={12} tickFormatter={(v) => `$${v}`} />
+            <YAxis yAxisId="right" orientation="right" fontSize={12} />
+            <Tooltip />
+            <Legend />
+            <Line yAxisId="left" type="monotone" dataKey="arpa" name="ARPA" stroke="#dc2626" strokeWidth={2} />
+            <Line yAxisId="right" type="monotone" dataKey="clientesActivos" name="Clientes" stroke="#1e3a8a" strokeWidth={2} />
           </LineChart>
         </ResponsiveContainer>
-      </div>
-
-      <div className="mt-4">
-        <select 
-          className="w-full h-10 rounded-md border border-input bg-muted/30 px-3 py-2 text-sm font-medium transition-colors text-muted-foreground"
-          value={filters.plan}
-          onChange={(e) => setPlan(e.target.value)}
-        >
-          <option value="Todos">Todos los planes</option>
-          {plans.map((plan) => (
-            <option key={plan} value={plan}>{plan}</option>
-          ))}
-        </select>
       </div>
     </div>
   )

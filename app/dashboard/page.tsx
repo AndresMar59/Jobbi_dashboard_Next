@@ -11,7 +11,7 @@ import { ExpansionKPICard } from "@/components/dashboard/expansion-kpi-card"
 import { DowngradeKPICard } from "@/components/dashboard/downgrade-kpi-card"
 import { ChurnKPICard } from "@/components/dashboard/churn-kpi-card"
 import { TasaRetencionKPICard } from "@/components/dashboard/tasa-retencion-kpi-card"
-import { MRRMetricsChart } from "@/components/dashboard/mrr-metrics-chart"
+import { MRRDATA } from "@/components/dashboard/mrr-metrics-chart"
 import { ARRMetricsChart } from "@/components/dashboard/arr-metrics-chart"
 import { CACVsLTVChart } from "@/components/dashboard/cac-vs-ltv-chart"
 import { DollarChurnChart } from "@/components/dashboard/dollar-churn-chart"
@@ -52,7 +52,7 @@ export default function DashboardMVP() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <MRRMetricsChart />
+            <MRRDATA />
             <ARRMetricsChart />
           </div>
 

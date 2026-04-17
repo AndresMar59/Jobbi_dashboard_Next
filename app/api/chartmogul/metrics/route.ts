@@ -2,13 +2,13 @@ import { NextResponse } from "next/server"
 
 export async function GET() {
   try {
-    const apiKey = process.env.CHARTMOGUL_API_KEY
+    const apiKey = process.env.jobbi_micro
 
     if (!apiKey) {
-      return NextResponse.json({ error: "ChartMogul API key not configured" }, { status: 500 })
+      return NextResponse.json({ error: "No sirve la api" }, { status: 500 })
     }
 
-    console.log("[v0] Fetching ChartMogul metrics")
+    console.log("Jobbi")
 
     const response = await fetch(
       "https://api.chartmogul.com/v1/metrics/all?start-date=2024-01-01&end-date=2024-12-31&interval=month",

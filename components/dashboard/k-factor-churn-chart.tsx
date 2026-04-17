@@ -2,94 +2,110 @@
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
 import { useFilters } from "@/lib/contexts/filters-context"
-import { useUsuariosChurnedData, MONTH_LABELS } from "@/lib/hooks/use-api-data"
-import { ALL_MONTHS } from "@/lib/api/metrics"
-import { Loader2 } from "lucide-react"
+import useSWR from "swr"
+import { Loader2, AlertCircle } from "lucide-react"
+
+interface ChartDataPoint {
+  mes: string;
+  churn: number;
+  kFactor: number;
+}
+
+const fetcher = (url: string) => fetch(url).then(res => res.json())
+
+const MONTH_LABELS = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
 
 export function KFactorChurnChart() {
   const { filters } = useFilters()
 
-  console.log("[v0] KFactorChurnChart - Filters:", { year: filters.year, plan: filters.plan, month: filters.month })
+  // Usamos el Proxy centralizado (una sola llamada, datos consistentes)
+  const { data: response, error, isLoading } = useSWR(
+    `/api/proxy?&date_to=${filters.year}-12-31&include_payroll=${filters.IncludePayroll}&date_from=${filters.year}-01-01`,
+    fetcher
+  )
 
-  // Obtener datos de usuarios churned
-  const { chartData: churnedUsersData, isLoading: loadingChurn } = useUsuariosChurnedData({
-    year: filters.year,
-    month: "Todos",
-    plan: filters.plan,
-  })
-
-  console.log("[v0] KFactorChurnChart - churnedUsersData:", churnedUsersData)
-
-  const isLoading = loadingChurn
-
-  // Preparar datos para el gráfico - usar usuarios churned como churn
-  // y calcular un K-factor derivado (ratio de crecimiento vs mes anterior)
-  const combinedData = ALL_MONTHS.map((m, index) => {
-    const label = MONTH_LABELS[m]
-    const churnEntry = churnedUsersData.find(d => d.monthLabel === label)
-    const churnValue = churnEntry?.churnedUsers || 0
-
-    console.log(`[v0] ${label}: churnValue=${churnValue}`, churnEntry)
-
-    // K-factor: ratio de crecimiento vs mes anterior
-    // Simplificado: base creciente con ajuste por churn
-    let kFactor = 20 + index * 2.5
-    if (churnValue > 0) {
-      kFactor = Math.max(15, kFactor - (churnValue / 10))
-    }
+  const chartData: ChartDataPoint[] = response?.data?.map((item: any) => {
+    const monthPart = item.period?.date_from?.split('-')[1]
+    const monthIndex = monthPart ? parseInt(monthPart) - 1 : 0
 
     return {
-      mes: label,
-      churn: churnValue,
-      kFactor: Math.round(kFactor * 10) / 10,
+      mes: MONTH_LABELS[monthIndex],
+      // Usuarios que se fueron (Churn)
+      churn: item.accounts?.churned || 0,
+      // Usuarios ganados por K-Factor (Viralidad/Referidos)
+      // Si el campo se llama distinto en external_metrics, ajústalo aquí
+      kFactor: item.external_required?.k_factor ||  0,
     }
-  }).filter(d => filters.month === "Todos" || d.mes === filters.month)
+  }) || []
+
+  const displayData = filters.month === "Todos" 
+    ? chartData 
+    : chartData.filter((d: ChartDataPoint) => d.mes === filters.month.substring(0, 3))
+
+  if (isLoading) return (
+    <div className="flex items-center justify-center h-[400px] border rounded-lg bg-card">
+      <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+    </div>
+  )
+
+  if (error) return (
+    <div className="flex flex-col items-center justify-center h-[400px] border border-red-100 bg-red-50 rounded-lg text-red-500">
+      <AlertCircle className="h-8 w-8 mb-2" />
+      <span className="text-sm font-medium">Error al cargar métricas de crecimiento</span>
+    </div>
+  )
 
   return (
-    <div className="rounded-lg border border-border bg-card p-6 shadow-sm w-full">
-      <h3 className="text-lg font-semibold text-card-foreground mb-4">K-factor vs Churn</h3>
+    <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
+      <h3 className="text-lg font-semibold text-card-foreground mb-4">Crecimiento Viral vs Churn (Usuarios)</h3>
 
-      {isLoading ? (
-        <div className="flex items-center justify-center h-[350px]">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-      ) : (
-        <div className="h-[350px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={combinedData} margin={{ top: 25, right: 20, left: 10, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis
-                dataKey="mes"
-                stroke="#6b7280"
-                fontSize={12}
-                tickMargin={10}
-                interval={0}
-                height={40}
-                padding={{ left: 20, right: 20 }}
-              />
-              <YAxis stroke="#6b7280" fontSize={12} width={30} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "white",
-                  border: "1px solid #e5e7eb",
-                  borderRadius: "6px",
-                }}
-              />
-              <Legend
-                verticalAlign="top"
-                height={30}
-                iconSize={10}
-                wrapperStyle={{
-                  fontSize: "12px",
-                  paddingBottom: "10px",
-                }}
-              />
-              <Line type="monotone" dataKey="churn" stroke="#ef4444" strokeWidth={2} name="Usuarios # Churn" dot={{ r: 4, fill: "white", stroke: "#ef4444", strokeWidth: 2 }} isAnimationActive={false} />
-              <Line type="monotone" dataKey="kFactor" stroke="#09124F" strokeWidth={2} name="Usuarios # K-factor" dot={{ r: 4, fill: "white", stroke: "#09124F", strokeWidth: 2 }} isAnimationActive={false} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      )}
+      <div className="h-[350px] w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={displayData} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+            <XAxis 
+              dataKey="mes" 
+              stroke="#6b7280" 
+              fontSize={12} 
+              tickLine={false} 
+              axisLine={false} 
+            />
+            <YAxis 
+              stroke="#6b7280" 
+              fontSize={12} 
+              axisLine={false} 
+              tickLine={false} 
+              tickFormatter={(v) => Math.floor(v).toString()}
+            />
+            <Tooltip
+              contentStyle={{ backgroundColor: "white", borderRadius: "8px", border: "1px solid #e5e7eb" }}
+              formatter={(value: number) => [value, "Usuarios"]}
+            />
+            <Legend verticalAlign="top" height={40} iconType="circle" />
+            
+            <Line 
+              type="monotone" 
+              dataKey="kFactor" 
+              stroke="#09124F" 
+              name="Nuevos (K-Factor)" 
+              strokeWidth={3} 
+              dot={{ r: 4, fill: "white", stroke: "#09124F", strokeWidth: 2 }}
+            />
+            <Line 
+              type="monotone" 
+              dataKey="churn" 
+              stroke="#ef4444" 
+              name="Perdidos (Churn)" 
+              strokeWidth={2} 
+              strokeDasharray="5 5" // Línea punteada para el churn (pérdida)
+              dot={{ r: 4, fill: "white", stroke: "#ef4444", strokeWidth: 2 }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+      <p className="text-[10px] text-muted-foreground mt-2 italic text-center">
+        Muestra la relación entre usuarios ganados por viralidad vs. usuarios perdidos en el periodo.
+      </p>
     </div>
   )
 }

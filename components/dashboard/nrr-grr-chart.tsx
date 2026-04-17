@@ -2,156 +2,117 @@
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
 import { useFilters } from "@/lib/contexts/filters-context"
-import { 
-  useMRRData, 
-  useChurnMRRData, 
-  useContractionMRRData, 
-  useExpansionMRRData,
-  useTasaRetentionData,
-  MONTH_LABELS 
-} from "@/lib/hooks/use-api-data"
-import { ALL_MONTHS } from "@/lib/api/metrics"
+import useSWR from "swr"
+import { Loader2, AlertCircle } from "lucide-react"
+
+// Interface para evitar errores de tipo en el map/filter
+interface ChartDataPoint {
+  mes: string;
+  grr: number;
+  nrr: number;
+  retencion: number;
+}
+
+const fetcher = (url: string) => fetch(url).then(res => {
+  if (!res.ok) throw new Error("Error en el proxy");
+  return res.json();
+})
+
+const MONTH_LABELS = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
 
 export function NRRGRRChart() {
   const { filters } = useFilters()
 
-  // Obtener datos de todas las métricas necesarias
-  const { chartData: mrrData } = useMRRData({
-    year: filters.year,
-    month: "Todos",
-    plan: filters.plan,
-  })
+  // Una sola llamada para traer todas las métricas de retención
+  const { data: response, error, isLoading } = useSWR(
+    `/api/proxy?&date_to=${filters.year}-12-31&include_payroll=${filters.IncludePayroll}&date_from=${filters.year}-01-01`,
+    fetcher
+  )
 
-  const { chartData: churnMRRData } = useChurnMRRData({
-    year: filters.year,
-    month: "Todos",
-    plan: filters.plan,
-  })
-
-  const { chartData: contractionMRRData } = useContractionMRRData({
-    year: filters.year,
-    month: "Todos",
-    plan: filters.plan,
-  })
-
-  const { chartData: expansionMRRData } = useExpansionMRRData({
-    year: filters.year,
-    month: "Todos",
-    plan: filters.plan,
-  })
-
-  const { chartData: tasaRetentionData } = useTasaRetentionData({
-    year: filters.year,
-    month: "Todos",
-    plan: filters.plan,
-  })
-
-  // Construir data para el gráfico
-  const chartData = ALL_MONTHS.map((m) => {
-    const label = MONTH_LABELS[m]
-
-    // Obtener MRR del mes anterior (para calcular GRR y NRR)
-    const monthIndex = parseInt(m) - 1
-    const prevMonth = monthIndex === 0 ? 12 : monthIndex
-    const prevMonthStr = String(prevMonth).padStart(2, "0")
-    const mrrPrevEntry = mrrData.find(d => d.month.endsWith(`-${prevMonthStr}`))
-    const mrrInitial = mrrPrevEntry?.mrr || 0
-
-    // MRR actual del mes
-    const mrrEntry = mrrData.find(d => d.monthLabel === label)
-    const mrrActual = mrrEntry?.mrr || 0
-
-    // Churn MRR del mes
-    const churnEntry = churnMRRData.find(d => d.monthLabel === label)
-    const churnMRR = churnEntry?.churnMRR || 0
-
-    // Contraction MRR del mes
-    const contractionEntry = contractionMRRData.find(d => d.monthLabel === label)
-    const contractionMRR = contractionEntry?.contractionMRR || 0
-
-    // Expansion MRR del mes
-    const expansionEntry = expansionMRRData.find(d => d.monthLabel === label)
-    const expansionMRR = expansionEntry?.expansionMRR || 0
-
-    // Tasa de Retención del mes
-    const tasaEntry = tasaRetentionData.find(d => d.monthLabel === label)
-    const tasaRetencion = tasaEntry?.retentionRate !== null && tasaEntry?.retentionRate !== undefined 
-      ? tasaEntry.retentionRate 
-      : 0
-
-    // Calcular GRR: (MRR_inicial - (Churn MRR + Contraction MRR)) / MRR_inicial * 100
-    // Si no hay MRR inicial (ej: enero), GRR = 0 (sin datos disponibles)
-    const grr = mrrInitial > 0 
-      ? ((mrrInitial - (churnMRR + contractionMRR)) / mrrInitial) * 100 
-      : 0
-
-    // Calcular NRR: (MRR_inicial - Churn MRR - Contraction MRR + Expansion MRR) / MRR_inicial * 100
-    // Si no hay MRR inicial (ej: enero), NRR = 0 (sin datos disponibles)
-    const nrr = mrrInitial > 0 
-      ? ((mrrInitial - churnMRR - contractionMRR + expansionMRR) / mrrInitial) * 100 
-      : 0
+  // Mapeamos los datos usando los campos que ya vienen calculados en la API
+  const chartData: ChartDataPoint[] = response?.data?.map((item: any) => {
+    const monthPart = item.period?.date_from?.split('-')[1];
+    const monthIndex = monthPart ? parseInt(monthPart) - 1 : 0;
 
     return {
-      mes: label,
-      grr: Math.round(grr * 10) / 10,
-      nrr: Math.round(nrr * 10) / 10,
-      retencion: Math.round(tasaRetencion * 10) / 10,
+      mes: MONTH_LABELS[monthIndex] || "S/N",
+      // Usamos los campos del objeto 'rates' de tu API
+      grr: item.rates?.grr ?? 0,
+      nrr: item.rates?.nrr ?? 0,
+      retencion: item.rates?.retention_rate ?? 0,
     }
-  }).filter(d => filters.month === "Todos" || d.mes === filters.month)
+  }) || []
+
+  // Filtrado por mes (compara las primeras 3 letras)
+  const displayData = filters.month === "Todos" 
+    ? chartData 
+    : chartData.filter((d: ChartDataPoint) => d.mes === filters.month.substring(0, 3));
+
+  if (isLoading) return (
+    <div className="h-[400px] flex items-center justify-center border rounded-lg bg-card shadow-sm">
+      <Loader2 className="h-8 w-8 animate-spin text-blue-900" />
+    </div>
+  )
+
+  if (error) return (
+    <div className="h-[400px] flex flex-col items-center justify-center border border-red-100 bg-red-50 rounded-lg text-red-500">
+      <AlertCircle className="h-8 w-8 mb-2" />
+      <span className="text-sm font-medium">Error al cargar métricas de retención</span>
+    </div>
+  )
 
   return (
-    <div className="rounded-lg border bg-card p-6">
-      <h3 className="text-lg font-semibold text-card-foreground mb-4">NRR vs GRR</h3>
+    <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
+      <h3 className="text-lg font-semibold text-card-foreground mb-4">NRR vs GRR (%)</h3>
 
       <div className="h-[350px] w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData} margin={{ top: 10, right: 20, left: 5, bottom: 20 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-            <XAxis dataKey="mes" stroke="#6b7280" padding={{ left: 20, right: 20 }} fontSize={12} tickMargin={10} interval={0} height={40}/>
-            <YAxis stroke="#6b7280" fontSize={12} tickFormatter={(value) => `${value}%`} width={40} />
+          <LineChart data={displayData} margin={{ top: 10, right: 20, left: 5, bottom: 20 }}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+            <XAxis 
+              dataKey="mes" 
+              stroke="#6b7280" 
+              fontSize={12} 
+              tickLine={false}
+              axisLine={false}
+            />
+            <YAxis 
+              stroke="#0f141f" 
+              fontSize={12} 
+              tickFormatter={(v) => `${v}%`} 
+              width={40}
+              axisLine={false}
+              tickLine={false}
+            />
             <Tooltip
-              contentStyle={{
-                backgroundColor: "white",
-                border: "1px solid #e5e7eb",
-                borderRadius: "6px",
-              }}
-              formatter={(value: number) => `${value.toFixed(2)}%`}
+              contentStyle={{ backgroundColor: "white", borderRadius: "8px", border: "1px solid #e5e7eb" }}
+              formatter={(value: number) => [`${value.toFixed(1)}%`, undefined]}
             />
-            <Legend
-              verticalAlign="top"
-              height={30}
-              iconSize={10}
-              wrapperStyle={{
-                fontSize: "12px",
-                paddingBottom: "10px",
-              }}
-            />
+            <Legend verticalAlign="top" height={40} iconType="circle" wrapperStyle={{ fontSize: "12px" }} />
+            
             <Line
               type="monotone"
               dataKey="grr"
               stroke="#09124F"
+              name="GRR (Neto)"
               strokeWidth={2}
               dot={{ fill: "white", r: 4, stroke: "#09124F", strokeWidth: 2 }}
-              name="GRR %"
-              isAnimationActive={false}
             />
             <Line
               type="monotone"
               dataKey="nrr"
               stroke="#10b981"
+              name="NRR (Con Expansión)"
               strokeWidth={2}
               dot={{ fill: "white", r: 4, stroke: "#10b981", strokeWidth: 2 }}
-              name="NRR %"
-              isAnimationActive={false}
             />
             <Line
               type="monotone"
               dataKey="retencion"
-              stroke="#6b018bff"
+              stroke="#6b018b"
+              name="Retención Logo"
               strokeWidth={2}
-              dot={{ fill: "white", r: 4, stroke: "#6b018bff", strokeWidth: 2 }}
-              name="% Retención"
-              isAnimationActive={false}
+              dot={{ fill: "white", r: 4, stroke: "#6b018b", strokeWidth: 2 }}
             />
           </LineChart>
         </ResponsiveContainer>
