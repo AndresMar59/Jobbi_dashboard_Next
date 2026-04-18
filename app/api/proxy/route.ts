@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
   try {
     const res = await fetch(apiUrl, {
       headers: {
-        'x-api-key': 'SrUlbNojU8DO7QAMu4d98EKMwvl7IA0a',
+        'x-api-key': process.env.jobbi_micro || '',
         'Accept': 'application/json'
       },
       cache: 'no-store'
