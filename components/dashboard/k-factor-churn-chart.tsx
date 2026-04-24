@@ -61,35 +61,41 @@ export function KFactorChurnChart() {
 
       <div className="h-[350px] w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={displayData} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
+          <LineChart data={displayData} margin={{ top: 5, right: 25, left:-10, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
             <XAxis 
               dataKey="mes" 
-              stroke="#6b7280" 
-              fontSize={12} 
+              tick={{ fill: "oklch(0.55 0 0)", fontSize: 12 }}
               tickLine={false} 
-              axisLine={false} 
+              axisLine={true} 
+              dy={10}
             />
             <YAxis 
-              stroke="#6b7280" 
-              fontSize={12} 
-              axisLine={false} 
-              tickLine={false} 
+              tick={{ fill: "oklch(0.55 0 0)", fontSize: 12 }}
+              axisLine={true} 
+              tickLine={true} 
               tickFormatter={(v) => Math.floor(v).toString()}
             />
             <Tooltip
-              contentStyle={{ backgroundColor: "white", borderRadius: "8px", border: "1px solid #e5e7eb" }}
+              contentStyle={{ backgroundColor: "oklch(1 0 0)",
+                border: "1px solid oklch(0.92 0 0)",
+                borderRadius: "0.5rem",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}
               formatter={(value: number) => [value, "Usuarios"]}
             />
-            <Legend verticalAlign="top" height={40} iconType="circle" />
+            <Legend verticalAlign="top"
+              align="left"
+              height={40}
+              iconType="circle"
+              wrapperStyle={{ fontSize: "12px", paddingBottom: "8px", top: 0, right: 10 }}/>
             
             <Line 
               type="monotone" 
               dataKey="kFactor" 
               stroke="#09124F" 
               name="Nuevos (K-Factor)" 
-              strokeWidth={3} 
-              dot={{ r: 4, fill: "white", stroke: "#09124F", strokeWidth: 2 }}
+              strokeWidth={2}
+              r = {3} 
             />
             <Line 
               type="monotone" 
@@ -97,15 +103,11 @@ export function KFactorChurnChart() {
               stroke="#ef4444" 
               name="Perdidos (Churn)" 
               strokeWidth={2} 
-              strokeDasharray="5 5" // Línea punteada para el churn (pérdida)
-              dot={{ r: 4, fill: "white", stroke: "#ef4444", strokeWidth: 2 }}
+              r = {3}
             />
           </LineChart>
         </ResponsiveContainer>
       </div>
-      <p className="text-[10px] text-muted-foreground mt-2 italic text-center">
-        Muestra la relación entre usuarios ganados por viralidad vs. usuarios perdidos en el periodo.
-      </p>
     </div>
   )
 }

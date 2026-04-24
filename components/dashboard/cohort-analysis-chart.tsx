@@ -36,7 +36,7 @@ export function CohortAnalysisChart() {
     const monthPart = item.period?.date_from?.split('-')[1]
     const monthIndex = monthPart ? parseInt(monthPart) - 1 : 0
     
-    const baseUsers = item.accounts?.active || 0
+    const baseUsers = item.accounts?.total?.active || 0
     const retentionValues: (number | null)[] = [100] // Mes 0 siempre es 100%
 
     // Simulamos/Calculamos los meses siguientes basándonos en la tendencia de churn

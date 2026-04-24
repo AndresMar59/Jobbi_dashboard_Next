@@ -1,145 +1,111 @@
 "use client"
 
 import { Card, CardContent } from "@/components/ui/card"
-import { Users, TrendingDown, TrendingUp } from "lucide-react"
-import useSWR from "swr"
+import { Users, TrendingUp, TrendingDown, AlertCircle } from "lucide-react"
 import { useFilters } from "@/lib/contexts/filters-context"
+import useSWR from "swr"
 
-interface ChurnedPlanData {
-  companies: string[]
-  churned_users: number
-}
-
-interface ChurnedResponse {
-  [month: string]: {
-    [plan: string]: ChurnedPlanData
-  }
-}
-
-const fetcher = async (url: string) => {
-  const response = await fetch(url)
-  if (!response.ok) throw new Error("Error fetching data")
-  return response.json()
-}
-
-const ALL_MONTHS = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
-const MONTH_MAP: { [key: string]: string } = {
-  "Todos": "Todos",
-  "Ene": "01",
-  "Feb": "02",
-  "Mar": "03",
-  "Abr": "04",
-  "May": "05",
-  "Jun": "06",
-  "Jul": "07",
-  "Ago": "08",
-  "Sep": "09",
-  "Oct": "10",
-  "Nov": "11",
-  "Dic": "12"
-}
+const fetcher = (url: string) => fetch(url).then(res => {
+  if (!res.ok) throw new Error('Error en el proxy');
+  return res.json();
+})
 
 export function ChurnKPICard() {
   const { filters } = useFilters()
-  const { year, plan, month } = filters
 
-  console.log("[v0] ChurnKPICard - Filters:", { year, plan, month })
-  
-  const { data: rawData, isLoading } = useSWR<ChurnedResponse>(
-    "/api/micro/usuarios_churned",
-    fetcher,
-    { revalidateOnFocus: false }
+  // Usamos el proxy central para traer los 12 meses
+  const { data: response, isLoading, error } = useSWR(
+    `/api/proxy?months=12&date_to=${filters.year}-12-31&include_payroll=${filters.IncludePayroll}&date_from=${filters.year}-01-01`, 
+    fetcher
   )
-  
-  // Procesar datos con filtros
-  const processData = () => {
-    if (!rawData) return { current: 0, previous: 0, change: 0 }
+
+  const getChurnMetrics = () => {
+    const history = response?.data || []
+    if (history.length === 0) return { current: 0, percent: 0 }
+
+    // 1. Encontrar el índice del mes seleccionado
+    let currentIndex = history.length - 1
     
-    // Filtrar por año y plan
-    const filteredByMonth: { month: string; churned: number }[] = []
-    
-    for (const monthNum of ALL_MONTHS) {
-      const monthKey = `${year}-${monthNum}`
-      const monthData = rawData[monthKey]
-      
-      let churned = 0
-      if (monthData) {
-        if (plan === "Todos") {
-          // Sumar todos los planes
-          for (const planData of Object.values(monthData)) {
-            churned += planData.churned_users || 0
-          }
-        } else if (monthData[plan]) {
-          churned = monthData[plan].churned_users || 0
-        }
-      }
-      
-      filteredByMonth.push({ month: monthKey, churned })
+    if (filters.month !== "Todos") {
+      const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
+
+
+      const foundIndex = history.findIndex((item: any) => {
+        const dateStr = item.period?.date_from || ""
+        const monthPart = dateStr.split("-")[1]
+        if (!monthPart) return false
+        const monthIdx = parseInt(monthPart, 10) - 1
+        // Nota: Asegúrate de que filters.month coincida con los nombres del array
+        return monthNames[monthIdx] === filters.month || filters.month.startsWith(monthNames[monthIdx].substring(0,3))
+      })
+      if (foundIndex !== -1) currentIndex = foundIndex
     }
-    
-    // Si hay filtro de mes específico
-    if (month !== "Todos") {
-      const monthNum = MONTH_MAP[month]
-      const monthKey = `${year}-${monthNum}`
-      const currentData = filteredByMonth.find(m => m.month === monthKey)
-      
-      // Mes anterior
-      const prevMonthNum = parseInt(monthNum) === 1 ? 12 : parseInt(monthNum) - 1
-      const prevYear = parseInt(monthNum) === 1 ? String(Number(year) - 1) : year
-      const prevMonthKey = `${prevYear}-${prevMonthNum.toString().padStart(2, "0")}`
-      const prevData = filteredByMonth.find(m => m.month === prevMonthKey)
-      
-      const current = currentData?.churned || 0
-      const previous = prevData?.churned || 0
-      const change = previous > 0 ? ((current - previous) / previous) * 100 : 0
-      
-      console.log("[v0] ChurnKPICard - Month filter:", { month, monthNum, monthKey, current, previous, change })
-      
-      return { current, previous, change }
+
+    // 2. Extraer cantidad de Churn (Clientes/Usuarios perdidos)
+    // En Jobbi/ChartMogul suele ser 'churn_customers' dentro de mrr_movements
+    const currentChurn = history[currentIndex]?.accounts?.total?.churned || 0
+    const previousChurn = currentIndex > 0 ? history[currentIndex - 1]?.accounts?.total?.churned : 0
+
+    // 3. Calcular variación
+    let percentChange = 0
+    if (previousChurn > 0) {
+      percentChange = ((currentChurn - previousChurn) / previousChurn) * 100
     }
-    
-    // Sin filtro de mes: usar el último mes con datos
-    const withData = filteredByMonth.filter(m => m.churned > 0)
-    if (withData.length === 0) return { current: 0, previous: 0, change: 0 }
-    
-    const current = withData[withData.length - 1]?.churned || 0
-    const previous = withData[withData.length - 2]?.churned || 0
-    const change = previous > 0 ? ((current - previous) / previous) * 100 : 0
-    
-    return { current, previous, change }
+
+    return {
+      current: currentChurn,
+      percent: percentChange
+    }
   }
+
+  const { current: currentChurn, percent: percentChange = 0 } = getChurnMetrics()
   
-  const { current, change } = processData()
-  const trend = change <= 0 ? "down" : "up" // Para churn, bajar es bueno
-  const TrendIcon = change <= 0 ? TrendingDown : TrendingUp
-  
+  // LÓGICA DE NEGOCIO: En Churn, si el cambio es <= 0 (bajó o se mantuvo), es BUENO (emerald)
+  const isGoodNews = percentChange <= 0
+
   if (isLoading) {
     return (
-      <Card className="bg-card">
-        <CardContent className="p-6">
-          <div className="animate-pulse">
-            <div className="h-4 bg-muted rounded w-20 mb-2"></div>
-            <div className="h-8 bg-muted rounded w-16"></div>
-          </div>
-        </CardContent>
+      <Card className="bg-card border border-border shadow-sm p-4">
+        <div className="animate-pulse space-y-2">
+          <div className="h-4 bg-muted rounded w-3/4"></div>
+          <div className="h-8 bg-muted rounded w-1/2"></div>
+        </div>
       </Card>
     )
   }
-  
+
+  if (error) {
+    return (
+      <Card className="bg-card border-red-100 shadow-sm p-4 flex flex-col items-center justify-center text-red-500">
+        <AlertCircle className="h-5 w-5 mb-1" />
+        <span className="text-[10px] font-bold uppercase">Error de Proxy</span>
+      </Card>
+    )
+  }
+
   return (
     <Card className="bg-card border border-border shadow-sm">
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-muted-foreground"># Churn</span>
-          <Users className="h-4 w-4 text-muted-foreground" />
+         <span className="text-sm text-muted-foreground font-medium"># Churn</span>
+          <div className="p-2 rounded-lg bg-muted">
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </div>
         </div>
+        
         <div className="text-2xl font-bold text-foreground mb-1">
-          {current}
+          {currentChurn}
         </div>
-        <div className={`flex items-center text-xs ${trend === "down" ? "text-emerald-600" : "text-red-500"} hidden`}>
-          <TrendIcon className="h-3 w-3 mr-1" />
+
+        {/* Quitamos el 'hidden' y usamos la lógica de colores de Churn */}
+        <div className={`flex items-center text-xs ${isGoodNews ? "text-emerald-600" : "text-red-500"}`}>
+          {percentChange <= 0 ? (
+            <TrendingDown className="h-3 w-3 mr-1" />
+          ) : (
+            <TrendingUp className="h-3 w-3 mr-1" />
+          )}
           <span>
-            {change >= 0 ? "+" : ""}{change.toFixed(1)}% vs mes anterior
+            {percentChange >= 0 ? "+" : ""}{percentChange.toFixed(1)}% vs anterior
           </span>
         </div>
       </CardContent>

@@ -1,117 +1,107 @@
 "use client"
 
 import { Card, CardContent } from "@/components/ui/card"
-import { DollarSign, TrendingUp, TrendingDown } from "lucide-react"
-import useSWR from "swr"
+import { DollarSign, TrendingUp, TrendingDown, AlertCircle } from "lucide-react"
 import { useFilters } from "@/lib/contexts/filters-context"
+import useSWR from "swr"
 
-// Estructura: { [plan]: { [month]: { [companyId]: { churned_MRR } } } }
-interface ChurnMRRResponse {
-  [plan: string]: {
-    [month: string]: {
-      [companyId: string]: {
-        churned_MRR: number
-      }
-    }
-  }
-}
-
-const fetcher = (url: string) => fetch(url).then(res => res.json())
+const fetcher = (url: string) => fetch(url).then(res => {
+  if (!res.ok) throw new Error('Error en el proxy');
+  return res.json();
+})
 
 export function DollarChurnKPICard() {
   const { filters } = useFilters()
 
-  console.log("[v0] DollarChurnKPICard - Filters:", { year: filters.year, plan: filters.plan, month: filters.month })
-  
-  const { data: rawData, isLoading } = useSWR<ChurnMRRResponse>(
-    "/api/micro/churn_mrr",
-    fetcher,
-    { revalidateOnFocus: false }
+  const { data: response, isLoading, error } = useSWR(
+    `/api/proxy?months=12&date_to=${filters.year}-12-31&include_payroll=${filters.IncludePayroll}&date_from=${filters.year}-01-01`, 
+    fetcher
   )
 
-  // Procesar datos con filtros
-  const processData = () => {
-    if (!rawData) return { currentChurn: 0, previousChurn: 0, percentChange: 0 }
+  const getChurnMetrics = () => {
+    const history = response?.data || []
+    if (history.length === 0) return { current: 0, percent: 0 }
 
-    const monthMap = new Map<string, number>()
+    // 1. Identificar el índice del mes seleccionado (usando el split seguro)
+    let currentIndex = history.length - 1
+    
+    if (filters.month !== "Todos") {
+      const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
 
-    for (const [plan, planData] of Object.entries(rawData)) {
-      // Filtrar por plan si está seleccionado
-      if (filters.plan !== "Todos" && plan !== filters.plan) continue
-
-      for (const [month, monthData] of Object.entries(planData)) {
-        // Filtrar por año
-        if (!month.startsWith(filters.year)) continue
-
-        let monthChurn = 0
-        for (const [, companyData] of Object.entries(monthData)) {
-          monthChurn += companyData.churned_MRR || 0
-        }
-
-        monthMap.set(month, (monthMap.get(month) || 0) + monthChurn)
-      }
+      const foundIndex = history.findIndex((item: any) => {
+        const dateStr = item.period?.date_from || ""
+        const monthPart = dateStr.split("-")[1]
+        if (!monthPart) return false
+        const monthIdx = parseInt(monthPart, 10) - 1
+        return monthNames[monthIdx] === filters.month
+      })
+      if (foundIndex !== -1) currentIndex = foundIndex
     }
 
-    const sortedMonths = Array.from(monthMap.entries())
-      .sort((a, b) => a[0].localeCompare(b[0]))
+    // 2. Extraer Churn MRR (Normalmente viene negativo, usamos Math.abs para mostrarlo positivo)
+    const currentChurn = Math.abs(history[currentIndex]?.accounts?.total?.churned || 0)
+    const previousChurn = currentIndex > 0 ? Math.abs(history[currentIndex - 1]?.accounts?.total?.churned || 0) : 0
 
-    const currentChurn = sortedMonths[sortedMonths.length - 1]?.[1] || 0
-    const previousChurn = sortedMonths[sortedMonths.length - 2]?.[1] || 0
+    // 3. Calcular variación
+    let percentChange = 0
+    if (previousChurn > 0) {
+      percentChange = ((currentChurn - previousChurn) / previousChurn) * 100
+    }
 
-    const percentChange = previousChurn > 0 
-      ? ((currentChurn - previousChurn) / previousChurn) * 100 
-      : 0
-
-    return { currentChurn, previousChurn, percentChange }
+    return {
+      current: currentChurn,
+      percent: percentChange
+    }
   }
 
-  const { currentChurn, percentChange } = processData()
-  // Para churn, una bajada es positiva (menos churn es bueno)
-  const isPositive = percentChange <= 0
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value)
-  }
+  const { current: currentChurn, percent: percentChange = 0 } = getChurnMetrics()
+  
+  // LÓGICA INVERTIDA: En Churn, si el cambio es negativo (bajó el churn), es BUENO (emerald)
+  const isImprovement = percentChange <= 0
 
   if (isLoading) {
     return (
-      <Card className="bg-card">
-        <CardContent className="p-4">
-          <div className="animate-pulse">
-            <div className="h-4 bg-muted rounded w-16 mb-2"></div>
-            <div className="h-8 bg-muted rounded w-24 mb-2"></div>
-            <div className="h-3 bg-muted rounded w-32"></div>
-          </div>
-        </CardContent>
+      <Card className="bg-card border border-border shadow-sm p-4">
+        <div className="animate-pulse space-y-2">
+          <div className="h-4 bg-muted rounded w-3/4"></div>
+          <div className="h-8 bg-muted rounded w-1/2"></div>
+        </div>
+      </Card>
+    )
+  }
+
+  if (error) {
+    return (
+      <Card className="bg-card border-red-100 shadow-sm p-4 flex flex-col items-center justify-center text-red-500">
+        <AlertCircle className="h-5 w-5 mb-1" />
+        <span className="text-[10px] font-bold uppercase">Error de Datos</span>
       </Card>
     )
   }
 
   return (
-    <Card className="bg-card">
+    <Card className="bg-card border border-border shadow-sm">
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-muted-foreground">$ Churn</span>
+          <span className="text-sm text-muted-foreground font-medium">$ Churn</span>
           <div className="p-2 rounded-lg bg-muted">
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </div>
         </div>
+        
         <div className="text-2xl font-bold text-foreground mb-1">
-          {formatCurrency(currentChurn)}
+          ${currentChurn.toLocaleString('en-US', { maximumFractionDigits: 0 })}
         </div>
-        <div className={`flex items-center text-xs ${isPositive ? "text-emerald-600" : "text-red-600"}`}>
-          {isPositive ? (
+
+        {/* Lógica de color: Verde si bajó (TrendingDown), Rojo si subió (TrendingUp) */}
+        <div className={`flex items-center text-xs ${isImprovement ? "text-emerald-600" : "text-red-500"}`}>
+          {percentChange <= 0 ? (
             <TrendingDown className="h-3 w-3 mr-1" />
           ) : (
             <TrendingUp className="h-3 w-3 mr-1" />
           )}
           <span>
-            {percentChange >= 0 ? "+" : ""}{percentChange.toFixed(1)}% vs mes anterior
+            {percentChange >= 0 ? "+" : ""}{percentChange.toFixed(1)}% vs anterior
           </span>
         </div>
       </CardContent>

@@ -10,7 +10,7 @@ interface SaasMetricsHistoryResponse {
   data: Array<{
     period: { date_from: string };
     accounts: { active: number };
-    rates: { arpa: number };
+    rates: { arpa: { total: number } };
   }>;
 }
 
@@ -48,7 +48,7 @@ export function ARPAClientesChart() {
     const monthIndex = monthPart ? parseInt(monthPart) - 1 : 0;
     return {
       monthLabel: MONTH_LABELS[monthIndex] || "S/N",
-      arpa: item.rates?.arpa ?? 0,
+      arpa: item.rates?.arpa?.total ?? 0,
       clientesActivos: item.accounts?.active ?? 0,
     }
   }) || []
@@ -59,13 +59,13 @@ export function ARPAClientesChart() {
     : chartData.filter((d: ChartDataPoint) => d.monthLabel.startsWith(filters.month.substring(0, 4)))
 
   if (isLoading) return (
-    <div className="h-[350px] flex items-center justify-center border rounded-lg bg-card">
+    <div className="h-[400px] flex items-center justify-center border border-border rounded-lg bg-card">
       <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
     </div>
   )
 
   if (error) return (
-    <div className="h-[350px] flex flex-col items-center justify-center border border-red-200 bg-red-50 rounded-lg p-4 text-center">
+    <div className="h-[400px] flex flex-col items-center justify-center border border-red-200 bg-red-50 rounded-lg p-4 text-center">
       <AlertTriangle className="h-8 w-8 text-red-500 mb-2" />
       <h4 className="font-bold text-red-800">Error en el Gráfico:</h4>
       <code className="text-[10px] bg-white p-2 border rounded mt-2 text-red-600 block max-w-full overflow-auto">
@@ -76,23 +76,23 @@ export function ARPAClientesChart() {
   )
 
   if (!isLoading && chartData.length === 0) return (
-    <div className="h-[350px] flex items-center justify-center border border-dashed rounded-lg text-muted-foreground">
+    <div className="h-[400px] flex items-center justify-center border border-dashed rounded-lg text-muted-foreground">
       No hay datos históricos para {filters.year}.
     </div>
   )
 
   return (
-    <div className="rounded-lg border bg-card p-6 shadow-sm">
-      <h3 className="text-lg font-semibold mb-4">ARPA vs Clientes ({filters.year})</h3>
-      <div className="h-[300px] w-full">
+    <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
+      <h3 className="text-lg font-semibold mb-6">ARPA vs Clientes ({filters.year})</h3>
+      <div className="h-[350px] w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={displayData}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis dataKey="monthLabel" fontSize={12} />
-            <YAxis yAxisId="left" fontSize={12} tickFormatter={(v) => `$${v}`} />
-            <YAxis yAxisId="right" orientation="right" fontSize={12} />
-            <Tooltip />
-            <Legend />
+          <LineChart data={displayData} margin={{ top: 5, right: -10, left: -10, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="oklch(0.92 0 0)" />
+            <XAxis dataKey="monthLabel" tick={{ fontSize: 12, fill: "oklch(0.55 0 0)" }} tickLine={false} axisLine={true} dy={10} />
+            <YAxis yAxisId="left" tick={{ fontSize: 12, fill: "oklch(0.55 0 0)" }} tickFormatter={(v) => `$${v}`} />
+            <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12, fill: "oklch(0.40 0 0)" }} />
+            <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+            <Legend verticalAlign="top" align="left" height={40} iconType="circle" wrapperStyle={{ fontSize: "12px", paddingBottom: "8px", top: 0, right: -25 }} />
             <Line yAxisId="left" type="monotone" dataKey="arpa" name="ARPA" stroke="#dc2626" strokeWidth={2} />
             <Line yAxisId="right" type="monotone" dataKey="clientesActivos" name="Clientes" stroke="#1e3a8a" strokeWidth={2} />
           </LineChart>

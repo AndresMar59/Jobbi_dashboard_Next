@@ -18,6 +18,14 @@ interface SaasMetricsHistoryResponse {
   }>;
 }
 
+interface ChartDataPoint {
+  mes: string;
+  accounts: number;
+  gross_churn_rate: number;
+  net_revenue_churn: number;
+  revenue_expansion_rate: number; }
+
+
 const fetcher = (url: string) => fetch(url).then(res => {
   if (!res.ok) throw new Error("Error en el proxy");
   return res.json();
@@ -34,16 +42,21 @@ export function DollarChurnChart() {
     fetcher
   )
 
-    const chartData = response?.data?.map((item) => {
+    const chartData: ChartDataPoint[] = response?.data?.map((item) => {
     const monthPart = item.period?.date_from?.split('-')[1]; 
     const monthIndex = monthPart ? parseInt(monthPart) - 1 : 0;
     return {
-      monthLabel: MONTH_LABELS[monthIndex] || "S/N",
-      churn_rate: item.rates?.gross_churn_rate ?? 0,
+      mes: MONTH_LABELS[monthIndex] || "S/N",
+      accounts: item.accounts?.active || 0,
+      gross_churn_rate: item.rates?.gross_churn_rate ?? 0,
       net_revenue_churn: item.rates?.net_revenue_churn?? 0,
       revenue_expansion_rate: item.rates?.revenue_expansion_rate ?? 0,
     }
   }) || []
+
+    const displayData = filters.month === "Todos" 
+    ? chartData 
+    : chartData.filter((d: ChartDataPoint) => d.mes.startsWith(filters.month.substring(0, 4)))
 
   if (isLoading) return (
     <div className="flex items-center justify-center h-[400px] border rounded-lg bg-card">
@@ -64,12 +77,12 @@ export function DollarChurnChart() {
 
       <div className="h-[350px] w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData} margin={{ top: 5, right: 25, left: 0, bottom: 0 }}>
+          <LineChart data={displayData} margin={{ top: 5, right: 25, left: -10, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
             <XAxis
-              dataKey="monthLabel" // CORREGIDO: Ahora coincide con el mapeo
+              dataKey="mes" // CORREGIDO: Ahora coincide con el mapeo
               tick={{ fill: "oklch(0.55 0 0)", fontSize: 12 }}
-              axisLine={false}
+              axisLine={true}
               tickLine={false}
               dy={10}
             />
@@ -88,7 +101,7 @@ export function DollarChurnChart() {
               }}
               formatter={(value: number) => [`${value.toFixed(1)}%`, undefined]}
             />
-            <Legend verticalAlign="top" align="left" height={40} iconType="circle" wrapperStyle={{ fontSize: "12px", paddingBottom: "10px"  }} />
+            <Legend verticalAlign="top" align="left" height={40} iconType="circle" wrapperStyle={{ fontSize: "12px", paddingBottom: "8px", top: 0, right: 10 }} />
             
             <Line 
               type="monotone" 
@@ -100,7 +113,7 @@ export function DollarChurnChart() {
             />
             <Line 
               type="monotone" 
-              dataKey="churn_rate" 
+              dataKey="gross_churn_rate" 
               stroke="#ef4444" 
               name="% Gross Churn" 
               strokeWidth={2} 

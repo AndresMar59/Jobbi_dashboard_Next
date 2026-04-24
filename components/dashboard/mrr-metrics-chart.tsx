@@ -20,6 +20,16 @@ interface SaasMetricsHistoryResponse {
   }>;
 }
 
+interface ChartDataPoint {
+  mes: string;
+  mrr: number;
+  churnMRR: number;
+  expansionMRR: number;
+  newMRR: number;
+}
+
+
+
 const fetcher = (url: string) => fetch(url).then(async res => {
   if (!res.ok) {
     throw new Error(res.status === 404 ? "Ruta /api/proxy no encontrada (404)" : "Error en el servidor");
@@ -33,22 +43,29 @@ export function MRRDATA() {
   const { filters } = useFilters()
   
   const { data: response, error, isLoading } = useSWR<SaasMetricsHistoryResponse>(
-    `/api/proxy?year=${filters.year}&include_payroll=${filters.IncludePayroll}&date_to=${filters.year}-12-31`,
+    `/api/proxy?months=12&date_to=${filters.year}-12-31&include_payroll=${filters.IncludePayroll}&date_from=${filters.year}-01-01`,
     fetcher
   );  
 
   // MAPEO CORREGIDO: Nombres de llaves idénticos a los del gráfico
-  const chartData = response?.data?.map((item) => {
+  const chartData: ChartDataPoint[] = response?.data?.map((item) => {
       const monthPart = item.period?.date_from?.split('-')[1]; 
       const monthIndex = monthPart ? parseInt(monthPart) - 1 : 0;
       return {
-        monthLabel: MONTH_LABELS[monthIndex] || "S/N",
+        mes: MONTH_LABELS[monthIndex] || "S/N",
         mrr: item.mrr?.total ?? 0,
         churnMRR: Math.abs(item.mrr_movements?.churn_mrr ?? 0), // Math.abs por si vienen negativos
         expansionMRR: item.mrr_movements?.expansion_mrr ?? 0,
         newMRR: item.mrr_movements?.new_mrr ?? 0
       }
     }) || []
+
+     const displayData = filters.month === "Todos" 
+    ? chartData 
+    : chartData.filter((d: ChartDataPoint) => d.mes.startsWith(filters.month.substring(0, 4)))
+
+
+
   
     if (isLoading) return (
       <div className="h-[400px] flex flex-col items-center justify-center border rounded-lg bg-card shadow-sm">
@@ -67,7 +84,7 @@ export function MRRDATA() {
       </div>
     )
   
-    if (chartData.length === 0) return (
+    if (displayData.length === 0) return (
       <div className="h-[400px] flex items-center justify-center border border-dashed rounded-lg text-muted-foreground italic">
         No hay datos de MRR para el periodo {filters.year}.
       </div>
@@ -81,12 +98,12 @@ export function MRRDATA() {
       
       <div className="h-[350px] w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData} margin={{ top: 5, right: 25, left: 0, bottom: 0 }}>
+          <LineChart data={displayData} margin={{ top: 5, right: 25, left: -10, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="oklch(0.92 0 0)" />
             <XAxis
-              dataKey="monthLabel" // CORREGIDO: Ahora coincide con el mapeo
+              dataKey="mes" // CORREGIDO: Ahora coincide con el mapeo
               tick={{ fill: "oklch(0.55 0 0)", fontSize: 12 }}
-              axisLine={false}
+              axisLine={true}
               tickLine={false}
               dy={10}
             />
@@ -113,7 +130,7 @@ export function MRRDATA() {
               align="left"
               height={40}
               iconType="circle"
-              wrapperStyle={{ fontSize: "12px", paddingBottom: "10px" }}
+              wrapperStyle={{ fontSize: "12px", paddingBottom: "8px", top: 0, right: 10 }}
             />
             {/* LÍNEAS CON DATA KEYS CORREGIDOS */}
             <Line type="monotone" dataKey="mrr" stroke="#1478a0" strokeWidth={2} name="Total MRR" r={3}   />

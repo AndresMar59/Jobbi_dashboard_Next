@@ -67,28 +67,28 @@ export function NRRGRRChart() {
 
       <div className="h-[350px] w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={displayData} margin={{ top: 10, right: 20, left: 5, bottom: 20 }}>
+          <LineChart data={displayData} margin={{ top: 10, right: 25, left: -10, bottom: 20 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
             <XAxis 
               dataKey="mes" 
-              stroke="#6b7280" 
-              fontSize={12} 
+              tick={{ fill: "oklch(0.55 0 0)", fontSize: 12 }}
               tickLine={false}
-              axisLine={false}
+              axisLine={true}
+              dy={10}
             />
             <YAxis 
-              stroke="#0f141f" 
-              fontSize={12} 
+              tick={{ fill: "oklch(0.55 0 0)", fontSize: 12 }}
               tickFormatter={(v) => `${v}%`} 
-              width={40}
-              axisLine={false}
-              tickLine={false}
+              axisLine={true}
             />
             <Tooltip
-              contentStyle={{ backgroundColor: "white", borderRadius: "8px", border: "1px solid #e5e7eb" }}
+              contentStyle={{ backgroundColor: "oklch(1 0 0)",
+                border: "1px solid oklch(0.92 0 0)",
+                borderRadius: "0.5rem",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}
               formatter={(value: number) => [`${value.toFixed(1)}%`, undefined]}
             />
-            <Legend verticalAlign="top" height={40} iconType="circle" wrapperStyle={{ fontSize: "12px" }} />
+            <Legend verticalAlign="top" align="left" height={40} iconType="circle" wrapperStyle={{ fontSize: "12px", paddingBottom: "8px", top: 0, right: 10 }} />
             
             <Line
               type="monotone"
@@ -96,7 +96,7 @@ export function NRRGRRChart() {
               stroke="#09124F"
               name="GRR (Neto)"
               strokeWidth={2}
-              dot={{ fill: "white", r: 4, stroke: "#09124F", strokeWidth: 2 }}
+              dot={{ fill: "white", r: 3, stroke: "#09124F", strokeWidth: 2 }}
             />
             <Line
               type="monotone"
@@ -104,15 +104,15 @@ export function NRRGRRChart() {
               stroke="#10b981"
               name="NRR (Con Expansión)"
               strokeWidth={2}
-              dot={{ fill: "white", r: 4, stroke: "#10b981", strokeWidth: 2 }}
+              dot={{ fill: "white", r: 3, stroke: "#10b981", strokeWidth: 2 }}
             />
             <Line
               type="monotone"
               dataKey="retencion"
               stroke="#6b018b"
-              name="Retención Logo"
+              name="Retención"
               strokeWidth={2}
-              dot={{ fill: "white", r: 4, stroke: "#6b018b", strokeWidth: 2 }}
+              dot={{ fill: "white", r: 3, stroke: "#6b018b", strokeWidth: 2 }}
             />
           </LineChart>
         </ResponsiveContainer>

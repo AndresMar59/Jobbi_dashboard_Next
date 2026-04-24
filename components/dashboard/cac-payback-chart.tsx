@@ -60,40 +60,39 @@ export function CACPaybackChart() {
 
       <div className="h-[350px] w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={displayData} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
+          <LineChart data={displayData} margin={{ top: 10, right: 25, left: -10, bottom: 20 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
             <XAxis
               dataKey="mes"
-              stroke="#6b7280"
-              fontSize={12}
+              tick={{ fill: "oklch(0.55 0 0)", fontSize: 12 }}
               tickLine={false}
-              axisLine={false}
+              axisLine={true}
+              dy ={10}
             />
             <YAxis
-              stroke="#6b7280"
-              fontSize={12}
-              tickLine={false}
-              axisLine={false}
+              tick={{ fill: "oklch(0.55 0 0)", fontSize: 12 }}
+              axisLine={true}
               tickFormatter={(v) => `${v}`}
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: "white",
-                border: "1px solid #e5e7eb",
-                borderRadius: "8px",
+                backgroundColor: "oklch(1 0 0)",
+                border: "1px solid oklch(0.92 0 0)",
+                borderRadius: "0.5rem",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.05)"
               }}
               formatter={(value: number) => [`${value.toFixed(1)} meses`, "Tiempo de recuperación"]}
             />
-            <Legend verticalAlign="top" height={40} iconType="circle" wrapperStyle={{ fontSize: "12px" }} />
+            <Legend verticalAlign="top" align="left" height={40} iconType="circle" wrapperStyle={{ fontSize: "12px", paddingBottom: "8px", top: 0, right: 10 }} />
             
             <Line 
               type="monotone" 
               dataKey="payback" 
               stroke="#710cac" 
               name="CAC Payback" 
-              strokeWidth={3} 
-              dot={{ r: 4, fill: "white", stroke: "#710cac", strokeWidth: 2 }}
-              activeDot={{ r: 6 }}
+              strokeWidth={2} 
+              dot={{ r: 3, fill: "white", stroke: "#710cac", strokeWidth: 2 }}
+              activeDot={{ r: 4 }}
               isAnimationActive={false}
             />
           </LineChart>

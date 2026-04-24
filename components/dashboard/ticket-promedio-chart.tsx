@@ -73,41 +73,46 @@ export function TicketPromedioChart() {
 
       <div className="h-[350px] w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={displayData} margin={{ top: 10, right: 20, left: 10, bottom: 20 }}>
+          <LineChart data={displayData} margin={{ top: 5, right: 25, left: -10, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
             <XAxis 
               dataKey="monthLabel" 
               stroke="#6b7280" 
-              tick={{ fontSize: 12 }} 
-              height={40} 
+              tick={{ fill: "oklch(0.55 0 0)", fontSize: 12 }} 
+              
             />
             <YAxis 
               stroke="#6b7280" 
-              tick={{ fontSize: 11 }} 
+              tick={{ fill: "oklch(0.55 0 0)", fontSize: 12 }} 
               tickFormatter={(v) => `$${v.toLocaleString()}`}
-              width={60}
+              
             />
             <Tooltip
               contentStyle={{ backgroundColor: "white", borderRadius: "8px", border: "1px solid #e2e8f0" }}
               formatter={(value: number) => [`$${value.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, ""]}
             />
-            <Legend verticalAlign="top" height={40} iconSize={10} wrapperStyle={{ fontSize: "12px" }} />
+            <Legend verticalAlign="top"
+              align="left"
+              height={40}
+              iconType="circle"
+              wrapperStyle={{ fontSize: "12px", paddingBottom: "8px", top: 0, right: 10 }} />
             
             <Line 
               type="monotone" 
               dataKey="cac" 
               stroke="#09124F" 
               name="CAC $"
-              strokeWidth={3} 
-              dot={{ r: 4, fill: "white", stroke: "#09124F", strokeWidth: 2 }}
+              strokeWidth={2} 
+              r ={3}
             />
             <Line
               type="monotone"
               dataKey="ticketPromedio"
-              stroke="#474194"
+              stroke="#d62008"
               name="Ticket Promedio $"
-              strokeWidth={3}
-              dot={{ r: 4, fill: "white", stroke: "#474194", strokeWidth: 2 }}
+              strokeWidth={2}
+              r ={3}
+              
             />
           </LineChart>
         </ResponsiveContainer>

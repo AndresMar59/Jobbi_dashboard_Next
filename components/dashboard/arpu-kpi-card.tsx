@@ -12,17 +12,46 @@ const fetcher = (url: string) => fetch(url).then(res => {
 
 export function ARPUKPICard() {
   const { filters } = useFilters()
-
-  // CORRECCIÓN: Quitamos el parámetro &month=${filters.month} 
-  // si el filtro devuelve strings como "Ene" o "Todos", ya que Jobbi no los procesa así.
-  const { data, isLoading, error } = useSWR(
-    `/api/proxy?year=${filters.year}-12-31&include_payroll=true&date_from=${filters.year}-01-01`, 
+  const { data: response, isLoading, error } = useSWR(
+    `/api/proxy?months=12&date_to=${filters.year}-12-31&include_payroll=${filters.IncludePayroll}&date_from=${filters.year}-01-01`, 
     fetcher
   )
 
-  const currentARPA = data?.mrr?.total || 0
-  const changePercent = data?.mrr?.change_percent || 0
-  const isPositive = changePercent >= 0
+  // --- LÓGICA DE CÁLCULO MANUAL ---
+  const getARPAMetrics = () => {
+    const history = response?.data || [] // El array de meses
+    if (history.length === 0) return { current: 0, diff: 0 }
+
+    // 1. Encontrar el índice del mes seleccionado
+    let currentIndex = history.length - 1 // Por defecto, el último mes
+    
+    if (filters.month !== "Todos") {
+      const foundIndex = history.findIndex((item: any) => {
+        const m = new Date(item.period.date_from).getUTCMonth()
+        const monthName = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"][m]
+        return monthName === filters.month
+      })
+      if (foundIndex !== -1) currentIndex = foundIndex
+    }
+
+    // 2. Obtener ARPA actual y del mes anterior
+    const currentARPA = history[currentIndex]?.rates?.arpa?.total || 0
+    const previousARPA = currentIndex > 0 ? history[currentIndex - 1]?.rates?.arpa?.total : null
+
+    // 3. Calcular porcentaje de cambio: ((Actual - Anterior) / Anterior) * 100
+    let changePercent = 0
+    if (previousARPA && previousARPA > 0) {
+      changePercent = ((currentARPA - previousARPA) / previousARPA) * 100
+    }
+
+    return {
+      current: currentARPA,
+      percent: changePercent
+    }
+  }
+
+  const { current: currentARPA, percent: changePercent = 0 } = getARPAMetrics()
+  const isPositive =  changePercent  >= 0  
 
   if (isLoading) {
     return (
@@ -50,8 +79,10 @@ export function ARPUKPICard() {
     <Card className="bg-card border border-border shadow-sm">
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-muted-foreground font-medium">ARPA</span>
+         <span className="text-sm text-muted-foreground font-medium">ARPA</span>
+          <div className="p-2 rounded-lg bg-muted">
           <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </div>
         </div>
         
         <div className="text-2xl font-bold text-foreground mb-1">
@@ -60,7 +91,7 @@ export function ARPUKPICard() {
 
         <div className={`flex items-center text-xs ${isPositive ? "text-emerald-600" : "text-red-500"}`}>
           {isPositive ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
-          <span>{isPositive ? "+" : ""}{changePercent.toFixed(1)}% vs anterior</span>
+          <span>{isPositive ? "+" : ""}{(changePercent ?? 0).toFixed(1)}% vs anterior</span>
         </div>
       </CardContent>
     </Card>

@@ -4,11 +4,12 @@ import Link from "next/link"
 import Image from "next/image";
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { LayoutDashboard, UserCheck } from "lucide-react"
+import { BarChart, LayoutDashboard, UserCheck,  } from "lucide-react"
 
 const navigation = [
-  { name: "Source", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Source & Payroll", href: "/dashboard/retention", icon: UserCheck },
+  { name: "Saas Metrics", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Credits & Payroll", href: "/dashboard/retention", icon: UserCheck },
+  { name: "Publication Metrics", href: "/dashboard/Publication", icon: BarChart },
 ]
 
 export function Sidebar() {

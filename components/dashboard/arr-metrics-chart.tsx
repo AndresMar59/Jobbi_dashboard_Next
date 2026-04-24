@@ -92,9 +92,9 @@ export function ARRMetricsChart() {
       <h3 className="text-lg font-semibold mb-6">ARR ({filters.year})</h3>
       <div className="h-[350px] w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={displayData} margin={{ top: 5, right: 25, left: 0, bottom: 0 }}>
+          <LineChart data={displayData} margin={{ top: 5, right: 25, left: -10, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="oklch(0.92 0 0)" />
-            <XAxis dataKey="mes" tick={{ fontSize: 12, fill: "oklch(0.55 0 0)" }} tickLine={false} axisLine={false} dy={10} />
+            <XAxis dataKey="mes" tick={{ fontSize: 12, fill: "oklch(0.55 0 0)" }} tickLine={false} axisLine={true} dy={10} />
             <YAxis 
               tick={{ fontSize: 12, fill: "oklch(0.55 0 0)" }} 
               tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`}
@@ -104,7 +104,7 @@ export function ARRMetricsChart() {
               contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
               formatter={(value: number) => [`$${value.toLocaleString()}`, ""]}
             />
-            <Legend verticalAlign="top" align="left" height={40} iconType="circle" wrapperStyle={{ fontSize: "12px", paddingBottom: "10px" }}/>
+            <Legend verticalAlign="top" align="left" height={40} iconType="circle" wrapperStyle={{ fontSize: "12px", paddingBottom: "8px", top: 0, right: 10 }}/>
             <Line type="monotone" dataKey="arr" stroke="#3b82f6" name="ARR Total" strokeWidth={2} r={3}  />
             <Line type="monotone" dataKey="contractionARR" stroke="#8e1aa5" name="Contraction" strokeWidth={2} r={3} />
             <Line type="monotone" dataKey="newARR" stroke="#d8734b" name="New ARR" strokeWidth={2} r={3} />

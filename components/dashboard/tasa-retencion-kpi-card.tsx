@@ -1,122 +1,100 @@
 "use client"
 
 import { Card, CardContent } from "@/components/ui/card"
-import { UserCheck, TrendingUp, TrendingDown } from "lucide-react"
-import useSWR from "swr"
+import { UserCheck, TrendingUp, TrendingDown, AlertCircle } from "lucide-react"
 import { useFilters } from "@/lib/contexts/filters-context"
-import { MONTH_MAP } from "@/lib/hooks/use-api-data"
+import useSWR from "swr"
 
-// Estructura simple: { [month]: retention_rate }
-interface TasaRetentionResponse {
-  [month: string]: number
-}
-
-const fetcher = (url: string) => fetch(url).then(res => res.json())
-
-const ALL_MONTHS = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
+const fetcher = (url: string) => fetch(url).then(res => {
+  if (!res.ok) throw new Error('Error en el proxy');
+  return res.json();
+})
 
 export function TasaRetencionKPICard() {
   const { filters } = useFilters()
 
-  console.log("[v0] TasaRetencionKPICard - Filters:", { year: filters.year, plan: filters.plan, month: filters.month })
-  
-  const { data: rawData, isLoading } = useSWR<TasaRetentionResponse>(
-    "/api/micro/tasa_retention",
-    fetcher,
-    { revalidateOnFocus: false }
+  // Usamos el mismo proxy que el ARPA para traer el historial de 12 meses
+  const { data: response, isLoading, error } = useSWR(
+    `/api/proxy?months=12&date_to=${filters.year}-12-31&include_payroll=${filters.IncludePayroll}&date_from=${filters.year}-01-01`, 
+    fetcher
   )
 
-  // Procesar datos con filtros
-  const processData = () => {
-    if (!rawData) return { currentRate: 0, previousRate: 0, percentChange: 0 }
+  const getRetentionMetrics = () => {
+    const history = response?.data || []
+    if (history.length === 0) return { current: 0, percent: 0 }
 
-    const retentionByMonth: { month: string; rate: number }[] = []
-
-    // Iterar sobre todos los meses del año
-    for (const monthNum of ALL_MONTHS) {
-      const monthKey = `${filters.year}-${monthNum}`
-      const retentionRate = rawData[monthKey]
-      
-      retentionByMonth.push({
-        month: monthKey,
-        rate: typeof retentionRate === 'number' ? retentionRate : 0,
-      })
-    }
-
-    // Si hay filtro de mes específico
-    let currentRate = 0
-    let previousRate = 0
-
+    // 1. Encontrar el índice del mes seleccionado
+    let currentIndex = history.length - 1
+    
     if (filters.month !== "Todos") {
-      // Convertir nombre de mes a número (Ene -> 01)
-      const monthNum = MONTH_MAP[filters.month]
-      if (!monthNum) {
-        return { currentRate: 0, previousRate: 0, percentChange: 0 }
-      }
-      
-      const monthKey = `${filters.year}-${monthNum}`
-      const monthData = retentionByMonth.find(m => m.month === monthKey)
-      currentRate = monthData?.rate || 0
-      
-      // Buscar mes anterior
-      const monthIndex = retentionByMonth.findIndex(m => m.month === monthKey)
-      if (monthIndex > 0) {
-        previousRate = retentionByMonth[monthIndex - 1].rate
-      }
-    } else {
-      // Usar último mes disponible con datos
-      const withData = retentionByMonth.filter(m => m.rate > 0)
-      if (withData.length > 0) {
-        currentRate = withData[withData.length - 1].rate
-        previousRate = withData[withData.length - 2]?.rate || 0
-      }
+      const foundIndex = history.findIndex((item: any) => {
+        const m = new Date(item.period.date_from).getUTCMonth()
+        const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
+        return monthNames[m] === filters.month
+      })
+      if (foundIndex !== -1) currentIndex = foundIndex
     }
 
-    const percentChange = previousRate > 0 
-      ? ((currentRate - previousRate) / previousRate) * 100 
-      : 0
+    // 2. Extraer Tasas de Retención (ajusta 'retention_rate' según el nombre exacto en tu JSON)
+    // Normalmente en ChartMogul/Jobbi está dentro de 'rates'
+    const currentRate = history[currentIndex]?.rates?.retention_rate || 0
+    const previousRate = currentIndex > 0 ? history[currentIndex - 1]?.rates?.retention_rate : 0
 
-    return { currentRate, previousRate, percentChange }
+    // 3. Calcular variación porcentual (Trend)
+    let percentChange = 0
+    if (previousRate > 0) {
+      percentChange = ((currentRate - previousRate) / previousRate) * 100
+    }
+
+    return {
+      current: currentRate,
+      percent: percentChange
+    }
   }
 
-  const { currentRate, percentChange } = processData()
-  // Para retención, una subida es positiva
+  // Desestructuración segura para evitar errores de TypeScript (como el de la imagen)
+  const { current: currentRate, percent: percentChange = 0 } = getRetentionMetrics()
   const isPositive = percentChange >= 0
 
   if (isLoading) {
     return (
-      <Card className="bg-card">
-        <CardContent className="p-4">
-          <div className="animate-pulse">
-            <div className="h-4 bg-muted rounded w-24 mb-2"></div>
-            <div className="h-8 bg-muted rounded w-16 mb-2"></div>
-            <div className="h-3 bg-muted rounded w-32"></div>
-          </div>
-        </CardContent>
+      <Card className="bg-card border border-border shadow-sm p-4">
+        <div className="animate-pulse space-y-2">
+          <div className="h-4 bg-muted rounded w-3/4"></div>
+          <div className="h-8 bg-muted rounded w-1/2"></div>
+        </div>
+      </Card>
+    )
+  }
+
+  if (error) {
+    return (
+      <Card className="bg-card border-red-100 shadow-sm p-4 flex flex-col items-center justify-center text-red-500">
+        <AlertCircle className="h-5 w-5 mb-1" />
+        <span className="text-[10px] font-bold uppercase">Error de Conexión</span>
       </Card>
     )
   }
 
   return (
-    <Card className="bg-card">
+    <Card className="bg-card border border-border shadow-sm">
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-muted-foreground">Tasa de retención</span>
+          <span className="text-sm text-muted-foreground font-medium">Tasa de Retención</span>
           <div className="p-2 rounded-lg bg-muted">
             <UserCheck className="h-4 w-4 text-muted-foreground" />
           </div>
         </div>
+        
         <div className="text-2xl font-bold text-foreground mb-1">
           {currentRate.toFixed(1)}%
         </div>
-        <div className={`flex items-center text-xs ${isPositive ? "text-emerald-600" : "text-red-600"} hidden`}>
-          {isPositive ? (
-            <TrendingUp className="h-3 w-3 mr-1" />
-          ) : (
-            <TrendingDown className="h-3 w-3 mr-1" />
-          )}
+
+        {/* Indicador de tendencia idéntico al ARPA */}
+        <div className={`flex items-center text-xs ${isPositive ? "text-emerald-600" : "text-red-500"}`}>
+          {isPositive ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
           <span>
-            {isPositive ? "+" : ""}{percentChange.toFixed(1)}% vs mes anterior
+            {isPositive ? "+" : ""}{percentChange.toFixed(1)}% vs anterior
           </span>
         </div>
       </CardContent>
