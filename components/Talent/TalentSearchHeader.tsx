@@ -17,13 +17,13 @@ export function TalentSearchHeader({ onSearch }: { onSearch: (type: string, id: 
           size="sm" 
           className="h-8"
           onClick={() => setType("company")}
-        >Empresa</Button>
+        >Company</Button>
         <Button 
           variant={type === "posting" ? "secondary" : "ghost"} 
           size="sm"
           className="h-8"
           onClick={() => setType("posting")}
-        >Vacante</Button>
+        >Posting</Button>
       </div>
       <div className="relative flex-1">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

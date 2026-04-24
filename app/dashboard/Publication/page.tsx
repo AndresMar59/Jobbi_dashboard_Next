@@ -26,7 +26,6 @@ export default function PublicationPage() {
         <main className="flex-1 p-6 lg:p-8">
           {/* Cabecera y Buscador */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold tracking-tight text-foreground mb-4">Talento y Reclutamiento</h1>
             <TalentSearchHeader onSearch={handleSearch} />
           </div>
 
@@ -34,7 +33,7 @@ export default function PublicationPage() {
           {searchType === "company" ? (
             <CompanySummaryView companyId={activeId} />
           ) : (
-            <PostingDetailView posting={activeId} />
+            <PostingDetailView postingId={activeId} />
           )}
         </main>
       </div>
