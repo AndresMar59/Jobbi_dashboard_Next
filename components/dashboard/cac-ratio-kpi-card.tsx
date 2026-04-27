@@ -29,7 +29,7 @@ export function CACRatioKPICard() {
     if (filters.month !== "Todos") {
       const foundIndex = history.findIndex((item: any) => {
         const m = new Date(item.period.date_from).getUTCMonth()
-        const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
+        const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
         return monthNames[m] === filters.month
       })
       if (foundIndex !== -1) currentIndex = foundIndex
