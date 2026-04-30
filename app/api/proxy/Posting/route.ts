@@ -1,4 +1,9 @@
+// /api/proxy/Posting/route.ts
 import { NextRequest, NextResponse } from 'next/server';
+
+// FORZAMOS A QUE NO HAYA CACHÉ EN EL SERVIDOR
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -6,33 +11,32 @@ export async function GET(request: NextRequest) {
   const searchId = searchParams.get('search_id');
 
   if (!endpoint || !searchId) {
-    return NextResponse.json({ data: null, error: "Missing parameters" }, { status: 400 });
+    return NextResponse.json({ error: "Faltan parámetros" }, { status: 400 });
   }
 
-  try {
+  
+    // 1. Limpiamos el ID de posibles espacios
+    const cleanId = searchId.trim();
     
-    // Si la API de Jobbi espera el ID como parámetro (basado en tus capturas de red previas):
+    // 2. Agregamos un timestamp único para romper la caché de Jobbi y de Next.js
+    // Usamos '&' porque tu endpoint ya trae el '?'
     let jobbiUrl = `https://data.jobbi.me/${endpoint}${searchId}`;
 
+    try {
     const res = await fetch(jobbiUrl, {
       headers: {
         'x-api-key': process.env.jobbi_micro || '',
         'Accept': 'application/json'
       },
-      cache: 'no-store' // Para evitar datos cacheados viejos
+      cache: 'no-store'
     });
 
-    if (!res.ok) {
-      const errorText = await res.text();
-      console.error("Error desde API Jobbi:", errorText);
-      return NextResponse.json({ error: "Jobbi API error", url: jobbiUrl }, { status: res.status });
-    }
+    if (!res.ok) throw new Error(`Error API: ${res.status}`);
 
     const data = await res.json();
     return NextResponse.json(data);
-
   } catch (error) {
-    console.error("Proxy Error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
-  }
+    return NextResponse.json({ error: 'Fallo al conectar con Jobbi' }, { status: 500 });
+  } 
 }
+
