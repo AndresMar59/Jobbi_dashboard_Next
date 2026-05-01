@@ -7,7 +7,7 @@ export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const endpoint = searchParams.get('endpoint');
+  const endpoint = searchParams.get('endpoint') ;
   const searchId = searchParams.get('search_id');
 
   if (!endpoint || !searchId) {

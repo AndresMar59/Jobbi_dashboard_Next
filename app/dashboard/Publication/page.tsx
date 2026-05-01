@@ -11,6 +11,10 @@ import { HireKPI } from "@/components/Talent/HireKPI"
 import { FiltersProvider } from "@/lib/contexts/filter-context-posting"
 import { Navbar } from "@/components/dashboard/navbar"
 import { Sidebar } from "@/components/dashboard/sidebar"
+import { ContextBanner } from "@/components/Talent/Baner_Context"
+import { TimelineChart } from "@/components/Talent/Timeline"
+import { Fuentechart } from "@/components/Talent/Fuente"
+
 
 export default function PublicationPage() {
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -44,15 +48,11 @@ export default function PublicationPage() {
           <ConvertionKPI/>
           < HireKPI  />
         </div>
-
+         <ContextBanner/>
         {/* 4. Fila de Gráficos (Abajo de los KPIs) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <div className="h-[400px] bg-card border border-border rounded-xl flex items-center justify-center text-muted-foreground italic">
-             Timeline de Aplicaciones
-          </div>
-          <div className="h-[400px] bg-card border border-border rounded-xl flex items-center justify-center text-muted-foreground italic">
-             Distribución por Fuente
-          </div>
+          <TimelineChart/>
+          <Fuentechart/>
         </div>
       </main>
       </div>

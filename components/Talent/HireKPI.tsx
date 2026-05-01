@@ -11,9 +11,13 @@ const fetcher = (url: string) => fetch(url).then(res => {
 })
 
 interface StatusItem {
-  status: string;
-  count: number;
-  percentage: number;
+  stage_id: string,
+  percentage: number
+  stage_name: string,
+  stage_type: string,
+  stage_order: number,
+  total_count: number,
+  new_in_range: number
 }
 
 export function HireKPI() {
@@ -30,9 +34,9 @@ export function HireKPI() {
 
 
   let displayValue = "--";
-  const hireItem = data?.data?.[0]?.metrics?.candidates_applied
-  const item = hireItem?.status_distribution?.find(
-  (item: StatusItem) => item.status === "hired"
+  const hireItem = data?.data?.[0]?.metrics?.pipeline_candidate_status
+  const item = hireItem?.find(
+  (item: StatusItem) => item.stage_type === "hire"
 );
 
   if (data && !isLoading) {
@@ -44,7 +48,7 @@ export function HireKPI() {
     } else {
       // Si es posting, solo mostramos si es mayor a 0
       if ( data.total_count > 0 && item !== undefined ) {
-        displayValue = item.count.toString();
+        displayValue = item.total_count.toString();
       } else if (data.total_count > 0 && item == undefined) {
         displayValue = "0"; // O "0" si quieres mostrar que el UUID existe pero no tiene nada
       }
