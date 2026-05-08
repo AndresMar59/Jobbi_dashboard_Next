@@ -25,7 +25,7 @@ export function Fuentechart() {
     fetcher
   )
 
-  const isCompany = filters.type.includes("company")
+  const isCompany = filters.type.includes("summary-company")
 
   // --- 1. VALIDACIONES DE ESTADO ---
   if (isLoading) {

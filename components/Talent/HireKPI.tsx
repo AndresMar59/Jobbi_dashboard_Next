@@ -28,7 +28,7 @@ export function HireKPI() {
     fetcher
   )
 
-  const isCompany = filters.type.includes("company")
+  const isCompany = filters.type.includes("summary-company")
 
   // LÓGICA DE EXTRACCIÓN SEGURA
 

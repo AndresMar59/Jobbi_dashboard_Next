@@ -28,7 +28,7 @@ export function DashboardFilters() {
         className="h-10 rounded-lg border border-input bg-background px-3 text-sm font-medium shadow-sm focus:ring-2 focus:ring-ring focus:outline-none min-w-[140px]"
       >
         <option value="metrics-postings/summary-company?company_id=">Company</option>
-        <option value="metrics-postings/metrics-posting?posting_id=">Posting</option>
+        <option value="metrics-postings?posting_id=">Posting</option>
       </select>
 
       <div className="relative flex-1 min-w-[200px]">

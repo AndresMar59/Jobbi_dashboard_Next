@@ -25,7 +25,7 @@ export function TimelineChart() {
     fetcher
   )
 
-  const isCompany = filters.type.includes("company")
+  const isCompany = filters.type.includes("summary-company")
 
   // --- 1. PRIMERO VALIDAMOS CARGA Y ERROR ---
   if (isLoading) {

@@ -18,7 +18,7 @@ export function AplicacionesKPI() {
     fetcher
   )
 
-  const isCompany = filters.type.includes("company")
+  const isCompany = filters.type.includes("summary-company")
 
   // LÓGICA DE EXTRACCIÓN SEGURA
   let displayValue = "--";
