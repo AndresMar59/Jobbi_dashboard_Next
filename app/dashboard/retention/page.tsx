@@ -1,7 +1,6 @@
 "use client"
 
 import { Sidebar } from "@/components/dashboard/sidebar"
-import { Navbar } from "@/components/dashboard/navbar"
 import { DashboardFilters } from "@/components/dashboard/dashboard-filters"
 import { FiltersProvider } from "@/lib/contexts/filters-context"
 
@@ -20,12 +19,11 @@ export default function CreditsAndPayrollPage() {
         <Sidebar />
 
         <div className="flex-1 flex flex-col lg:ml-64">
-          <Navbar />
+
 
           <main className="flex-1 p-6 lg:p-8 space-y-8">
             {/* Sección de Filtros (Año, Mes, Excluir nómina) */}
             <header className="flex flex-col space-y-4">
-              <h1 className="text-2xl font-bold tracking-tight">Credits & Payroll Analytics</h1>
               <DashboardFilters />
             </header>
 

@@ -2,14 +2,12 @@
 
 import { useState } from "react"
 import { DashboardFilters } from "@/components/Talent/dasboard-filter"
-import { TalentSearchHeader } from "@/components/Talent/TalentSearchHeader"
 import { PostingKPICard } from "@/components/Talent/Posting_kpi"
 import { AplicacionesKPI } from "@/components/Talent/AplicacionesKPICard"
 import { MatchKPI } from "@/components/Talent/MatchRateKPICard"
 import { ConvertionKPI } from "@/components/Talent/ConversionRateKPICard"
 import { HireKPI } from "@/components/Talent/HireKPI"
 import { FiltersProvider } from "@/lib/contexts/filter-context-posting"
-import { Navbar } from "@/components/dashboard/navbar"
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { ContextBanner } from "@/components/Talent/Baner_Context"
 import { TimelineChart } from "@/components/Talent/Timeline"
@@ -33,7 +31,6 @@ export default function PublicationPage() {
           <Sidebar />
 
         <div className="flex-1 flex flex-col lg:ml-64">
-         <Navbar />
              
       <main className="flex-1 p-6 lg:p-8 flex flex-col gap-8">
         {/* 1. Filtros superiores */}

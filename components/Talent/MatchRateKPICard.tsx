@@ -10,33 +10,25 @@ const fetcher = (url: string) => fetch(url).then(res => {
   return res.json();
 })
 
-function CardLoadingState() {
-  return (
-    <div className="animate-pulse space-y-3 p-6 border rounded-xl bg-card">
-      <div className="flex justify-between items-center">
-        <div className="h-4 bg-muted rounded w-1/3"></div>
-        <div className="h-8 w-8 bg-muted rounded-lg"></div>
-      </div>
-      <div className="h-8 bg-muted rounded w-1/2 mt-4"></div>
-    </div>
-  )
-}
-
-function CardErrorState() {
-  return (
-    <div className="p-6 border border-red-100 bg-red-50 rounded-xl text-red-600 flex flex-col items-center justify-center min-h-[120px] text-center">
-      <span className="font-bold text-xs uppercase mb-1 tracking-wider">Error de Datos</span>
-      <span className="text-[10px] leading-tight">ID no encontrado o error en API</span>
-    </div>
-  )
-}
-
 export function MatchKPI() {
   const { filters } = useFilters()
+  const searchIdReal = filters.searchId;
+const companyIdReal = filters.type; 
+
+const listoParaConsultar = searchIdReal && companyIdReal;
   
   const { data, isLoading, error } = useSWR(
-    filters.searchId ? `/api/proxy/Posting?endpoint=${filters.type}&search_id=${filters.searchId}` : null,
-    fetcher
+    listoParaConsultar ? `/api/proxy/Posting?endpoint=${filters.type}&search_id=${filters.searchId}` : null,
+    fetcher,
+
+    {
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,      
+    revalidateIfStale: false,      
+    dedupingInterval: 10000,
+
+
+    }
   )
 
   const isCompany = filters.type.includes("summary-company")

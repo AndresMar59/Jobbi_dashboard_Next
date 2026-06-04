@@ -4,14 +4,16 @@ import Link from "next/link"
 import Image from "next/image";
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { BarChart, LayoutDashboard, UserCheck,  } from "lucide-react"
+import { BarChart, LayoutDashboard, UserCheck, Building } from "lucide-react"
 
 const navigation = [
   { name: "Saas Metrics", href: "/dashboard", icon: LayoutDashboard },
   { name: "Credits & Payroll", href: "/dashboard/retention", icon: UserCheck },
   { name: "Publication Metrics", href: "/dashboard/Publication", icon: BarChart },
+  { name: "Enterprise Metrics", href: "/dashboard/Enterprise", icon: Building }
 ]
 
+// Componente Sidebar para el dashboard
 export function Sidebar() {
   const pathname = usePathname()
 

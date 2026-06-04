@@ -22,10 +22,20 @@ interface StatusItem {
 
 export function HireKPI() {
   const { filters } = useFilters()
+  const searchIdReal = filters.searchId;
+const companyIdReal = filters.type; 
+
+const listoParaConsultar = searchIdReal && companyIdReal;
   
   const { data, isLoading, error } = useSWR(
-    filters.searchId ? `/api/proxy/Posting?endpoint=${filters.type}&search_id=${filters.searchId}` : null,
-    fetcher
+    listoParaConsultar ? `/api/proxy/Posting?endpoint=${filters.type}&search_id=${filters.searchId}` : null,
+    fetcher,
+    {
+     revalidateOnFocus: false,
+    revalidateOnReconnect: false,      
+    revalidateIfStale: false,      
+    dedupingInterval: 10000,
+    }
   )
 
   const isCompany = filters.type.includes("summary-company")

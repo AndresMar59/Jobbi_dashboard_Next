@@ -19,10 +19,22 @@ interface ChartDataNode {
 
 export function Fuentechart() {
   const { filters } = useFilters()
+
+  const searchIdReal = filters.searchId;
+const companyIdReal = filters.type; 
+
+const listoParaConsultar = searchIdReal && companyIdReal;
   
   const { data, isLoading, error } = useSWR(
-    filters.searchId ? `/api/proxy/Posting?endpoint=${filters.type}&search_id=${filters.searchId}` : null,
-    fetcher
+    listoParaConsultar ? `/api/proxy/Posting?endpoint=${filters.type}&search_id=${filters.searchId}` : null,
+    fetcher,
+
+    {
+     revalidateOnFocus: false,
+    revalidateOnReconnect: false,      
+    revalidateIfStale: false,      
+    dedupingInterval: 10000,
+    }
   )
 
   const isCompany = filters.type.includes("summary-company")
@@ -93,14 +105,14 @@ export function Fuentechart() {
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
               <XAxis 
                 dataKey="name" 
-                axisLine={false} 
+                axisLine={true} 
                 tickLine={false} 
                 tick={{ fill: '#64748b', fontSize: 10 }} 
                 dy={10} 
               />
               <YAxis 
-                axisLine={false} 
-                tickLine={false} 
+                axisLine={true} 
+                tickLine={true} 
                 tick={{ fill: '#64748b', fontSize: 11 }} 
               />
               <Tooltip 

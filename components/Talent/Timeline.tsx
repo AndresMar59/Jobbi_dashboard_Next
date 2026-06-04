@@ -19,10 +19,20 @@ interface ChartDataNode {
 
 export function TimelineChart() {
   const { filters } = useFilters()
+  const searchIdReal = filters.searchId;
+const companyIdReal = filters.type; 
+
+const listoParaConsultar = searchIdReal && companyIdReal;
   
   const { data, isLoading, error } = useSWR(
-    filters.searchId ? `/api/proxy/Posting?endpoint=${filters.type}&search_id=${filters.searchId}` : null,
-    fetcher
+    listoParaConsultar ? `/api/proxy/Posting?endpoint=${filters.type}&search_id=${filters.searchId}` : null,
+    fetcher,
+    {
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,      
+    revalidateIfStale: false,      
+    dedupingInterval: 10000,
+    }
   )
 
   const isCompany = filters.type.includes("summary-company")
@@ -97,12 +107,14 @@ export function TimelineChart() {
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-              <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} dy={10} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} />
+              <XAxis dataKey="date" axisLine={true} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} dy={10} />
+              <YAxis axisLine={true} tickLine={true} tick={{ fill: '#64748b', fontSize: 11 }} />
+             
               <Tooltip 
                 cursor={{ fill: '#f1f5f9' }}
                 contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '12px' }}
               />
+              
               <Bar dataKey="applications" fill="#6D28D9" radius={[4, 4, 0, 0]} barSize={chartData.length > 20 ? 12 : 32} />
             </BarChart>
           </ResponsiveContainer>

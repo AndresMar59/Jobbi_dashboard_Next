@@ -13,28 +13,40 @@ const fetcher = (url: string) => fetch(url).then(res => {
 export function AplicacionesKPI() {
   const { filters } = useFilters()
   
-  const { data, isLoading, error } = useSWR(
-    filters.searchId ? `/api/proxy/Posting?endpoint=${filters.type}&search_id=${filters.searchId}` : null,
-    fetcher
-  )
+// 1. Captura los IDs reales (ya sea de un estado o de la URL del navegador)
+const searchIdReal = filters.searchId;
+const companyIdReal = filters.type; 
+
+// 2. Condición estricta: Si alguno de los dos está vacío o indefinido, NO HACER NADA
+const listoParaConsultar = searchIdReal && companyIdReal;
+
+
+const { data, isLoading, error } = useSWR(
+  listoParaConsultar ? `/api/proxy/Posting?endpoint=${filters.type}&search_id=${filters.searchId}` 
+  : null,
+  fetcher,
+  {
+    revalidateOnFocus: false,      
+    revalidateIfStale: false,      
+    revalidateOnReconnect: false,  
+    dedupingInterval: 10000,       
+  }
+);
 
   const isCompany = filters.type.includes("summary-company")
 
-  // LÓGICA DE EXTRACCIÓN SEGURA
   let displayValue = "--";
 
   if (data && !isLoading) {
     if (isCompany) {
-      // Si hay datos de empresa y NO es el mensaje de "No data found"
       if (data.summary && data.summary.total_applications !== undefined) {
         displayValue = data.summary.total_applications.toString();
       }
     } else {
-      // Si es posting, solo mostramos si es mayor a 0
       if (data.total_count > 0) {
         displayValue = data.data[0].metrics.candidates_applied.total_applications.toString();
       } else {
-        displayValue = "--"; // O "0" si quieres mostrar que el UUID existe pero no tiene nada
+        displayValue = "--"; 
       }
     }
   }

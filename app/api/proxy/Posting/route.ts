@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     
     // 2. Agregamos un timestamp único para romper la caché de Jobbi y de Next.js
     // Usamos '&' porque tu endpoint ya trae el '?'
-    let jobbiUrl = `https://data.jobbi.me/${endpoint}${searchId}`;
+    let jobbiUrl = `https://data.jobbi.me/${endpoint}${cleanId}`;
 
     try {
     const res = await fetch(jobbiUrl, {

@@ -68,7 +68,6 @@ export function CohortAnalysisChart() {
     <Card className="shadow-sm border-border">
       <CardHeader className="pb-2">
         <CardTitle className="text-lg font-bold">Análisis de Cohortes (Retention %)</CardTitle>
-        <p className="text-xs text-muted-foreground">Seguimiento de permanencia de empresas por mes de adquisición</p>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
