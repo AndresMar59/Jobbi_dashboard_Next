@@ -33,7 +33,7 @@ export function ActivityChart({ data, isLoading, error, isFuture }: ActivityChar
     )
   }
 
-    if (isFuture || (data.length === 0 && !isFuture)) {
+    if (isFuture || (data.length === 0)) {
       return (
         <Card className="bg-card border border-border shadow-sm w-full h-[350px] flex flex-col items-center justify-center gap-3 p-6">
         <AlertCircle className="h-10 w-10 text-muted-foreground/30 stroke-[1.5]" />

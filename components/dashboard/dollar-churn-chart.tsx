@@ -39,7 +39,13 @@ export function DollarChurnChart() {
   // Usamos el proxy para obtener el historial completo
   const { data: response, error, isLoading } = useSWR<SaasMetricsHistoryResponse>(
     `/api/proxy?&date_to=${filters.year}-12-31&include_payroll=${filters.IncludePayroll}&date_from=${filters.year}-01-01`,
-    fetcher
+    fetcher,
+    {
+      revalidateOnFocus: false,
+    revalidateOnReconnect: false,      
+    revalidateIfStale: false,      
+    dedupingInterval: 10000,
+    }
   )
 
     const chartData: ChartDataPoint[] = response?.data?.map((item) => {

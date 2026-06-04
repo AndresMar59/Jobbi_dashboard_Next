@@ -21,7 +21,13 @@ export function KFactorChurnChart() {
   // Usamos el Proxy centralizado (una sola llamada, datos consistentes)
   const { data: response, error, isLoading } = useSWR(
     `/api/proxy?&date_to=${filters.year}-12-31&include_payroll=${filters.IncludePayroll}&date_from=${filters.year}-01-01`,
-    fetcher
+    fetcher,
+    {
+      revalidateOnFocus: false,
+    revalidateOnReconnect: false,      
+    revalidateIfStale: false,      
+    dedupingInterval: 10000,
+    }
   )
 
   const chartData: ChartDataPoint[] = response?.data?.map((item: any) => {

@@ -45,7 +45,9 @@ export function MetricsGrid() {
       let toDate = new Date(fromDate)
       toDate.setDate(toDate.getDate() + 30) // Suma automática de 30 días
       
-      if (toDate > hoy) toDate = hoy // Si el fin se va al futuro, topa a hoy
+      if (toDate > hoy) {
+        toDate = hoy
+      }
       
       return { 
         dateFromUrl: formatear(fromDate), 
@@ -70,8 +72,11 @@ const firstDay = isFuture ? hoy : new Date(anioNum, numeroMes, 1)
 let lastDay = isFuture ? hoy : new Date(anioNum, numeroMes + 1, 0)
 
 if (!isFuture && lastDay > hoy) {
-  lastDay = hoy
+  lastDay = hoy 
+
 }
+
+
 
 return { 
   dateFromUrl: formatear(firstDay), 

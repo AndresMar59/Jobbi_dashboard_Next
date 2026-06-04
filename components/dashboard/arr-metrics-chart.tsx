@@ -43,7 +43,13 @@ export function ARRMetricsChart() {
   // 2. CAMBIO CRÍTICO: Usamos /api/proxy para saltar el bloqueo de CORS
   const { data: response, isLoading, error } = useSWR<SaasMetricsHistoryResponse>(
     `/api/proxy?months=12&date_to=${filters.year}-12-31&include_payroll=${filters.IncludePayroll}&date_from=${filters.year}-01-01`,
-    fetcher
+    fetcher,
+    {
+      revalidateOnFocus: false,
+    revalidateOnReconnect: false,      
+    revalidateIfStale: false,      
+    dedupingInterval: 10000,
+    }
   )
 
   // 3. Mapeo con validación de nulidad para evitar que el gráfico quede vacío

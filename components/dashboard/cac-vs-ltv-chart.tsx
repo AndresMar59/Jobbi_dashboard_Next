@@ -12,7 +12,13 @@ export function CACVsLTVChart() {
 
   const { data: response, error, isLoading } = useSWR(
     `/api/proxy?year=${filters.year}&include_payroll=${filters.IncludePayroll}`,
-    fetcher
+    fetcher,
+    {
+      revalidateOnFocus: false,
+    revalidateOnReconnect: false,      
+    revalidateIfStale: false,      
+    dedupingInterval: 10000,
+    }
   )
 
   // Obtenemos los datos según el filtro de mes

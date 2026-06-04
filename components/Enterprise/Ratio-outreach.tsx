@@ -50,7 +50,7 @@ export function MatchViewedCard({ value, isLoading, error, isFuture }: SesionesT
     <Card className="bg-card border border-border shadow-sm">
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-muted-foreground font-medium">Ratio de Match</span>
+          <span className="text-sm text-muted-foreground font-medium">Tasa de Conversión de Selección</span>
           <div className="p-2 rounded-lg bg-muted">
             <Percent className="h-4 w-4 text-muted-foreground" />
           </div>

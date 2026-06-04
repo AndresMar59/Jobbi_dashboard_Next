@@ -25,7 +25,13 @@ export function TicketPromedioChart() {
   // 1. LLAMADA AL PROXY (Evita el error de CORS)
   const { data: response, isLoading, error } = useSWR<{ data: JobbiMetricItem[] }>(
     `/api/proxy?&date_to=${filters.year}-12-31&include_payroll=${filters.IncludePayroll}&date_from=${filters.year}-01-01`,
-    fetcher
+    fetcher,
+    {
+      revalidateOnFocus: false,
+    revalidateOnReconnect: false,      
+    revalidateIfStale: false,      
+    dedupingInterval: 10000,
+    }
   )
 
   // 2. Mapeo seguro: comprobamos que response.data exista antes de mapear

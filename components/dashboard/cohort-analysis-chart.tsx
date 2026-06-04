@@ -25,7 +25,13 @@ export function CohortAnalysisChart() {
   // Traemos toda la data del año para construir la matriz
   const { data: response, error, isLoading } = useSWR(
     `/api/proxy?&date_to=${filters.year}-12-31&include_payroll=${filters.IncludePayroll}&date_from=${filters.year}-01-01`,
-    fetcher
+    fetcher,
+    {
+      revalidateOnFocus: false,
+    revalidateOnReconnect: false,      
+    revalidateIfStale: false,      
+    dedupingInterval: 10000,
+    }
   )
 
   const rawData = response?.data || []

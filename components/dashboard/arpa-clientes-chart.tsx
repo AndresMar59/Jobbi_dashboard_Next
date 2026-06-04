@@ -40,7 +40,15 @@ export function ARPAClientesChart() {
   // CORRECCIÓN: Agregamos isLoading de nuevo
   const { data: response, error, isLoading } = useSWR<SaasMetricsHistoryResponse>(
     `/api/proxy?&date_to=${filters.year}-12-31&include_payroll=${filters.IncludePayroll}&date_from=${filters.year}-01-01`,
-    fetcher
+    fetcher, 
+  { 
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,      
+    revalidateIfStale: false,      
+    dedupingInterval: 10000,
+
+
+  }
   );        
 
   const chartData = response?.data?.map((item) => {

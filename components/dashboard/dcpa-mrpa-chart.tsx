@@ -38,7 +38,13 @@ export function DCPAMRPAChart() {
   // Traemos el historial completo del año para tener MRR y DCPA (Unit Economics)
   const { data: response, isLoading, error } = useSWR<SasMetrics>(
     `/api/proxy?months=12&date_to=${filters.year}-12-31&include_payroll=${filters.IncludePayroll}&date_from=${filters.year}-01-01`,
-    fetcher
+    fetcher,
+    {
+      revalidateOnFocus: false,
+    revalidateOnReconnect: false,      
+    revalidateIfStale: false,      
+    dedupingInterval: 10000,
+    }
   )
 
   // Procesamos los datos: MRPA será simplemente el MRR Total

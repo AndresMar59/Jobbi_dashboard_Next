@@ -17,7 +17,7 @@ export interface FiltersContextValue {
 }
 
 const defaultFilters: FiltersState = {
-  type: "metrics-postings/summary-company?Company_id=",
+  type: "metrics-postings/summary-company?company_id=",
   searchId: ""
 }
 

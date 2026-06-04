@@ -15,7 +15,13 @@ export function DollarChurnKPICard() {
 
   const { data: response, isLoading, error } = useSWR(
     `/api/proxy?months=12&date_to=${filters.year}-12-31&include_payroll=${filters.IncludePayroll}&date_from=${filters.year}-01-01`, 
-    fetcher
+    fetcher,
+    {
+      revalidateOnFocus: false,
+    revalidateOnReconnect: false,      
+    revalidateIfStale: false,      
+    dedupingInterval: 10000,
+    }
   )
 
   const getChurnMetrics = () => {

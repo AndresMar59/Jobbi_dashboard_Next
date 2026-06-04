@@ -16,7 +16,13 @@ export function TasaRetencionKPICard() {
   // Usamos el mismo proxy que el ARPA para traer el historial de 12 meses
   const { data: response, isLoading, error } = useSWR(
     `/api/proxy?months=12&date_to=${filters.year}-12-31&include_payroll=${filters.IncludePayroll}&date_from=${filters.year}-01-01`, 
-    fetcher
+    fetcher,
+    {
+      revalidateOnFocus: false,
+    revalidateOnReconnect: false,      
+    revalidateIfStale: false,      
+    dedupingInterval: 10000,
+    }
   )
 
   const getRetentionMetrics = () => {

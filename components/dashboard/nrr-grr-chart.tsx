@@ -26,7 +26,13 @@ export function NRRGRRChart() {
   // Una sola llamada para traer todas las métricas de retención
   const { data: response, error, isLoading } = useSWR(
     `/api/proxy?&date_to=${filters.year}-12-31&include_payroll=${filters.IncludePayroll}&date_from=${filters.year}-01-01`,
-    fetcher
+    fetcher,
+    {
+      revalidateOnFocus: false,
+    revalidateOnReconnect: false,      
+    revalidateIfStale: false,      
+    dedupingInterval: 10000,
+    }
   )
 
   // Mapeamos los datos usando los campos que ya vienen calculados en la API

@@ -50,20 +50,42 @@ export async function GET(request: NextRequest) {
     });
 
     let distinctIdsArray: string[] = [];
+    let Principal_user: string | null = null;
+
 
     if (resEngage.ok) {
       const engageData = await resEngage.json();
       
-      if (engageData.results && engageData.results.length > 0) {
-        const rawIds = engageData.results
+
+
+    if (engageData.results && engageData.results.length > 0) {
+        // =========================================================================
+        // AJUSTE CRONOLÓGICO: Ordenar perfiles desde el más antiguo al más nuevo
+        // =========================================================================
+        const sortedProfiles = engageData.results.sort((a: any, b: any) => {
+          const dateA = a.properties?.$created ? new Date(a.properties.$created).getTime() : Infinity;
+          const dateB = b.properties?.$created ? new Date(b.properties.$created).getTime() : Infinity;
+          
+          return dateA - dateB; // Orden ascendente (menor timestamp/más viejo primero)
+        });
+
+        const rawIds = sortedProfiles
           .map((profile: any) => profile.$distinct_id)
           .filter((id: string) => id);
 
+        // Remover duplicados manteniendo el orden de inserción original
         distinctIdsArray = Array.from(new Set(rawIds));
-        console.log(`✅ Mapeados con éxito ${distinctIdsArray.length} usuarios para la empresa.`);
+        
+        // El índice [0] queda garantizado como el usuario creado hace más tiempo
+        Principal_user = distinctIdsArray[0] || null;
+        
+        console.log(`Mapeados y ordenados cronológicamente con éxito ${distinctIdsArray.length} usuarios para la empresa.`);
+      } else {
+        console.log("No se encontraron usuarios vinculados a este company_id.");
       }
     } else {
       console.error("Error en Mixpanel Engage (HTTP " + resEngage.status + ")");
+      return NextResponse.json({ error: "Error al consultar Mixpanel" }, { status: resEngage.status });
     }
 
     // =========================================================================
@@ -85,15 +107,13 @@ export async function GET(request: NextRequest) {
     const eventParam = encodeURIComponent(JSON.stringify(eventosTarget));
     
     // Ahora garantizamos que whereFilter NUNCA sea una cadena vacía
-    const whereFilter = distinctIdsArray
-      .map(id => `properties["$distinct_id"] == "${id}"`)
-      .join(" or ");
+    const whereFilter = Principal_user ? `properties["$distinct_id"] == "${Principal_user}"` : "";
       
     const whereParam = encodeURIComponent(whereFilter);
     const mixpanelUrl = `https://data.mixpanel.com/api/2.0/export?project_id=${projectId}&from_date=${dateFrom}&to_date=${dateTo}&event=${eventParam}&where=${whereParam}`;
 
     // Microservicio Jobbi mantiene la consulta nativa por company_id
-    const jobbiUrl = `https://data.jobbi.me/metrics-postings/summary-company?company_id=${cleanCompanyId}&date_to=${dateTo}&date_from=${dateFrom}`;
+    const jobbiUrl = `https://data.jobbi.me/metrics-postings/summary-company?company_id=${cleanCompanyId}&date_from=${dateFrom}&date_to=${dateTo}`;
 
     const [resMixpanel, resJobbi] = await Promise.all([
       fetch(mixpanelUrl, {

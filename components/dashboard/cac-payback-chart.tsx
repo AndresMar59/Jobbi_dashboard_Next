@@ -19,7 +19,13 @@ export function CACPaybackChart() {
   // Llamada al proxy con los filtros globales
   const { data: response, error, isLoading } = useSWR(
     `/api/proxy?year=${filters.year}&include_payroll=${filters.IncludePayroll}`,
-    fetcher
+    fetcher,
+    {
+      revalidateOnFocus: false,
+    revalidateOnReconnect: false,      
+    revalidateIfStale: false,      
+    dedupingInterval: 10000,
+    }
   )
 
   // Mapeo de datos desde unit_economics

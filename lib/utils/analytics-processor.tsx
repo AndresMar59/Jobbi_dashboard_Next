@@ -167,7 +167,10 @@ export function processBehavioralData(
 
   // --- INTEGRACIÓN MICROSERVICIO JOBBI DATA ---
   let Jobs = (JobbiData as any)?.summary?.total_postings ?? -1;
-  let Applications = (JobbiData as any)?.channel_distribution?.other ?? -1;
+  let Applications = (
+  ((JobbiData as any)?.channel_distribution?.other || 0) + 
+  ((JobbiData as any)?.channel_distribution?.Website || 0)
+) || 0; 
 
   if (totalCandidateSelect > 0) {
     Jobs_outreach_applications = Applications / totalCandidateSelect;
