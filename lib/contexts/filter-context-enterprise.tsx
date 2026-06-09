@@ -8,7 +8,8 @@ import { createContext, useContext, useState, type ReactNode } from "react"
 
 export interface CustomRangeState {
   active: boolean;
-  fromDate: string | null; // Guardará el formato "YYYY-MM-DD"
+  fromDate: string | null;
+  toDate: string | null;
 }
 
 export interface FiltersState {
@@ -38,7 +39,8 @@ const defaultFilters: FiltersState = {
   searchId: "",
   customRange: {
     active: false,
-    fromDate: null
+    fromDate: null,
+    toDate: null
   }
 }
 

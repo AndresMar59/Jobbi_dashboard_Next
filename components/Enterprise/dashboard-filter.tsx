@@ -20,6 +20,7 @@ export function DashboardFilters() {
   const [localYear, setLocalYear] = useState(filters.year || "2026")
   const [localMonth, setLocalMonth] = useState(filters.month || "Ene")
   const [localFrom, setLocalFrom] = useState("")
+  const [localTo, setLocalTo] = useState("")
 
   const years = ["2025", "2026", "2027"]
   const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
@@ -36,11 +37,12 @@ export function DashboardFilters() {
     if (isCustom) {
       setCustomRange({
         active: true,
-        fromDate: localFrom
+        fromDate: localFrom,
+        toDate: localTo
       })
     } else {
       // Bloqueamos el rango personalizado para que use los selectores normales
-      setCustomRange({ active: false, fromDate: null })
+      setCustomRange({ active: false, fromDate: null, toDate: null })
       setYear(localYear)
       setMonth(localMonth)
     }
@@ -111,12 +113,13 @@ export function DashboardFilters() {
       className="h-10 rounded-md border border-input bg-muted/50 px-4 py-2 text-sm font-medium transition-colors text-muted-foreground outline-none focus:outline-none focus:border-purple-600 focus:ring-0 shadow-sm"
     />
   </div>
-  
   <div className="flex flex-col">
-    {/* Se agrega 'flex items-center' para nivelar la altura del texto internamente */}
-    <div className="h-10 flex items-center rounded-md border border-input bg-muted/50 px-4 text-sm font-medium transition-colors text-muted-foreground shadow-sm">
-      {localFrom ? "+30 días automático" : "Esperando fecha..."}
-    </div>
+    <input
+      type="date"
+      value={localTo}
+      onChange={(e) => setLocalTo(e.target.value)}
+      className="h-10 rounded-md border border-input bg-muted/50 px-4 py-2 text-sm font-medium transition-colors text-muted-foreground outline-none focus:outline-none focus:border-purple-600 focus:ring-0 shadow-sm"
+    />
   </div>
 </div>
           )}

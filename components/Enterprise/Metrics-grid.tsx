@@ -42,10 +42,10 @@ export function MetricsGrid() {
         isFuture = true
       }
 
-      let toDate = new Date(fromDate)
-      toDate.setDate(toDate.getDate() + 30) // Suma automática de 30 días
+      let toDate = new Date(filters.customRange.toDate ?? new Date())
       
-      if (toDate > hoy) {
+      if (toDate == null || toDate > hoy
+      ) {
         toDate = hoy
       }
       
